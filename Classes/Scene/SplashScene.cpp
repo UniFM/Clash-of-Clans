@@ -8,7 +8,7 @@
 #include "LoginScene.h"
 
 USING_NS_CC;
-
+   
 Scene* SplashScene::createScene()
 {
     return SplashScene::create();
