@@ -11,7 +11,7 @@
 #include "cocos2d.h"
 #include "Constant/Constant.h"
 
-USING_NS_CC;
+USING_NS_CC; 
 
 class SceneMap : public Node {
 public:
