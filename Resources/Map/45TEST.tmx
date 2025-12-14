@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="staggered" renderorder="right-down" width="60" height="120" tilewidth="16" tileheight="16" infinite="0" staggeraxis="y" staggerindex="odd" nextlayerid="7" nextobjectid="1">
+<map version="1.10" tiledversion="1.11.2" orientation="isometric" renderorder="right-down" width="60" height="120" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="1">
  <editorsettings>
-  <export target="HomeVillage..tmx" format="tmx"/>
+  <export format="tmx"/>
  </editorsettings>
- <tileset firstgid="1" source="Plateformer Exterior Grass World.tsx"/>
- <tileset firstgid="513" source="water.tsx"/>
- <tileset firstgid="529" source="tree3.tsx"/>
+ <tileset firstgid="1" source="../../../ALL FILE/code_study/cs/Final/tmx/Plateformer Exterior Grass World.tsx"/>
+ <tileset firstgid="513" source="../../../ALL FILE/code_study/cs/Final/tmx/water.tsx"/>
+ <tileset firstgid="529" source="../../../ALL FILE/code_study/cs/Final/tmx/tree3.tsx"/>
  <layer id="1" name="Background" width="60" height="120">
   <data encoding="csv">
 98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,98,

@@ -8,6 +8,7 @@
 
 #include "cocos2d.h"
 #include "SceneMap.h"
+#include "Constant/Constant.h"
 
 class HomeVillageMap : public SceneMap {
 public:
@@ -21,14 +22,24 @@ public:
 	// 初始化地图
 	bool init(const std::string& tmxFile) override;
 
+	// 重写基类方法，添加家乡基地特有逻辑
+	bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const override;
+
+	// 家乡基地特有的检测方法
+	bool isOnGrassland(const Vec2& pos, const Size& buildingSize) const;  // 检查是否完全在草地上
+
+	// 析构函数公开，允许正常释放
+	virtual ~HomeVillageMap();
 
 private:
-	// 构造函数私有化
+	// 构造函数私有化 
 	HomeVillageMap();
-	~HomeVillageMap();
 
 	// 静态实例指针
 	static HomeVillageMap* sInstance;
 
+	// TMX地图层
+	TMXLayer* backgroundLayer;   // 背景层
+	TMXLayer* grassLayer;        // 草地层
 
 };
