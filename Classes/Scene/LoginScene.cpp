@@ -141,7 +141,7 @@ bool LoginScene::performLogin(const std::string& username, const std::string& pa
 {
     // 这里可以实现真实的登录验证逻辑
     // 目前只是简单的示例验证
-    if (username == "admin" && password == "123456") {
+    if (username == "1" && password == "1") {
         return true;
     }
     if (username == "player" && password == "password") {

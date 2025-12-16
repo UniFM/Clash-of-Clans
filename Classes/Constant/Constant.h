@@ -18,6 +18,7 @@ enum class MapType {
 // 地形类型枚举
 enum class TerrainType {
     Grass,              // 草地
+    Occupied            // 已占用
     //Water,              // 水域
     //Buildable
 };
@@ -39,6 +40,11 @@ namespace ResPath {
 
     //瓦片地图TMX
 	const std::string TMX_HOMEVILLAGEMAP = "Map/HomeVillage.tmx";    // 家乡基地
+
+    // 显示屏大小,设计比例 16:9
+    const cocos2d::Size WINDOWS(1280.0f, 720.0f);
+
+
 
 
     //兵种Sprite
