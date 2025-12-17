@@ -10,6 +10,7 @@
 #define __SCENEMAP_H__
 #include "cocos2d.h"
 #include "Constant/Constant.h"
+#include "Control/Control.h"
 
 USING_NS_CC;
 
@@ -32,6 +33,8 @@ public:
 	void onTouchMoved(Touch* touch, Event* event);
 	void onTouchEnded(Touch* touch, Event* event);
 
+	// 设置控制系统
+	void setupControl();
 
 protected:
 	// 获取地图层

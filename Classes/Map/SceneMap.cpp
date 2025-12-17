@@ -273,3 +273,29 @@ void SceneMap::onTouchMoved(Touch* touch, Event* event) {
 void SceneMap::onTouchEnded(Touch* touch, Event* event) {
 	// 触摸结束后可以添加惯性滚动等效果
 }
+
+// 设置控制系统
+void SceneMap::setupControl() {
+	auto control = Control::getInstance();
+
+	// 设置当前地图为控制目标
+	control->setTargetMap(this);
+
+	// 配置缩放设置
+	control->enableMapZoom(true);
+	control->setZoomRange(0.5f, 2.0f);  // 最小0.5倍，最大2倍
+
+	// 启用自动适应窗口
+	control->setAutoFitMap(true);
+
+	// 启用滚轮缩放
+	control->enableScrollWheel(true);
+
+	// 启用双指缩放（移动端）
+	control->enablePinchGesture(true);
+
+	// 启用窗口大小调整
+	control->enableWindowResize(true);
+
+	CCLOG("Control system setup completed for HomeVillageMap");
+}

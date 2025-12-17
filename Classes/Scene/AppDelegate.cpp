@@ -24,6 +24,7 @@
 
 #include "AppDelegate.h"
 #include "SplashScene.h"
+#include "Constant/Constant.h"
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -33,10 +34,6 @@ using namespace cocos2d::experimental;
 #endif
 
 USING_NS_CC;
-
-static cocos2d::Size smallResolutionSize = cocos2d::Size(1024, 576);   // 小屏幕
-static cocos2d::Size mediumResolutionSize = cocos2d::Size(1280, 720);  // 中等屏幕
-static cocos2d::Size largeResolutionSize = cocos2d::Size(1920, 1080);  // 大屏幕
 
 AppDelegate::AppDelegate()
 {
