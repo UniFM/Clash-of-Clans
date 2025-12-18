@@ -6,6 +6,8 @@
 **************************************************************/
 #include "SplashScene.h"
 #include "LoginScene.h"
+#include "Control/Control.h"
+#include "Constant/Constant.h"
 
 USING_NS_CC;
    
@@ -24,7 +26,7 @@ bool SplashScene::init()
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     // Ìí¼ÓÓÎÏ··âÃæ
-    auto cover = Sprite::create("Scene/Cover.png");
+    auto cover = Sprite::create(ResPath::SPLASHSCENE);
     cover->setPosition(Vec2(visibleSize.width / 2 + origin.x,
         visibleSize.height / 2 + origin.y));
     this->addChild(cover);

@@ -24,6 +24,7 @@
 
 #include "AppDelegate.h"
 #include "SplashScene.h"
+#include "Constant/Constant.h"
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -33,11 +34,6 @@ using namespace cocos2d::experimental;
 #endif
 
 USING_NS_CC;
-
-static cocos2d::Size designResolutionSize = cocos2d::Size(1280, 720);  // 设计分辨率 16:9
-static cocos2d::Size smallResolutionSize = cocos2d::Size(1024, 576);   // 小屏幕
-static cocos2d::Size mediumResolutionSize = cocos2d::Size(1280, 720);  // 中等屏幕
-static cocos2d::Size largeResolutionSize = cocos2d::Size(1920, 1080);  // 大屏幕
 
 AppDelegate::AppDelegate()
 {
@@ -73,7 +69,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+        glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height));
 #else
         glview = GLViewImpl::create("cs_final_coc");
 #endif
@@ -88,22 +84,23 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // Set the design resolution
     // 使用 FIXED_WIDTH 策略：宽度始终填满，高度自适应，上下可能出现黑边
-    glview->setDesignResolutionSize(designResolutionSize.width, designResolutionSize.height, ResolutionPolicy::FIXED_WIDTH);
+    glview->setDesignResolutionSize(ResPath::WINDOWS.width, ResPath::WINDOWS.height, ResolutionPolicy::FIXED_WIDTH);
+    //glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
     auto frameSize = glview->getFrameSize();
     // if the frame's height is larger than the height of medium size.
     if (frameSize.height > mediumResolutionSize.height)
     {        
-        director->setContentScaleFactor(MIN(largeResolutionSize.height/designResolutionSize.height, largeResolutionSize.width/designResolutionSize.width));
+        director->setContentScaleFactor(MIN(largeResolutionSize.height/ResPath::WINDOWS.height, largeResolutionSize.width/ResPath::WINDOWS.width));
     }
     // if the frame's height is larger than the height of small size.
     else if (frameSize.height > smallResolutionSize.height)
     {        
-        director->setContentScaleFactor(MIN(mediumResolutionSize.height/designResolutionSize.height, mediumResolutionSize.width/designResolutionSize.width));
+        director->setContentScaleFactor(MIN(mediumResolutionSize.height/ResPath::WINDOWS.height, mediumResolutionSize.width/ResPath::WINDOWS.width));
     }
     // if the frame's height is smaller than the height of medium size.
     else
     {        
-        director->setContentScaleFactor(MIN(smallResolutionSize.height/designResolutionSize.height, smallResolutionSize.width/designResolutionSize.width));
+        director->setContentScaleFactor(MIN(smallResolutionSize.height/ResPath::WINDOWS.height, smallResolutionSize.width/ResPath::WINDOWS.width));
     }
 
     register_all_packages();
