@@ -25,6 +25,7 @@ public:
 	virtual TerrainType getTerrainType(const Vec2& pos) const;    // 获取地形类型
 	Size getMapSize() const;    // 获取地图尺寸
 	Size getTileSize() const;    // 获取瓦片尺寸
+	TMXTiledMap* getTiledMap() const { return tileMap; }  // 获取TMX瓦片地图对象
 	cocos2d::Vec2 TMXToCocos2d(const cocos2d::Vec2& tmxPos) const;
 	cocos2d::Vec2 Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const;
 
@@ -32,9 +33,6 @@ public:
 	bool onTouchBegan(Touch* touch, Event* event);
 	void onTouchMoved(Touch* touch, Event* event);
 	void onTouchEnded(Touch* touch, Event* event);
-
-	// 设置控制系统
-	void setupControl();
 
 protected:
 	// 获取地图层

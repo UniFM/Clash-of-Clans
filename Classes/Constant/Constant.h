@@ -49,7 +49,7 @@ namespace ResPath {
 
     //Scene路径
     constexpr const char* SPLASHSCENE = "Scene/Cover.png";    //SplashScene游戏开屏
-
+    constexpr const char* LOGINBACKGROUND = "Scene/LoginBackground.png";
 
     //瓦片地图TMX
 	const std::string TMX_HOMEVILLAGEMAP = "Map/HomeVillage.tmx";    // 家乡基地
@@ -62,4 +62,10 @@ namespace ResPath {
 
     //兵种Sprite
 
+
+    //图标icons
+    constexpr const char* ZOOMINBUTTON = "Icon/zoom_in_button.png";
+    constexpr const char* ZOOMOUTBUTTON = "Icon/zoom_out_button.png";
+    constexpr const char* ZOOMINBUTTONPRESSED = "Icon/zoom_in_button_pressed.png";
+    constexpr const char* ZOOMOUTBUTTONPRESSED = "Icon/zoom_out_button_pressed.png";
 }

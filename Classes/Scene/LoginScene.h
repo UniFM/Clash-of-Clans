@@ -10,6 +10,7 @@
 
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
+#include "Constant/Constant.h"
 
 class LoginScene : public cocos2d::Scene {
 public:

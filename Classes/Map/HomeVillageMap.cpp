@@ -80,9 +80,6 @@ bool HomeVillageMap::init(const std::string& tmxFile) {
     // 设置滚动视图
     setupScrollView();
 
-    // 设置控制系统
-    setupControl();
-
     return true;
 }
 

@@ -23,7 +23,7 @@ bool LoginScene::init()
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     // Ìí¼Ó±³¾°
-    auto background = Sprite::create("Scene/LoginBackground.png");
+    auto background = Sprite::create(ResPath::LOGINBACKGROUND);
     background->setPosition(Vec2(visibleSize.width / 2 + origin.x,
         visibleSize.height / 2 + origin.y));
     this->addChild(background);

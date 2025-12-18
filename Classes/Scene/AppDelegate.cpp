@@ -85,6 +85,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     // Set the design resolution
     // 使用 FIXED_WIDTH 策略：宽度始终填满，高度自适应，上下可能出现黑边
     glview->setDesignResolutionSize(ResPath::WINDOWS.width, ResPath::WINDOWS.height, ResolutionPolicy::FIXED_WIDTH);
+    //glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
     auto frameSize = glview->getFrameSize();
     // if the frame's height is larger than the height of medium size.
     if (frameSize.height > mediumResolutionSize.height)
