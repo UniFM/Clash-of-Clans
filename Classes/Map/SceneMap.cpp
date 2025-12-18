@@ -8,6 +8,7 @@
 #include "SceneMap.h"
 #include <algorithm>
 #include <cmath>
+#include "Constant/Constant.h"
 
 USING_NS_CC;
 
@@ -53,6 +54,41 @@ bool SceneMap::init(const std::string& tmxFile) {
 
 	// 获取碰撞层
 	collisionLayer = getLayer("Collision");
+
+	// 放大按钮
+	auto zoomInBtn = MenuItemImage::create(
+		ResPath::ZOOMINBUTTON, ResPath::ZOOMINBUTTONPRESSED,
+		CC_CALLBACK_0(SceneMap::zoomIn, this)
+	);
+	zoomInBtn->setPosition(visibleSize.width - 50, visibleSize.height - 30);
+
+	// 缩小按钮
+	auto zoomOutBtn = MenuItemImage::create(
+		ResPath::ZOOMOUTBUTTON, ResPath::ZOOMOUTBUTTONPRESSED,
+		CC_CALLBACK_0(SceneMap::zoomOut, this)
+	);
+	zoomOutBtn->setPosition(visibleSize.width - 50, visibleSize.height - 80);
+
+	// 创建菜单并添加到场景
+	auto menu = Menu::create(zoomInBtn, zoomOutBtn, nullptr);
+	menu->setPosition(Vec2::ZERO); // 菜单锚点设为原点，方便按钮定位
+	this->addChild(menu, 10); // 层级设为10，确保按钮在最上层
+
+	// 多点触摸监听器
+	auto touchListener = EventListenerTouchAllAtOnce::create();
+	// 绑定多点触摸的三个回调
+	touchListener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
+	touchListener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
+	touchListener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
+
+	// 添加监听器到事件分发器
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
+
+	// 添加鼠标滚轮监听器
+	auto mouseListener = EventListenerMouse::create();
+	// 绑定滚轮事件
+	mouseListener->onMouseScroll = CC_CALLBACK_1(SceneMap::onMouseScroll, this);
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
 	return true;
 }
@@ -242,34 +278,106 @@ cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
 // 设置滚动视图
 void SceneMap::setupScrollView() {
 	// 启用触摸事件
-	auto listener = EventListenerTouchOneByOne::create();
-	listener->onTouchBegan = CC_CALLBACK_2(SceneMap::onTouchBegan, this);
-	listener->onTouchMoved = CC_CALLBACK_2(SceneMap::onTouchMoved, this);
-	listener->onTouchEnded = CC_CALLBACK_2(SceneMap::onTouchEnded, this);
+	auto listener = EventListenerTouchAllAtOnce::create();
+	listener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
+	listener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
+	listener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
 
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
-// 触摸开始
-bool SceneMap::onTouchBegan(Touch* touch, Event* event) {
-	lastTouchPos = touch->getLocation();
-	return true;
-}
-
-// 触摸移动
-void SceneMap::onTouchMoved(Touch* touch, Event* event) {
-	Vec2 currentPos = touch->getLocation();
-	Vec2 delta = currentPos - lastTouchPos;
-
-	if (tileMap) {
-		Vec2 mapPos = tileMap->getPosition();
-		tileMap->setPosition(mapPos + delta);
+// 多点触摸开始
+void SceneMap::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) {
+	if (touches.size() >= 2) {
+		isTwoTouch = true;
+		auto touch1 = touches[0];
+		auto touch2 = touches[1];
+		initTwoTouchDistance = touch1->getLocation().distance(touch2->getLocation());
+		initTwoTouchCenter = (touch1->getLocation() + touch2->getLocation()) / 2.0f;
 	}
-
-	lastTouchPos = currentPos;
+	else if (touches.size() == 1) {
+		isTwoTouch = false;
+		lastTouchPos = touches[0]->getLocation();
+	}
 }
 
-// 触摸结束
-void SceneMap::onTouchEnded(Touch* touch, Event* event) {
-	// 触摸结束后可以添加惯性滚动等效果
+// 多点触摸移动（缩放+移动逻辑）
+void SceneMap::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) {
+	if (!tileMap) return;
+
+	if (touches.size() >= 2 && isTwoTouch) {
+		// 双指缩放逻辑
+		auto touch1 = touches[0];
+		auto touch2 = touches[1];
+		float currentDistance = touch1->getLocation().distance(touch2->getLocation());
+		float scaleRatio = currentDistance / initTwoTouchDistance;
+		float newScale = clampf(currentScale * scaleRatio, minScale, maxScale);
+		float scaleDelta = newScale / currentScale;
+
+		Vec2 currentCenter = (touch1->getLocation() + touch2->getLocation()) / 2.0f;
+		Vec2 offset = currentCenter - initTwoTouchCenter;
+		Vec2 newMapPos = tileMap->getPosition() - offset * scaleDelta;
+
+		tileMap->setScale(newScale);
+		tileMap->setPosition(newMapPos);
+
+		currentScale = newScale;
+		initTwoTouchDistance = currentDistance;
+		initTwoTouchCenter = currentCenter;
+	}
+	else if (touches.size() == 1 && !isTwoTouch) {
+		// 单指移动逻辑
+		Vec2 currentPos = touches[0]->getLocation();
+		Vec2 delta = currentPos - lastTouchPos;
+		tileMap->setPosition(tileMap->getPosition() + delta);
+		lastTouchPos = currentPos;
+	}
+}
+
+// 多点触摸结束
+void SceneMap::onTouchesEnded(const std::vector<Touch*>& touches, Event* event) {
+	if (touches.size() < 2) {
+		isTwoTouch = false;
+	}
+}
+//缩放功能的实现
+void SceneMap::zoomIn() {
+	currentScale += scaleStep;
+	currentScale = clampf(currentScale, minScale, maxScale);
+	tileMap->setScale(currentScale);
+}
+
+void SceneMap::zoomOut() {
+	currentScale -= scaleStep;
+	currentScale = clampf(currentScale, minScale, maxScale);
+	tileMap->setScale(currentScale);
+}
+
+// 实现鼠标滚轮缩放逻辑
+void SceneMap::onMouseScroll(EventMouse* event) {
+	if (!tileMap) return;
+
+	// 获取滚轮方向（向上为正，向下为负）
+	float scrollY = event->getScrollY();
+	if (scrollY == 0) return;
+
+	// 计算新的缩放系数
+	float newScale = currentScale + (scrollY > 0 ? scrollStep : -scrollStep);
+	newScale = clampf(newScale, minScale, maxScale); // 限制范围
+	if (newScale == currentScale) return; // 无变化则返回
+
+	// 以鼠标当前位置为中心缩放
+	Vec2 mouseWorldPos = event->getLocation(); // 鼠标屏幕坐标
+	Vec2 mapLocalPos = tileMap->convertToNodeSpace(mouseWorldPos); // 鼠标在地图节点的本地坐标
+
+	// 计算缩放后的地图位置偏移
+	float scaleRatio = newScale / currentScale;
+	Vec2 newMapPos = tileMap->getPosition() - (mapLocalPos * (scaleRatio - 1)) * tileMap->getScale();
+
+	// 应用缩放和位置
+	tileMap->setScale(newScale);
+	tileMap->setPosition(newMapPos);
+
+	// 更新当前缩放系数
+	currentScale = newScale;
 }

@@ -25,6 +25,7 @@
 #include "AppDelegate.h"
 #include "SplashScene.h"
 #include "Constant/Constant.h"
+#define CC_ENABLE_MULTI_TOUCH 1  // 开启多点触摸宏
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -70,6 +71,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
         glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height));
+        // 启用多点触摸（部分平台需要显式开启）
 #else
         glview = GLViewImpl::create("cs_final_coc");
 #endif

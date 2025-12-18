@@ -29,10 +29,22 @@ public:
 	cocos2d::Vec2 TMXToCocos2d(const cocos2d::Vec2& tmxPos) const;
 	cocos2d::Vec2 Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const;
 
-	// 触摸事件处理
-	bool onTouchBegan(Touch* touch, Event* event);
-	void onTouchMoved(Touch* touch, Event* event);
-	void onTouchEnded(Touch* touch, Event* event);
+	// 替换为多点触摸的函数
+	void onTouchesBegan(const std::vector<Touch*>& touches, Event* event);
+	void onTouchesMoved(const std::vector<Touch*>& touches, Event* event);
+	void onTouchesEnded(const std::vector<Touch*>& touches, Event* event);
+
+	//// 触摸事件处理  移除单指
+	//bool onTouchBegan(Touch* touch, Event* event);
+	//void onTouchMoved(Touch* touch, Event* event);
+	//void onTouchEnded(Touch* touch, Event* event);
+
+	//缩放地图
+	void zoomIn();
+	void zoomOut();
+
+	// 鼠标滚轮缩放方法
+	void onMouseScroll(EventMouse* event);
 
 protected:
 	// 获取地图层
@@ -52,6 +64,20 @@ protected:
 
 	// 设置滚动视图
 	void setupScrollView();
+
+	float currentScale = 1.0f;	// 当前缩放系数
+
+	const float scaleStep = 0.1f; // 每次缩放步长
+	const float minScale = 0.5f;  // 最小缩放限制
+	const float maxScale = 3.0f;  // 最大缩放限制
+
+	//触摸缩放
+	bool isTwoTouch = false;       // 是否双指触摸
+	float initTwoTouchDistance;    // 双指初始距离
+	Vec2 initTwoTouchCenter;       // 双指初始中心点（屏幕坐标）
+
+	// 鼠标
+	const float scrollStep = 0.1f; // 滚轮每次缩放步长
 
 };
 
