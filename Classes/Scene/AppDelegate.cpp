@@ -70,7 +70,11 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height));
+        // 启用步进窗口缩放功能
+        glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height), 1.0f, true);
+        // 原函数
+        //GLViewImpl* GLViewImpl::createWithRect(const std::string & viewName, Rect rect, float frameZoomFactor, bool resizable)
+
         // 启用多点触摸（部分平台需要显式开启）
 #else
         glview = GLViewImpl::create("cs_final_coc");

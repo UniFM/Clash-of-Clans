@@ -5,7 +5,7 @@
 * @note     ：实现地图网格系统、建筑放置、碰撞检测等核心功能
 **************************************************************/
 
-#include "SceneMap.h"
+#include "SceneMap.h"-
 #include <algorithm>
 #include <cmath>
 #include "Constant/Constant.h"
@@ -27,7 +27,7 @@ bool SceneMap::init(const std::string& tmxFile) {
 	//// 设置地图属性
 	//tileMap->setAnchorPoint(Vec2(0.0, 0.0));
 
-	// 计算地图初始位置 - 让地图左下角对齐窗口左下角
+	// 计算地图初始位置 
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Size mapContentSize = tileMap->getContentSize();
 
@@ -51,6 +51,15 @@ bool SceneMap::init(const std::string& tmxFile) {
 	CCLOG("偏移量: Y轴向上偏移 %.0f 像素", -(initialPos.y));
 
 	this->addChild(tileMap);
+
+	//// 实现地图初始的时候横向自适应窗口
+	//Size winSize = Director::getInstance()->getVisibleSize();	//查看窗口可见区域
+	//float mapOriginalWidth = tileMap->getMapSize().width * tileMap->getTileSize().width;	//地图原始宽度像素大小
+	////float mapOriginalHeight = tileMap->getMapSize().height * tileMap->getTileSize().height;	//地图原始高度像素大小
+	//float adaptScale = winSize.width / mapOriginalWidth;
+
+	//tileMap->setScale(adaptScale);
+	//currentScale = adaptScale;
 
 	// 获取碰撞层
 	collisionLayer = getLayer("Collision");
