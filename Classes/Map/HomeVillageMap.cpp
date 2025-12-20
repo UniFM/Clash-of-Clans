@@ -1,18 +1,18 @@
 /*************************************************************
 * @file     : HomeVillageMap.cpp
-* @function £º¼ÒÏç»ùµØµØÍ¼ÊµÏÖ
-* @author   : Ò¶ÜÆº¬
-* @note     £ºÊµÏÖ¼ÒÏç»ùµØÌØÓĞµÄµØÍ¼¹¦ÄÜ
+* @function ï¼šå®¶ä¹¡åŸºåœ°åœ°å›¾å®ç°
+* @author   : å¶èŠ·å«
+* @note     ï¼šå®ç°å®¶ä¹¡åŸºåœ°ç‰¹æœ‰çš„åœ°å›¾åŠŸèƒ½
 **************************************************************/
 
 #include "HomeVillageMap.h"
 
 USING_NS_CC;
 
-// ¾²Ì¬ÊµÀıÖ¸Õë³õÊ¼»¯
+// é™æ€å®ä¾‹æŒ‡é’ˆåˆå§‹åŒ–
 HomeVillageMap* HomeVillageMap::sInstance = nullptr;
 
-// ¹¹Ôìº¯Êı
+// æ„é€ å‡½æ•°
 HomeVillageMap::HomeVillageMap()
     : backgroundLayer(nullptr)
     , grassLayer(nullptr)
@@ -22,15 +22,15 @@ HomeVillageMap::HomeVillageMap()
 {
 }
 
-// Îö¹¹º¯Êı
+// ææ„å‡½æ•°
 HomeVillageMap::~HomeVillageMap() {
-    // Çå¿Õ¾²Ì¬ÊµÀıÖ¸Õë
+    // æ¸…ç©ºé™æ€å®ä¾‹æŒ‡é’ˆ
     if (sInstance == this) {
         sInstance = nullptr;
     }
 }
 
-// »ñÈ¡µ¥ÀıÊµÀı
+// è·å–å•ä¾‹å®ä¾‹
 HomeVillageMap* HomeVillageMap::getInstance() {
     if (!sInstance) {
         sInstance = new (std::nothrow) HomeVillageMap();
@@ -44,28 +44,28 @@ HomeVillageMap* HomeVillageMap::getInstance() {
     return sInstance;
 }
 
-// ³õÊ¼»¯µØÍ¼
+// åˆå§‹åŒ–åœ°å›¾
 bool HomeVillageMap::init(const std::string& tmxFile) {
     if (!SceneMap::init(tmxFile)) {
         CCLOG("Failed to init SceneMap with file: %s", tmxFile.c_str());
         return false;
     }
 
-    // µ÷ÊÔµØÍ¼¼ÓÔØ
+    // è°ƒè¯•åœ°å›¾åŠ è½½
     if (!tileMap) {
         CCLOG("TileMap is null!");
         return false;
     }
 
-    // ÏÈ»ñÈ¡ÌØ¶¨²ã
+    // å…ˆè·å–ç‰¹å®šå±‚
     backgroundLayer = getLayer("Background");
     grassLayer = getLayer("Grass");
 
-    // »ñÈ¡ÆÁÄ»ºÍµØÍ¼³ß´ç
+    // è·å–å±å¹•å’Œåœ°å›¾å°ºå¯¸
     Size visibleSize = Director::getInstance()->getVisibleSize();
     Size mapContentSize = tileMap->getContentSize();
 
-    // ĞŞÕıµÄµØÍ¼Î»ÖÃÉèÖÃÂß¼­
+    // ä¿®æ­£çš„åœ°å›¾ä½ç½®è®¾ç½®é€»è¾‘
     Vec2 initialPos;
 
     initialPos.x = 0;
@@ -73,78 +73,78 @@ bool HomeVillageMap::init(const std::string& tmxFile) {
 
     tileMap->setPosition(initialPos);
 
-    // ÖØÖÃµØÍ¼µÄ±ä»»ÊôĞÔ£¬È·±£Ã»ÓĞĞı×ª»òÅ¤Çú
+    // é‡ç½®åœ°å›¾çš„å˜æ¢å±æ€§ï¼Œç¡®ä¿æ²¡æœ‰æ—‹è½¬æˆ–æ‰­æ›²
     tileMap->setRotation(0);
     tileMap->setScaleX(1.0f);
     tileMap->setScaleY(1.0f);
     tileMap->setSkewX(0);
     tileMap->setSkewY(0);
 
-    // ÉèÖÃ¹ö¶¯ÊÓÍ¼
+    // è®¾ç½®æ»šåŠ¨è§†å›¾
     setupScrollView();
 
     return true;
 }
 
-// ÖØĞ´½¨Öş·ÅÖÃ¼ì²â£¬Ìí¼Ó²İµØ¼ì²â
+// é‡å†™å»ºç­‘æ”¾ç½®æ£€æµ‹ï¼Œæ·»åŠ è‰åœ°æ£€æµ‹
 bool HomeVillageMap::canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const {
-    // Ê×ÏÈ½øĞĞ»ù´¡¼ì²â
+    // é¦–å…ˆè¿›è¡ŒåŸºç¡€æ£€æµ‹
     if (!SceneMap::canPlaceBuilding(pos, buildingSize)) {
         return false;
     }
 
-    // ¼ì²éÊÇ·ñÔÚ²İµØÉÏ
+    // æ£€æŸ¥æ˜¯å¦åœ¨è‰åœ°ä¸Š
     return isOnGrassland(pos, buildingSize);
 }
 
-// ¼ì²éÊÇ·ñÍêÈ«ÔÚ²İµØÉÏ
+// æ£€æŸ¥æ˜¯å¦å®Œå…¨åœ¨è‰åœ°ä¸Š
 bool HomeVillageMap::isOnGrassland(const Vec2& pos, const Size& buildingSize) const {
     if (!grassLayer || !tileMap) {
         return false;
     }
 
-    // ½«ÊÀ½ç×ø±ê×ª»»ÎªÍßÆ¬×ø±ê
+    // å°†ä¸–ç•Œåæ ‡è½¬æ¢ä¸ºç“¦ç‰‡åæ ‡
     Size tileSize = tileMap->getTileSize();
     Size mapSize = tileMap->getMapSize();
 
-    // ¼ÆËã½¨ÖşÕ¼ÓÃµÄÍßÆ¬·¶Î§
+    // è®¡ç®—å»ºç­‘å ç”¨çš„ç“¦ç‰‡èŒƒå›´
     int startTileX = static_cast<int>(pos.x / tileSize.width);
     int startTileY = static_cast<int>(pos.y / tileSize.height);
 
     int tilesX = static_cast<int>(std::ceil(buildingSize.width / tileSize.width));
     int tilesY = static_cast<int>(std::ceil(buildingSize.height / tileSize.height));
 
-    CCLOG("½¨ÖşÕ¼ÓÃÍßÆ¬Êı: %d x %d", tilesX, tilesY);
+    CCLOG("å»ºç­‘å ç”¨ç“¦ç‰‡æ•°: %d x %d", tilesX, tilesY);
 
-    // ¼ì²é½¨ÖşÕ¼ÓÃµÄËùÓĞÍßÆ¬ÊÇ·ñ¶¼ÔÚ²İµØÉÏ
+    // æ£€æŸ¥å»ºç­‘å ç”¨çš„æ‰€æœ‰ç“¦ç‰‡æ˜¯å¦éƒ½åœ¨è‰åœ°ä¸Š
     for (int x = 0; x < tilesX; x++) {
         for (int y = 0; y < tilesY; y++) {
             int tileX = startTileX + x;
             int tileY = startTileY + y;
 
-            // ¼ì²é±ß½ç£¨Ê¹ÓÃÍßÆ¬×ø±ê±ß½ç£©
+            // æ£€æŸ¥è¾¹ç•Œï¼ˆä½¿ç”¨ç“¦ç‰‡åæ ‡è¾¹ç•Œï¼‰
             if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-                CCLOG("ÍßÆ¬×ø±ê³¬³ö±ß½ç: (%d, %d)", tileX, tileY);
-                return false; // ³¬³ö±ß½ç
+                CCLOG("ç“¦ç‰‡åæ ‡è¶…å‡ºè¾¹ç•Œ: (%d, %d)", tileX, tileY);
+                return false; // è¶…å‡ºè¾¹ç•Œ
             }
 
-            // Ö±½ÓÊ¹ÓÃÍßÆ¬×ø±ê¼ì²é£¬²»ĞèÒª×ª»»
+            // ç›´æ¥ä½¿ç”¨ç“¦ç‰‡åæ ‡æ£€æŸ¥ï¼Œä¸éœ€è¦è½¬æ¢
             unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-            if (gid == 0) {  // 0±íÊ¾Ã»ÓĞÍßÆ¬£¬¼´²»ÊÇ²İµØ
-                CCLOG("Î»ÖÃ(%d, %d)²»ÊÇ²İµØ£¬GID: %u", tileX, tileY, gid);
+            if (gid == 0) {  // 0è¡¨ç¤ºæ²¡æœ‰ç“¦ç‰‡ï¼Œå³ä¸æ˜¯è‰åœ°
+                CCLOG("ä½ç½®(%d, %d)ä¸æ˜¯è‰åœ°ï¼ŒGID: %u", tileX, tileY, gid);
                 return false;
             }
             else {
-                CCLOG("Î»ÖÃ(%d, %d)ÊÇ²İµØ£¬GID: %u", tileX, tileY, gid);
+                CCLOG("ä½ç½®(%d, %d)æ˜¯è‰åœ°ï¼ŒGID: %u", tileX, tileY, gid);
             }
         }
     }
 
-    CCLOG("ËùÓĞÍßÆ¬¶¼ÔÚ²İµØÉÏ");
+    CCLOG("æ‰€æœ‰ç“¦ç‰‡éƒ½åœ¨è‰åœ°ä¸Š");
     return true;
 }
 
-// ¿ªÊ¼½¨Öş·ÅÖÃÄ£Ê½
+// å¼€å§‹å»ºç­‘æ”¾ç½®æ¨¡å¼
 void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
 {
     CCLOG("Starting building placement mode for building type: %d", static_cast<int>(buildingType));
@@ -152,7 +152,7 @@ void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
     isPlacingBuilding = true;
     currentBuildingType = buildingType;
     
-    // ´´½¨½¨ÖşÔ¤ÀÀ¾«Áé
+    // åˆ›å»ºå»ºç­‘é¢„è§ˆç²¾çµ
     std::string spritePath;
     switch (buildingType) {
         case BuildingType::CANNON:
@@ -162,7 +162,7 @@ void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
             spritePath = ResPath::TOWNHALLLEVEL1;
             break;
         default:
-            // ¿ÉÒÔÉèÖÃÄ¬ÈÏÔ¤ÀÀÍ¼Æ¬»ò´ÓBuildingConfig»ñÈ¡
+            // å¯ä»¥è®¾ç½®é»˜è®¤é¢„è§ˆå›¾ç‰‡æˆ–ä»BuildingConfigè·å–
             const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, 1);
             if (stats) {
                 spritePath = stats->spriteName;
@@ -172,19 +172,19 @@ void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
     
     buildingPreview = Sprite::create(spritePath);
     if (!buildingPreview) {
-        // Èç¹û¼ÓÔØÊ§°Ü£¬´´½¨Õ¼Î»·û
+        // å¦‚æœåŠ è½½å¤±è´¥ï¼Œåˆ›å»ºå ä½ç¬¦
         buildingPreview = Sprite::create();
         auto placeholder = LayerColor::create(Color4B(100, 200, 100, 128), 64, 64);
         buildingPreview->addChild(placeholder);
         buildingPreview->setContentSize(Size(64, 64));
     }
     
-    // ÉèÖÃÔ¤ÀÀ½¨ÖşµÄÍ¸Ã÷¶È£¬±íÊ¾ÕâÊÇÔ¤ÀÀ×´Ì¬
+    // è®¾ç½®é¢„è§ˆå»ºç­‘çš„é€æ˜åº¦ï¼Œè¡¨ç¤ºè¿™æ˜¯é¢„è§ˆçŠ¶æ€
     buildingPreview->setOpacity(150);
-    buildingPreview->setVisible(false); // ³õÊ¼Ê±Òş²Ø£¬µÈ´¥ÃşÊ±ÏÔÊ¾
-    this->addChild(buildingPreview, 100); // ¸ß²ã¼¶È·±£ÔÚ×îÉÏ²ã
+    buildingPreview->setVisible(false); // åˆå§‹æ—¶éšè—ï¼Œç­‰è§¦æ‘¸æ—¶æ˜¾ç¤º
+    this->addChild(buildingPreview, 100); // é«˜å±‚çº§ç¡®ä¿åœ¨æœ€ä¸Šå±‚
     
-    // ´´½¨½¨Öş·ÅÖÃµÄ´¥Ãş¼àÌıÆ÷
+    // åˆ›å»ºå»ºç­‘æ”¾ç½®çš„è§¦æ‘¸ç›‘å¬å™¨
     auto touchListener = EventListenerTouchOneByOne::create();
     touchListener->setSwallowTouches(true);
     
@@ -211,16 +211,16 @@ void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
         }
     };
     
-    // Ìí¼Ó¼àÌıÆ÷£¬Ê¹ÓÃ¸ßÓÅÏÈ¼¶È·±£ÓÅÏÈ´¦Àí½¨Öş·ÅÖÃ
+    // æ·»åŠ ç›‘å¬å™¨ï¼Œä½¿ç”¨é«˜ä¼˜å…ˆçº§ç¡®ä¿ä¼˜å…ˆå¤„ç†å»ºç­‘æ”¾ç½®
     _eventDispatcher->addEventListenerWithFixedPriority(touchListener, -1);
     
-    // ±£´æ¼àÌıÆ÷ÒıÓÃÒÔ±ãºóĞøÒÆ³ı
+    // ä¿å­˜ç›‘å¬å™¨å¼•ç”¨ä»¥ä¾¿åç»­ç§»é™¤
     buildingPreview->setUserData(touchListener);
     
     CCLOG("Building placement mode started successfully");
 }
 
-// ½áÊø½¨Öş·ÅÖÃÄ£Ê½
+// ç»“æŸå»ºç­‘æ”¾ç½®æ¨¡å¼
 void HomeVillageMap::endBuildingPlacement()
 {
     CCLOG("Ending building placement mode");
@@ -228,13 +228,13 @@ void HomeVillageMap::endBuildingPlacement()
     isPlacingBuilding = false;
     
     if (buildingPreview) {
-        // ÒÆ³ı´¥Ãş¼àÌıÆ÷
+        // ç§»é™¤è§¦æ‘¸ç›‘å¬å™¨
         auto touchListener = static_cast<EventListenerTouchOneByOne*>(buildingPreview->getUserData());
         if (touchListener) {
             _eventDispatcher->removeEventListener(touchListener);
         }
         
-        // ÒÆ³ıÔ¤ÀÀ¾«Áé
+        // ç§»é™¤é¢„è§ˆç²¾çµ
         buildingPreview->removeFromParent();
         buildingPreview = nullptr;
     }
@@ -242,7 +242,7 @@ void HomeVillageMap::endBuildingPlacement()
     CCLOG("Building placement mode ended");
 }
 
-// ´¦Àí½¨Öş·ÅÖÃµÄ´¥Ãş¿ªÊ¼
+// å¤„ç†å»ºç­‘æ”¾ç½®çš„è§¦æ‘¸å¼€å§‹
 void HomeVillageMap::onTouchBeganForBuilding(const Vec2& touchPos)
 {
     if (!buildingPreview) return;
@@ -253,69 +253,69 @@ void HomeVillageMap::onTouchBeganForBuilding(const Vec2& touchPos)
     CCLOG("Building placement touch began at (%.1f, %.1f)", touchPos.x, touchPos.y);
 }
 
-// ´¦Àí½¨Öş·ÅÖÃµÄ´¥ÃşÒÆ¶¯
+// å¤„ç†å»ºç­‘æ”¾ç½®çš„è§¦æ‘¸ç§»åŠ¨
 void HomeVillageMap::onTouchMovedForBuilding(const Vec2& touchPos)
 {
     updateBuildingPreview(touchPos);
 }
 
-// ´¦Àí½¨Öş·ÅÖÃµÄ´¥Ãş½áÊø
+// å¤„ç†å»ºç­‘æ”¾ç½®çš„è§¦æ‘¸ç»“æŸ
 void HomeVillageMap::onTouchEndedForBuilding(const Vec2& touchPos)
 {
     CCLOG("Building placement touch ended at (%.1f, %.1f)", touchPos.x, touchPos.y);
     
-    // ×ª»»´¥ÃşÎ»ÖÃµ½µØÍ¼×ø±ê
+    // è½¬æ¢è§¦æ‘¸ä½ç½®åˆ°åœ°å›¾åæ ‡
     Vec2 mapPos = this->convertToNodeSpace(touchPos);
     
-    // ¼ì²éÊÇ·ñ¿ÉÒÔÔÚ´ËÎ»ÖÃ·ÅÖÃ½¨Öş
+    // æ£€æŸ¥æ˜¯å¦å¯ä»¥åœ¨æ­¤ä½ç½®æ”¾ç½®å»ºç­‘
     const BuildingData* buildingData = BuildingConfig::getBuildingData(currentBuildingType);
     if (buildingData) {
-        Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16); // ¼ÙÉèÃ¿¸ñ16ÏñËØ
+        Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16); // å‡è®¾æ¯æ ¼16åƒç´ 
         
         if (canPlaceBuilding(mapPos, buildingSize)) {
-            // È·ÈÏ·ÅÖÃ½¨Öş
+            // ç¡®è®¤æ”¾ç½®å»ºç­‘
             placeBuildingAtPosition(mapPos);
             endBuildingPlacement();
         } else {
             CCLOG("Cannot place building at this position");
-            // ¿ÉÒÔÔÚÕâÀïÌí¼Ó´íÎóÌáÊ¾
+            // å¯ä»¥åœ¨è¿™é‡Œæ·»åŠ é”™è¯¯æç¤º
         }
     }
 }
 
-// ¸üĞÂ½¨ÖşÔ¤ÀÀÎ»ÖÃºÍ×´Ì¬
+// æ›´æ–°å»ºç­‘é¢„è§ˆä½ç½®å’ŒçŠ¶æ€
 void HomeVillageMap::updateBuildingPreview(const Vec2& worldPos)
 {
     if (!buildingPreview) return;
     
-    // ×ª»»ÊÀ½ç×ø±êµ½µØÍ¼×ø±ê
+    // è½¬æ¢ä¸–ç•Œåæ ‡åˆ°åœ°å›¾åæ ‡
     Vec2 mapPos = this->convertToNodeSpace(worldPos);
     
-    // ÉèÖÃÔ¤ÀÀ¾«ÁéÎ»ÖÃ
+    // è®¾ç½®é¢„è§ˆç²¾çµä½ç½®
     buildingPreview->setPosition(mapPos);
     
-    // ¼ì²éµ±Ç°Î»ÖÃÊÇ·ñ¿ÉÒÔ·ÅÖÃ½¨Öş
+    // æ£€æŸ¥å½“å‰ä½ç½®æ˜¯å¦å¯ä»¥æ”¾ç½®å»ºç­‘
     const BuildingData* buildingData = BuildingConfig::getBuildingData(currentBuildingType);
     if (buildingData) {
         Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16);
         
         if (canPlaceBuilding(mapPos, buildingSize)) {
-            // ¿ÉÒÔ·ÅÖÃ - ÂÌÉ«Í¸Ã÷
+            // å¯ä»¥æ”¾ç½® - ç»¿è‰²é€æ˜
             buildingPreview->setColor(Color3B(100, 255, 100));
         } else {
-            // ²»¿ÉÒÔ·ÅÖÃ - ºìÉ«Í¸Ã÷
+            // ä¸å¯ä»¥æ”¾ç½® - çº¢è‰²é€æ˜
             buildingPreview->setColor(Color3B(255, 100, 100));
         }
     }
 }
 
-// È·ÈÏ·ÅÖÃ½¨Öş
+// ç¡®è®¤æ”¾ç½®å»ºç­‘
 void HomeVillageMap::placeBuildingAtPosition(const Vec2& pos)
 {
     CCLOG("Placing building type %d at position (%.1f, %.1f)", 
           static_cast<int>(currentBuildingType), pos.x, pos.y);
     
-    // ´´½¨Êµ¼ÊµÄ½¨Öş¾«Áé
+    // åˆ›å»ºå®é™…çš„å»ºç­‘ç²¾çµ
     std::string spritePath;
     switch (currentBuildingType) {
         case BuildingType::CANNON:
@@ -334,7 +334,7 @@ void HomeVillageMap::placeBuildingAtPosition(const Vec2& pos)
     
     auto buildingSprite = Sprite::create(spritePath);
     if (!buildingSprite) {
-        // ´´½¨Õ¼Î»·û
+        // åˆ›å»ºå ä½ç¬¦
         buildingSprite = Sprite::create();
         auto placeholder = LayerColor::create(Color4B(100, 150, 200, 255), 64, 64);
         buildingSprite->addChild(placeholder);
@@ -342,14 +342,14 @@ void HomeVillageMap::placeBuildingAtPosition(const Vec2& pos)
     }
     
     buildingSprite->setPosition(pos);
-    this->addChild(buildingSprite, 5); // ÔÚµØÍ¼Ö®ÉÏ£¬µ«±ÈUIµÍ
+    this->addChild(buildingSprite, 5); // åœ¨åœ°å›¾ä¹‹ä¸Šï¼Œä½†æ¯”UIä½
     
     CCLOG("Building placed successfully!");
     
-    // TODO: ÔÚÕâÀï¿ÉÒÔÌí¼ÓÆäËûÂß¼­£¬Èç£º
-    // 1. ¸üĞÂÓÎÏ·Êı¾İ
-    // 2. ¿Û³ı×ÊÔ´
-    // 3. ±£´æ½¨Öşµ½´æµµÏµÍ³
-    // 4. ²¥·Å·ÅÖÃÒôĞ§
+    // TODO: åœ¨è¿™é‡Œå¯ä»¥æ·»åŠ å…¶ä»–é€»è¾‘ï¼Œå¦‚ï¼š
+    // 1. æ›´æ–°æ¸¸æˆæ•°æ®
+    // 2. æ‰£é™¤èµ„æº
+    // 3. ä¿å­˜å»ºç­‘åˆ°å­˜æ¡£ç³»ç»Ÿ
+    // 4. æ’­æ”¾æ”¾ç½®éŸ³æ•ˆ
 }
 

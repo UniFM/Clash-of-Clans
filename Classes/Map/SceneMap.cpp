@@ -1,8 +1,8 @@
 /*************************************************************
 * @file     : SceneMap.cpp
-* @function £ºËùÓÐµØÍ¼µÄ»ùÀàÊµÏÖ - ²¿Âä³åÍ»µØÍ¼ÏµÍ³
-* @author   : Ò¶ÜÆº¬
-* @note     £ºÊµÏÖµØÍ¼Íø¸ñÏµÍ³¡¢½¨Öþ·ÅÖÃ¡¢Åö×²¼ì²âµÈºËÐÄ¹¦ÄÜ
+* @function ï¼šæ‰€æœ‰åœ°å›¾çš„åŸºç±»å®žçŽ° - éƒ¨è½å†²çªåœ°å›¾ç³»ç»Ÿ
+* @author   : å¶èŠ·å«
+* @note     ï¼šå®žçŽ°åœ°å›¾ç½‘æ ¼ç³»ç»Ÿã€å»ºç­‘æ”¾ç½®ã€ç¢°æ’žæ£€æµ‹ç­‰æ ¸å¿ƒåŠŸèƒ½
 **************************************************************/
 
 #include "SceneMap.h"-
@@ -12,22 +12,22 @@
 
 USING_NS_CC;
 
-// ³õÊ¼»¯ÍßÆ¬µØÍ¼
+// åˆå§‹åŒ–ç“¦ç‰‡åœ°å›¾
 bool SceneMap::init(const std::string& tmxFile) {
 	if (!Node::init()) {
 		return false;
 	}
 
-	// ´´½¨²¢Ìí¼ÓTMXµØÍ¼
+	// åˆ›å»ºå¹¶æ·»åŠ TMXåœ°å›¾
 	tileMap = TMXTiledMap::create(tmxFile);
 	if (!tileMap) {
 		return false;
 	}
 
-	//// ÉèÖÃµØÍ¼ÊôÐÔ
+	//// ï¿½ï¿½ï¿½Ãµï¿½Í¼ï¿½ï¿½ï¿½ï¿½
 	//tileMap->setAnchorPoint(Vec2(0.0, 0.0));
 
-	// ¼ÆËãµØÍ¼³õÊ¼Î»ÖÃ 
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ê¼Î»ï¿½ï¿½ 
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Size mapContentSize = tileMap->getContentSize();
 
@@ -38,7 +38,7 @@ bool SceneMap::init(const std::string& tmxFile) {
 	CCLOG("tileSize = %.0f x %.0f", tileSize.width, tileSize.height);
 
 	Vec2 initialPos;
-	initialPos.x = 0;  // XÖá×ó¶ÔÆë
+	initialPos.x = 0;  // Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	if (mapContentSize.height > visibleSize.height) {
 		initialPos.y = -(mapContentSize.height - visibleSize.height)/2;
@@ -49,89 +49,89 @@ bool SceneMap::init(const std::string& tmxFile) {
 
 	tileMap->setPosition(initialPos);
 
-	//CCLOG("=== µØÍ¼Î»ÖÃµ÷Õû ===");
-	//CCLOG("µØÍ¼³ß´ç: %.0fx%.0f, ´°¿Ú³ß´ç: %.0fx%.0f",
+	//CCLOG("=== ï¿½ï¿½Í¼Î»ï¿½Ãµï¿½ï¿½ï¿½ ===");
+	//CCLOG("ï¿½ï¿½Í¼ï¿½ß´ï¿½: %.0fx%.0f, ï¿½ï¿½ï¿½Ú³ß´ï¿½: %.0fx%.0f",
 	//	mapContentSize.width, mapContentSize.height,
 	//	visibleSize.width, visibleSize.height);
-	//CCLOG("µØÍ¼³õÊ¼Î»ÖÃ: (%.0f, %.0f)", initialPos.x, initialPos.y);
-	//CCLOG("Æ«ÒÆÁ¿: YÖáÏòÉÏÆ«ÒÆ %.0f ÏñËØ", -(initialPos.y));
+	//CCLOG("ï¿½ï¿½Í¼ï¿½ï¿½Ê¼Î»ï¿½ï¿½: (%.0f, %.0f)", initialPos.x, initialPos.y);
+	//CCLOG("Æ«ï¿½ï¿½ï¿½ï¿½: Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ %.0f ï¿½ï¿½ï¿½ï¿½", -(initialPos.y));
 
 	this->addChild(tileMap);
 
-	//// ÊµÏÖµØÍ¼³õÊ¼µÄÊ±ºòºáÏò×ÔÊÊÓ¦´°¿Ú
-	//Size winSize = Director::getInstance()->getVisibleSize();	//²é¿´´°¿Ú¿É¼ûÇøÓò
-	//float mapOriginalWidth = tileMap->getMapSize().width * tileMap->getTileSize().width;	//µØÍ¼Ô­Ê¼¿í¶ÈÏñËØ´óÐ¡
-	////float mapOriginalHeight = tileMap->getMapSize().height * tileMap->getTileSize().height;	//µØÍ¼Ô­Ê¼¸ß¶ÈÏñËØ´óÐ¡
+	//// Êµï¿½Öµï¿½Í¼ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
+	//Size winSize = Director::getInstance()->getVisibleSize();	//ï¿½é¿´ï¿½ï¿½ï¿½Ú¿É¼ï¿½ï¿½ï¿½ï¿½ï¿½
+	//float mapOriginalWidth = tileMap->getMapSize().width * tileMap->getTileSize().width;	//ï¿½ï¿½Í¼Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ð¡
+	////float mapOriginalHeight = tileMap->getMapSize().height * tileMap->getTileSize().height;	//ï¿½ï¿½Í¼Ô­Ê¼ï¿½ß¶ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ð¡
 	//float adaptScale = winSize.width / mapOriginalWidth;
 
 	//tileMap->setScale(adaptScale);
 	//currentScale = adaptScale;
 
-	// »ñÈ¡Åö×²²ã
+	// ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½
 	collisionLayer = getLayer("Collision");
 
-	// ·Å´ó°´Å¥
+	// ï¿½Å´ï¿½Å¥
 	auto zoomInBtn = MenuItemImage::create(
 		ResPath::ZOOMINBUTTON, ResPath::ZOOMINBUTTONPRESSED,
 		CC_CALLBACK_0(SceneMap::zoomIn, this)
 	);
 	zoomInBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.95f));
 
-	// ËõÐ¡°´Å¥
+	// ï¿½ï¿½Ð¡ï¿½ï¿½Å¥
 	auto zoomOutBtn = MenuItemImage::create(
 		ResPath::ZOOMOUTBUTTON, ResPath::ZOOMOUTBUTTONPRESSED,
 		CC_CALLBACK_0(SceneMap::zoomOut, this)
 	);
 	zoomOutBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.88f));
 
-	//Ìí¼ÓÉÌµê°´Å¥
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Ìµê°´Å¥
 	auto shopBtn = MenuItemImage::create(
 		ResPath::SHOP, ResPath::SHOPPRESSED,
-		CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // µã»÷»Øµ÷
+		CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // ï¿½ï¿½ï¿½ï¿½Øµï¿½
 
 	shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
 
-	// ´´½¨²Ëµ¥²¢Ìí¼Óµ½³¡¾°
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½
 	auto menu = Menu::create(zoomInBtn, zoomOutBtn, shopBtn ,nullptr);
-	menu->setPosition(Vec2::ZERO); // ²Ëµ¥ÃªµãÉèÎªÔ­µã£¬·½±ã°´Å¥¶¨Î»
-	this->addChild(menu, 10); // ²ã¼¶ÉèÎª10£¬È·±£°´Å¥ÔÚ×îÉÏ²ã
+	menu->setPosition(Vec2::ZERO); // ï¿½Ëµï¿½Ãªï¿½ï¿½ï¿½ï¿½ÎªÔ­ï¿½ã£¬ï¿½ï¿½ï¿½ã°´Å¥ï¿½ï¿½Î»
+	this->addChild(menu, 10); // ï¿½ã¼¶ï¿½ï¿½Îª10ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½ï¿½Ï²ï¿½
 
-	// ¶àµã´¥Ãþ¼àÌýÆ÷
+	// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	auto touchListener = EventListenerTouchAllAtOnce::create();
-	// °ó¶¨¶àµã´¥ÃþµÄÈý¸ö»Øµ÷
+	// ï¿½ó¶¨¶ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
 	touchListener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
 	touchListener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
 	touchListener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
 
-	// Ìí¼Ó¼àÌýÆ÷µ½ÊÂ¼þ·Ö·¢Æ÷
+	// ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
 
-	// Ìí¼ÓÊó±ê¹öÂÖ¼àÌýÆ÷
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ï¿½ï¿½
 	auto mouseListener = EventListenerMouse::create();
-	// °ó¶¨¹öÂÖÊÂ¼þ
+	// ï¿½ó¶¨¹ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
 	mouseListener->onMouseScroll = CC_CALLBACK_1(SceneMap::onMouseScroll, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
 
 	return true;
 }
 
-// ¼ì²âÎ»ÖÃÊÇ·ñºÏ·¨
+// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
 bool SceneMap::isPositionValid(const Vec2& pos) const {
 	return isWithinMapBounds(pos) && !checkTileCollision(pos);
 }
 
-// ¼ì²â½¨ÖþÄÜ·ñ·ÅÖÃ£¨Õý½»µØÍ¼£©
+// ï¿½ï¿½â½¨ï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
 bool SceneMap::canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const {
 	if (!tileMap) {
 		return false;
 	}
 
-	// ¼ì²é½¨ÖþµÄÃ¿¸öÍßÆ¬Î»ÖÃ
+	// ï¿½ï¿½é½¨ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½Æ¬Î»ï¿½ï¿½
 	Size tileSize = tileMap->getTileSize();
 	int tilesX = static_cast<int>(std::ceil(buildingSize.width / tileSize.width));
 	int tilesY = static_cast<int>(std::ceil(buildingSize.height / tileSize.height));
 
-	// ¼ì²é½¨ÖþÕ¼ÓÃµÄËùÓÐÍßÆ¬
+	// ï¿½ï¿½é½¨ï¿½ï¿½Õ¼ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬
 	for (int x = 0; x < tilesX; x++) {
 		for (int y = 0; y < tilesY; y++) {
 			Vec2 checkPos = Vec2(pos.x + x * tileSize.width, pos.y + y * tileSize.height);
@@ -144,38 +144,38 @@ bool SceneMap::canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const
 	return true;
 }
 
-// ¼ì²âµ¥¸öÍßÆ¬Åö×²
+// ï¿½ï¿½âµ¥ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½×²
 bool SceneMap::checkTileCollision(const Vec2& pos) const {
 	if (!collisionLayer || !tileMap) {
-		// Èç¹ûÃ»ÓÐCollision²ã£¬Ê¹ÓÃGrass²ã×÷ÎªÅö×²¼ì²â
+		// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Collisionï¿½ã£¬Ê¹ï¿½ï¿½Grassï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½×²ï¿½ï¿½ï¿½
 		TMXLayer* grassLayer = getLayer("Grass");
 		if (!grassLayer) {
-			return false; // Ã»ÓÐÈÎºÎÅö×²²ã£¬ÔÊÐíÍ¨ÐÐ
+			return false; // Ã»ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½×²ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
 		}
 		
-		// ½«ÊÀ½ç×ø±ê×ª»»ÎªÍßÆ¬×ø±ê
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 		Size tileSize = tileMap->getTileSize();
 		Size mapSize = tileMap->getMapSize();
 
-		// ÊÀ½ç×ø±ê×ªÍßÆ¬×ø±ê
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 		int tileX = static_cast<int>(pos.x / tileSize.width);
 		int tileY = static_cast<int>(pos.y / tileSize.height);
 
-		// ¼ì²é±ß½ç
+		// ï¿½ï¿½ï¿½ß½ï¿½
 		if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-			return true; // ³¬³ö±ß½çÊÓÎªÅö×²
+			return true; // ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½ï¿½Îªï¿½ï¿½×²
 		}
 
-		// ¹Ø¼üÐÞÕý£º¶ÔÓÚ"left-up"äÖÈ¾Ë³ÐòµÄTMXµØÍ¼£¬Y×ø±êÎÞÐè·­×ª
-		// ÒòÎªcocos2d-xµÄ×ø±êÏµ(×óÏÂ½ÇÎªÔ­µã)Óëleft-upäÖÈ¾Ë³ÐòÊÇÒ»ÖÂµÄ
-		// Ö±½ÓÊ¹ÓÃÔ­Ê¼×ø±ê½øÐÐ²éÑ¯
+		// ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"left-up"ï¿½ï¿½È¾Ë³ï¿½ï¿½ï¿½TMXï¿½ï¿½Í¼ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è·­×ª
+		// ï¿½ï¿½Îªcocos2d-xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ(ï¿½ï¿½ï¿½Â½ï¿½ÎªÔ­ï¿½ï¿½)ï¿½ï¿½left-upï¿½ï¿½È¾Ë³ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Âµï¿½
+		// Ö±ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Ñ¯
 		unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-		// Èç¹ûÓÐ²ÝµØÍßÆ¬(gid != 0)£¬ËµÃ÷¿ÉÒÔÍ¨ÐÐ£¬·µ»Øfalse±íÊ¾ÎÞÅö×²
-		// Èç¹ûÃ»ÓÐ²ÝµØÍßÆ¬(gid == 0)£¬ËµÃ÷²»ÄÜÍ¨ÐÐ£¬·µ»Øtrue±íÊ¾ÓÐÅö×²
+		// ï¿½ï¿½ï¿½ï¿½Ð²Ýµï¿½ï¿½ï¿½Æ¬(gid != 0)ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½falseï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½×²
+		// ï¿½ï¿½ï¿½Ã»ï¿½Ð²Ýµï¿½ï¿½ï¿½Æ¬(gid == 0)ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½trueï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½×²
 		return gid == 0;
 	}
 
-	// Ô­ÓÐµÄCollision²ãÂß¼­
+	// Ô­ï¿½Ðµï¿½Collisionï¿½ï¿½ï¿½ß¼ï¿½
 	Size tileSize = tileMap->getTileSize();
 	Size mapSize = tileMap->getMapSize();
 
@@ -186,12 +186,12 @@ bool SceneMap::checkTileCollision(const Vec2& pos) const {
 		return true;
 	}
 
-	// ¶ÔÓÚ"left-up"äÖÈ¾Ë³Ðò£¬Ö±½ÓÊ¹ÓÃÔ­Ê¼×ø±ê
+	// ï¿½ï¿½ï¿½ï¿½"left-up"ï¿½ï¿½È¾Ë³ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½
 	unsigned int gid = collisionLayer->getTileGIDAt(Vec2(tileX, tileY));
 	return gid != 0;
 }
 
-// ¼ì²âÎ»ÖÃÊÇ·ñÔÚµØÍ¼±ß½çÄÚ
+// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Í¼ï¿½ß½ï¿½ï¿½ï¿½
 bool SceneMap::isWithinMapBounds(const Vec2& pos) const {
 	if (!tileMap) {
 		return false;
@@ -200,15 +200,15 @@ bool SceneMap::isWithinMapBounds(const Vec2& pos) const {
 	Size mapSize = tileMap->getMapSize();
 	Size tileSize = tileMap->getTileSize();
 
-	// ¼ÆËãµØÍ¼µÄÊµ¼ÊÏñËØ´óÐ¡
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ð¡
 	float mapWidth = mapSize.width * tileSize.width;
 	float mapHeight = mapSize.height * tileSize.height;
 
-	// ¼ì²éÎ»ÖÃÊÇ·ñÔÚµØÍ¼·¶Î§ÄÚ
+	// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Í¼ï¿½ï¿½Î§ï¿½ï¿½
 	return pos.x >= 0 && pos.x < mapWidth && pos.y >= 0 && pos.y < mapHeight;
 }
 
-// »ñÈ¡µØÍ¼²ã
+// ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½
 TMXLayer* SceneMap::getLayer(const std::string& layerName) const {
 	if (tileMap) {
 		return tileMap->getLayer(layerName);
@@ -216,15 +216,15 @@ TMXLayer* SceneMap::getLayer(const std::string& layerName) const {
 	return nullptr;
 }
 
-// »ñÈ¡Åö×²²ã
+// ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½
 TMXLayer* SceneMap::getCollisionLayer() const {
 	return collisionLayer;
 }
 
-// »ñÈ¡µØÐÎÀàÐÍ
+// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 TerrainType SceneMap::getTerrainType(const Vec2& pos) const {
 	if (!isWithinMapBounds(pos)) {
-		return TerrainType::Grass; // Ä¬ÈÏ·µ»Ø²ÝµØÀàÐÍ
+		return TerrainType::Grass; // Ä¬ï¿½Ï·ï¿½ï¿½Ø²Ýµï¿½ï¿½ï¿½ï¿½ï¿½
 	}
 
 	TMXLayer* grassLayer = getLayer("Grass");
@@ -232,24 +232,24 @@ TerrainType SceneMap::getTerrainType(const Vec2& pos) const {
 		return TerrainType::Grass;
 	}
 
-	// ×ø±ê×ª»»£¨ÊÀ½ç×ø±êµ½ÍßÆ¬×ø±ê£©
+	// ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½êµ½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ê£©
 	Size tileSize = tileMap->getTileSize();
 	Size mapSize = tileMap->getMapSize();
 
 	int tileX = static_cast<int> (pos.x / tileSize.width);
 	int tileY = static_cast<int> (pos.y / tileSize.height);
 
-	// ±ß½ç¼ì²é
+	// ï¿½ß½ï¿½ï¿½ï¿½
 	if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
 		return TerrainType::Grass;
 	}
 
-	// ¶ÔÓÚ"left-up"äÖÈ¾Ë³Ðò£¬Ö±½ÓÊ¹ÓÃÔ­Ê¼×ø±ê
+	// ï¿½ï¿½ï¿½ï¿½"left-up"ï¿½ï¿½È¾Ë³ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½
 	unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-	return gid != 0 ? TerrainType::Grass : TerrainType::Grass; // ¼ò»¯Âß¼­£¬¶¼·µ»ØGrass
+	return gid != 0 ? TerrainType::Grass : TerrainType::Grass; // ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Grass
 }
 
-// »ñÈ¡µØÍ¼³ß´ç
+// ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ß´ï¿½
 Size SceneMap::getMapSize() const {
 	if (tileMap) {
 		return tileMap->getMapSize();
@@ -257,7 +257,7 @@ Size SceneMap::getMapSize() const {
 	return Size::ZERO;
 }
 
-// »ñÈ¡ÍßÆ¬³ß´ç
+// ï¿½ï¿½È¡ï¿½ï¿½Æ¬ï¿½ß´ï¿½
 Size SceneMap::getTileSize() const {
 	if (tileMap) {
 		return tileMap->getTileSize();
@@ -265,7 +265,7 @@ Size SceneMap::getTileSize() const {
 	return Size::ZERO;
 }
 
-// Ìí¼Ó×ø±ê×ª»»·½·¨
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
 //	if (!tileMap) {
 //		return tmxPos;
@@ -274,7 +274,7 @@ Size SceneMap::getTileSize() const {
 //	Size tileSize = tileMap->getTileSize();
 //	Size mapSize = tileMap->getMapSize();
 //	
-//	// y×ø±ê×ª»»
+//	// yï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
 //	Vec2 cocos2dPos;
 //	cocos2dPos.x = tmxPos.x * tileSize.width;
 //	cocos2dPos.y = mapSize.height * tileSize.height - tmxPos.y * tileSize.height;
@@ -285,28 +285,28 @@ Size SceneMap::getTileSize() const {
 cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
 	if (!tileMap) return tmxPos;
 
-	// 1. »ñÈ¡µØÍ¼²ÎÊý
-	Size tileSize = tileMap->getTileSize();   // 16¡Á16
-	Vec2 mapOrigin = tileMap->getPosition();  // µØÍ¼½ÚµãµÄÊÀ½ç×ø±ê£¨º¬Î»ÒÆ£©
-	float scale = tileMap->getScale();        // µØÍ¼Ëõ·ÅÏµÊý
+	// 1. ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
+	Size tileSize = tileMap->getTileSize();   // 16ï¿½ï¿½16
+	Vec2 mapOrigin = tileMap->getPosition();  // ï¿½ï¿½Í¼ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨ï¿½ï¿½Î»ï¿½Æ£ï¿½
+	float scale = tileMap->getScale();        // ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
 
-	// 2. YÖáÕ¤¸ñÖáµÄStaggered×ª»»ºËÐÄ¹«Ê½
-	// Ë®Æ½²½³¤£ºÍ¼¿é¿í¶È ¡Á 0.75£¨½»´íÁÐµÄË®Æ½Æ«ÒÆ£©
+	// 2. Yï¿½ï¿½Õ¤ï¿½ï¿½ï¿½ï¿½ï¿½Staggered×ªï¿½ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½Ê½
+	// Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 0.75ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½Ë®Æ½Æ«ï¿½Æ£ï¿½
 	float stepX = tileSize.width * 0.75f;
-	// ´¹Ö±²½³¤£ºÍ¼¿é¸ß¶È + Å¼ÊýÁÐµÄ´¹Ö±Æ«ÒÆ£¨Í¼¿é¸ß¶È/2£©
+	// ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ß¶ï¿½ + Å¼ï¿½ï¿½ï¿½ÐµÄ´ï¿½Ö±Æ«ï¿½Æ£ï¿½Í¼ï¿½ï¿½ß¶ï¿½/2ï¿½ï¿½
 	float yOffset = (static_cast<int>(tmxPos.x) % 2) * (tileSize.height / 2);
 
-	// ¼ÆËãÊÀ½ç×ø±ê
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	float x = tmxPos.x * stepX;
 	float y = tmxPos.y * tileSize.height + yOffset;
 
-	// 3. Ó¦ÓÃµØÍ¼µÄËõ·ÅºÍÎ»ÒÆ
+	// 3. Ó¦ï¿½Ãµï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Î»ï¿½ï¿½
 	x *= scale;
 	y *= scale;
 	x += mapOrigin.x;
 	y += mapOrigin.y;
 
-	// £¨¿ÉÑ¡£©×ªÎªÍßÆ¬ÖÐÐÄ×ø±ê
+	// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½×ªÎªï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	x += (tileSize.width / 2) * scale;
 	y += (tileSize.height / 2) * scale;
 
@@ -321,10 +321,10 @@ cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
 //	Size tileSize = tileMap->getTileSize();
 //	Size mapSize = tileMap->getMapSize();
 //	
-//	// Cocos2dÊÀ½ç×ø±ê×ª»»ÎªTMXÍßÆ¬×ø±ê
+//	// Cocos2dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ÎªTMXï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 //	Vec2 tmxPos;
 //	tmxPos.x = static_cast<int>(cocosPos.x / tileSize.width);
-//	tmxPos.y = static_cast<int>(mapSize.height - cocosPos.y / tileSize.height);		// y×ø±ê×ª»»
+//	tmxPos.y = static_cast<int>(mapSize.height - cocosPos.y / tileSize.height);		// yï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
 //	
 //	return tmxPos;
 //}
@@ -332,39 +332,39 @@ cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
 cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
 	if (!tileMap) return cocosPos;
 
-	// 1. »ñÈ¡µØÍ¼²ÎÊý
-	Size tileSize = tileMap->getTileSize();   // 16¡Á16
-	Vec2 mapOrigin = tileMap->getPosition();  // µØÍ¼½ÚµãµÄÊÀ½ç×ø±ê
-	float scale = tileMap->getScale();        // µØÍ¼Ëõ·ÅÏµÊý
-	Size mapSize = tileMap->getMapSize();     // 60ÁÐ ¡Á 120ÐÐ
+	// 1. ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
+	Size tileSize = tileMap->getTileSize();   // 16ï¿½ï¿½16
+	Vec2 mapOrigin = tileMap->getPosition();  // ï¿½ï¿½Í¼ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	float scale = tileMap->getScale();        // ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+	Size mapSize = tileMap->getMapSize();     // 60ï¿½ï¿½ ï¿½ï¿½ 120ï¿½ï¿½
 
-	// 2. µÖÏûµØÍ¼µÄËõ·ÅºÍÎ»ÒÆ
+	// 2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Î»ï¿½ï¿½
 	float x = (cocosPos.x - mapOrigin.x) / scale;
 	float y = (cocosPos.y - mapOrigin.y) / scale;
 
-	// 3. µÖÏûÍßÆ¬ÖÐÐÄµÄÆ«ÒÆ£¨ÈôTMXToCocos2dÖÐ¼ÓÁËÖÐÐÄÆ«ÒÆ£©
+	// 3. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½Äµï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½TMXToCocos2dï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
 	x -= (tileSize.width / 2);
 	y -= (tileSize.height / 2);
 
-	// 4. YÖáÕ¤¸ñÖáµÄStaggeredÄæ×ª»»
+	// 4. Yï¿½ï¿½Õ¤ï¿½ï¿½ï¿½ï¿½ï¿½Staggeredï¿½ï¿½×ªï¿½ï¿½
 	float stepX = tileSize.width * 0.75f;
-	// ÏÈ¼ÆËãÁÐ×ø±ê£¨X£©
+	// ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨Xï¿½ï¿½
 	float tileX = x / stepX;
-	// ÐÞÕýÅ¼ÊýÁÐµÄ´¹Ö±Æ«ÒÆ
+	// ï¿½ï¿½ï¿½ï¿½Å¼ï¿½ï¿½ï¿½ÐµÄ´ï¿½Ö±Æ«ï¿½ï¿½
 	float yOffset = (static_cast<int>(tileX) % 2) * (tileSize.height / 2);
-	// ÔÙ¼ÆËãÐÐ×ø±ê£¨Y£©
+	// ï¿½Ù¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨Yï¿½ï¿½
 	float tileY = (y - yOffset) / tileSize.height;
 
-	// 5. È¡Õû²¢ÏÞÖÆ±ß½ç£¨±ÜÃâÔ½½ç£©
+	// 5. È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ±ß½ç£¨ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ç£©
 	tileX = clampf(floor(tileX), 0, mapSize.width - 1);
 	tileY = clampf(floor(tileY), 0, mapSize.height - 1);
 
 	return Vec2(tileX, tileY);
 }
 
-// ÉèÖÃ¹ö¶¯ÊÓÍ¼
+// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
 void SceneMap::setupScrollView() {
-	// ÆôÓÃ´¥ÃþÊÂ¼þ
+	// ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
 	auto listener = EventListenerTouchAllAtOnce::create();
 	listener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
 	listener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
@@ -373,7 +373,7 @@ void SceneMap::setupScrollView() {
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
-// ¶àµã´¥Ãþ¿ªÊ¼
+// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½Ê¼
 void SceneMap::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) {
 	if (touches.size() >= 2) {
 		isTwoTouch = true;
@@ -388,12 +388,12 @@ void SceneMap::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) 
 	}
 }
 
-// ¶àµã´¥ÃþÒÆ¶¯£¨Ëõ·Å+ÒÆ¶¯Âß¼­£©
+// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+ï¿½Æ¶ï¿½ï¿½ß¼ï¿½ï¿½ï¿½
 void SceneMap::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) {
 	if (!tileMap) return;
 
 	if (touches.size() >= 2 && isTwoTouch) {
-		// Ë«Ö¸Ëõ·ÅÂß¼­
+		// Ë«Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
 		auto touch1 = touches[0];
 		auto touch2 = touches[1];
 		float currentDistance = touch1->getLocation().distance(touch2->getLocation());
@@ -413,7 +413,7 @@ void SceneMap::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) 
 		initTwoTouchCenter = currentCenter;
 	}
 	else if (touches.size() == 1 && !isTwoTouch) {
-		// µ¥Ö¸ÒÆ¶¯Âß¼­
+		// ï¿½ï¿½Ö¸ï¿½Æ¶ï¿½ï¿½ß¼ï¿½
 		Vec2 currentPos = touches[0]->getLocation();
 		Vec2 delta = currentPos - lastTouchPos;
 		tileMap->setPosition(tileMap->getPosition() + delta);
@@ -421,13 +421,13 @@ void SceneMap::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) 
 	}
 }
 
-// ¶àµã´¥Ãþ½áÊø
+// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void SceneMap::onTouchesEnded(const std::vector<Touch*>& touches, Event* event) {
 	if (touches.size() < 2) {
 		isTwoTouch = false;
 	}
 }
-//Ëõ·Å¹¦ÄÜµÄÊµÏÖ
+//ï¿½ï¿½ï¿½Å¹ï¿½ï¿½Üµï¿½Êµï¿½ï¿½
 void SceneMap::zoomIn() {
 	currentScale += scaleStep;
 	currentScale = clampf(currentScale, minScale, maxScale);
@@ -440,50 +440,50 @@ void SceneMap::zoomOut() {
 	tileMap->setScale(currentScale);
 }
 
-// ÊµÏÖÊó±ê¹öÂÖËõ·ÅÂß¼­
+// Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
 void SceneMap::onMouseScroll(EventMouse* event) {
 	if (!tileMap) return;
 
-	// »ñÈ¡¹öÂÖ·½Ïò£¨ÏòÉÏÎªÕý£¬ÏòÏÂÎª¸º£©
+	// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½
 	float scrollY = event->getScrollY();
 	if (scrollY == 0) return;
 
-	// ¼ÆËãÐÂµÄËõ·ÅÏµÊý
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
 	float newScale = currentScale + (scrollY > 0 ? scrollStep : -scrollStep);
-	newScale = clampf(newScale, minScale, maxScale); // ÏÞÖÆ·¶Î§
-	if (newScale == currentScale) return; // ÎÞ±ä»¯Ôò·µ»Ø
+	newScale = clampf(newScale, minScale, maxScale); // ï¿½ï¿½ï¿½Æ·ï¿½Î§
+	if (newScale == currentScale) return; // ï¿½Þ±ä»¯ï¿½ò·µ»ï¿½
 
-	// ÒÔÊó±êµ±Ç°Î»ÖÃÎªÖÐÐÄËõ·Å
-	Vec2 mouseWorldPos = event->getLocation(); // Êó±êÆÁÄ»×ø±ê
-	Vec2 mapLocalPos = tileMap->convertToNodeSpace(mouseWorldPos); // Êó±êÔÚµØÍ¼½ÚµãµÄ±¾µØ×ø±ê
+	// ï¿½ï¿½ï¿½ï¿½êµ±Ç°Î»ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	Vec2 mouseWorldPos = event->getLocation(); // ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
+	Vec2 mapLocalPos = tileMap->convertToNodeSpace(mouseWorldPos); // ï¿½ï¿½ï¿½ï¿½Úµï¿½Í¼ï¿½Úµï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	// ¼ÆËãËõ·ÅºóµÄµØÍ¼Î»ÖÃÆ«ÒÆ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Äµï¿½Í¼Î»ï¿½ï¿½Æ«ï¿½ï¿½
 	float scaleRatio = newScale / currentScale;
 	Vec2 newMapPos = tileMap->getPosition() - (mapLocalPos * (scaleRatio - 1)) * tileMap->getScale();
 
-	// Ó¦ÓÃËõ·ÅºÍÎ»ÖÃ
+	// Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Î»ï¿½ï¿½
 	tileMap->setScale(newScale);
 	tileMap->setPosition(newMapPos);
 
-	// ¸üÐÂµ±Ç°Ëõ·ÅÏµÊý
+	// ï¿½ï¿½ï¿½Âµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
 	currentScale = newScale;
 }
 
 void SceneMap::onShopButtonClicked(Ref* sender) {
 	this->scheduleOnce([this](float dt) {
 		this->enterShop();
-	}, 0.0f, "enter_shop");	  //ºóÃæµÄ¹ý¶É³¡¾°ÓÐÑÓÊ±£¬ËùÒÔÕâÀïµÄÑÓÊ±ÉèÖÃÎª0.0f
+	}, 0.0f, "enter_shop");	  //ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½É³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Îª0.0f
 }
 
 void SceneMap::enterShop() {
 	CCLOG("Click shop button, jump to shop scene!");
 
-	// ´´½¨ÉÌµê³¡¾°
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ìµê³¡ï¿½ï¿½
 	auto shopScene = ShopScene::create();
 
 	if (!shopScene) {
 		CCLOG("Warning: Failed to enter shopScene!");
-		// ÏÔÊ¾´íÎóÐÅÏ¢¸øÓÃ»§
+		// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ã»ï¿½
 		statusLabel->setString("Failed to enter shopScene! Please try again.");
 		statusLabel->setColor(Color3B::RED);
 		return;
@@ -498,7 +498,7 @@ void SceneMap::enterShop() {
 	}
 	scene->addChild(shopScene);
 
-	// Ê¹ÓÃ¹ý¶ÉÐ§¹ûÇÐ»»³¡¾°
+	// Ê¹ï¿½Ã¹ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½
 	auto transition = TransitionFade::create(1.0f, scene);
 	Director::getInstance()->replaceScene(transition);
 }

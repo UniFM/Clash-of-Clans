@@ -25,7 +25,7 @@
 #include "AppDelegate.h"
 #include "SplashScene.h"
 #include "Constant/Constant.h"
-#define CC_ENABLE_MULTI_TOUCH 1  // ¿ªÆô¶àµã´¥Ãþºê
+#define CC_ENABLE_MULTI_TOUCH 1  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -70,12 +70,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        // ÆôÓÃ²½½ø´°¿ÚËõ·Å¹¦ÄÜ
+        // ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¹ï¿½ï¿½ï¿½
         glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height), 1.0f, true);
-        // Ô­º¯Êý
+        // Ô­ï¿½ï¿½ï¿½ï¿½
         //GLViewImpl* GLViewImpl::createWithRect(const std::string & viewName, Rect rect, float frameZoomFactor, bool resizable)
 
-        // ÆôÓÃ¶àµã´¥Ãþ£¨²¿·ÖÆ½Ì¨ÐèÒªÏÔÊ½¿ªÆô£©
+        // ï¿½ï¿½ï¿½Ã¶ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½Òªï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #else
         glview = GLViewImpl::create("cs_final_coc");
 #endif
@@ -89,7 +89,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setAnimationInterval(1.0f / 60);
 
     // Set the design resolution
-    // Ê¹ÓÃ FIXED_WIDTH ²ßÂÔ£º¿í¶ÈÊ¼ÖÕÌîÂú£¬¸ß¶È×ÔÊÊÓ¦£¬ÉÏÏÂ¿ÉÄÜ³öÏÖºÚ±ß
+    // Ê¹ï¿½ï¿½ FIXED_WIDTH ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¶ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½Â¿ï¿½ï¿½Ü³ï¿½ï¿½ÖºÚ±ï¿½
     glview->setDesignResolutionSize(ResPath::WINDOWS.width, ResPath::WINDOWS.height, ResolutionPolicy::FIXED_WIDTH);
     //glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
     auto frameSize = glview->getFrameSize();

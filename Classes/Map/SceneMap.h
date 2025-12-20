@@ -1,9 +1,9 @@
 #pragma once
 /*************************************************************
 * @file     : SceneMap.h
-* @function £ºËùÓĞµØÍ¼µÄ»ùÀà - ²¿Âä³åÍ»µØÍ¼ÏµÍ³
-* @author   : Ò¶ÜÆº¬
-* @note     £º°üº¬µØÍ¼Íø¸ñÏµÍ³¡¢½¨Öş·ÅÖÃ¡¢Åö×²¼ì²âµÈºËĞÄ¹¦ÄÜ
+* @function ï¼šæ‰€æœ‰åœ°å›¾çš„åŸºç±» - éƒ¨è½å†²çªåœ°å›¾ç³»ç»Ÿ
+* @author   : å¶èŠ·å«
+* @note     ï¼šåŒ…å«åœ°å›¾ç½‘æ ¼ç³»ç»Ÿã€å»ºç­‘æ”¾ç½®ã€ç¢°æ’æ£€æµ‹ç­‰æ ¸å¿ƒåŠŸèƒ½
 **************************************************************/
 
 #ifndef __SCENEMAP_H__
@@ -17,77 +17,77 @@ USING_NS_CC;
 
 class SceneMap : public Node {
 public:
-	// ³õÊ¼»¯ÍßÆ¬µØÍ¼
+	// åˆå§‹åŒ–ç“¦ç‰‡åœ°å›¾
 	virtual bool init(const std::string& tmxFile);
 
-	// Í¨ÓÃÅö×²¼ì²â½Ó¿Ú
-	virtual bool isPositionValid(const Vec2& pos) const;    // ¼ì²âÎ»ÖÃÊÇ·ñºÏ·¨
-	virtual bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const;    // ¼ì²â½¨ÖşÄÜ·ñ·ÅÖÃ
-	virtual TerrainType getTerrainType(const Vec2& pos) const;    // »ñÈ¡µØĞÎÀàĞÍ
-	Size getMapSize() const;    // »ñÈ¡µØÍ¼³ß´ç
-	Size getTileSize() const;    // »ñÈ¡ÍßÆ¬³ß´ç
-	TMXTiledMap* getTiledMap() const { return tileMap; }  // »ñÈ¡TMXÍßÆ¬µØÍ¼¶ÔÏó
+	// Í¨ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½Ó¿ï¿½
+	virtual bool isPositionValid(const Vec2& pos) const;    // ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
+	virtual bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const;    // ï¿½ï¿½â½¨ï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½ï¿½
+	virtual TerrainType getTerrainType(const Vec2& pos) const;    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	Size getMapSize() const;    // ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ß´ï¿½
+	Size getTileSize() const;    // ï¿½ï¿½È¡ï¿½ï¿½Æ¬ï¿½ß´ï¿½
+	TMXTiledMap* getTiledMap() const { return tileMap; }  // ï¿½ï¿½È¡TMXï¿½ï¿½Æ¬ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
 	cocos2d::Vec2 TMXToCocos2d(const cocos2d::Vec2& tmxPos) const;
 	cocos2d::Vec2 Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const;
 
-	// Ìæ»»Îª¶àµã´¥ÃşµÄº¯Êı
+	// ï¿½æ»»Îªï¿½ï¿½ã´¥ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½
 	void onTouchesBegan(const std::vector<Touch*>& touches, Event* event);
 	void onTouchesMoved(const std::vector<Touch*>& touches, Event* event);
 	void onTouchesEnded(const std::vector<Touch*>& touches, Event* event);
 
-	//// ´¥ÃşÊÂ¼ş´¦Àí  ÒÆ³ıµ¥Ö¸
+	//// ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½Æ³ï¿½ï¿½ï¿½Ö¸
 	//bool onTouchBegan(Touch* touch, Event* event);
 	//void onTouchMoved(Touch* touch, Event* event);
 	//void onTouchEnded(Touch* touch, Event* event);
 
-	//Ëõ·ÅµØÍ¼
+	//ï¿½ï¿½ï¿½Åµï¿½Í¼
 	void zoomIn();
 	void zoomOut();
 
-	// Êó±ê¹öÂÖËõ·Å·½·¨
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½
 	void onMouseScroll(EventMouse* event);
 
-	// ÉÌµê°´Å¥»Øµ÷
+	// ï¿½Ìµê°´Å¥ï¿½Øµï¿½
 	void onShopButtonClicked(Ref* sender);
 
-	// ½øÈëÉÌµê³¡¾°
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ìµê³¡ï¿½ï¿½
 	void enterShop();
 
-	// »ñÈ¡µØÍ¼²ã
+	// ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½
 	TMXLayer* getLayer(const std::string& layerName) const;
 
 protected:
 
-	// »ù´¡Åö×²¼ì²â·½·¨
-	bool checkTileCollision(const Vec2& pos) const;    // ¼ì²âµ¥¸öÍßÆ¬Åö×²
-	bool isWithinMapBounds(const Vec2& pos) const;    // ¼ì²âÎ»ÖÃÊÇ·ñÔÚµØÍ¼±ß½çÄÚ
-	TMXLayer* getCollisionLayer() const;    // »ñÈ¡Åö×²²ã
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½â·½ï¿½ï¿½
+	bool checkTileCollision(const Vec2& pos) const;    // ï¿½ï¿½âµ¥ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½×²
+	bool isWithinMapBounds(const Vec2& pos) const;    // ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Í¼ï¿½ß½ï¿½ï¿½ï¿½
+	TMXLayer* getCollisionLayer() const;    // ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½
 
-	// µØÍ¼¶ÔÏó
+	// ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
 	TMXTiledMap* tileMap;
-	TMXLayer* collisionLayer;  // Åö×²¼ì²â²ã
+	TMXLayer* collisionLayer;  // ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½
 
-	// ¹ö¶¯Ïà¹Ø
-	Vec2 lastTouchPos;  // ÉÏ´Î´¥ÃşÎ»ÖÃ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	Vec2 lastTouchPos;  // ï¿½Ï´Î´ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 
-	// ÉèÖÃ¹ö¶¯ÊÓÍ¼
+	// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
 	void setupScrollView();
 
-	float currentScale = 1.0f;	// µ±Ç°Ëõ·ÅÏµÊı
+	float currentScale = 1.0f;	// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
 
-	const float scaleStep = 0.1f; // Ã¿´ÎËõ·Å²½³¤
-	const float minScale = 0.5f;  // ×îĞ¡Ëõ·ÅÏŞÖÆ
-	const float maxScale = 3.0f;  // ×î´óËõ·ÅÏŞÖÆ
+	const float scaleStep = 0.1f; // Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å²ï¿½ï¿½ï¿½
+	const float minScale = 0.5f;  // ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	const float maxScale = 3.0f;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	//´¥ÃşËõ·Å
-	bool isTwoTouch = false;       // ÊÇ·ñË«Ö¸´¥Ãş
-	float initTwoTouchDistance;    // Ë«Ö¸³õÊ¼¾àÀë
-	Vec2 initTwoTouchCenter;       // Ë«Ö¸³õÊ¼ÖĞĞÄµã£¨ÆÁÄ»×ø±ê£©
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	bool isTwoTouch = false;       // ï¿½Ç·ï¿½Ë«Ö¸ï¿½ï¿½ï¿½ï¿½
+	float initTwoTouchDistance;    // Ë«Ö¸ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
+	Vec2 initTwoTouchCenter;       // Ë«Ö¸ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Äµã£¨ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ê£©
 
-	// Êó±ê
-	const float scrollStep = 0.1f; // ¹öÂÖÃ¿´ÎËõ·Å²½³¤
+	// ï¿½ï¿½ï¿½
+	const float scrollStep = 0.1f; // ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å²ï¿½ï¿½ï¿½
 
-	// ÉÌµê»ñÈ¡³É¹¦±êÖ¾
+	// ï¿½Ìµï¿½ï¿½È¡ï¿½É¹ï¿½ï¿½ï¿½Ö¾
 	cocos2d::Label* statusLabel;
 };
 
