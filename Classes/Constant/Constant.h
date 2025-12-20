@@ -68,4 +68,28 @@ namespace ResPath {
     constexpr const char* ZOOMOUTBUTTON = "Icon/zoom_out_button.png";
     constexpr const char* ZOOMINBUTTONPRESSED = "Icon/zoom_in_button_pressed.png";
     constexpr const char* ZOOMOUTBUTTONPRESSED = "Icon/zoom_out_button_pressed.png";
+    constexpr const char* SHOP = "Icon/shop.png";
+    constexpr const char* CLOSEBUTTON = "Icon/close_button.png";
+    constexpr const char* CLOSEBUTTONPRESSED = "Icon/close_button_pressed.png";
+    constexpr const char* SHOPPRESSED = "shop_pressed.png";
+
+    //商店shop
+    constexpr const char* SHOPBACKGROUND = "Shop/ShopBackground.png";
+    constexpr const char* SHOPCATEGORYGREENBUTTON = "Shop/green.png";
+    constexpr const char* SHOPCATEGORYGREYGREENBUTTON = "Shop/greygreen.png";
+    constexpr const char* AVAILABLEBUILDINGCARDBACKGROUND = "Shop/availableBuildingCardBackground.png";
+    constexpr const char* UNAVAILABLEBUILDINGCARDBACKGROUND = "Shop/unavailableBuildingCardBackground.png";
+
+
+    //建筑building
+    //防御建筑
+    constexpr const char* CANNONLEVEL1 = "Building/Cannon_level1.png";
+
+
+    //资源建筑
+    //军事建筑
+    constexpr const char* TOWNHALLLEVEL1 = "Building/Town_Hall_level1.png";
+
+
+
 }

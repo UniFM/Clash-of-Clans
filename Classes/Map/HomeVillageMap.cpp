@@ -16,6 +16,9 @@ HomeVillageMap* HomeVillageMap::sInstance = nullptr;
 HomeVillageMap::HomeVillageMap()
     : backgroundLayer(nullptr)
     , grassLayer(nullptr)
+    , isPlacingBuilding(false)
+    , currentBuildingType(BuildingType::CANNON)
+    , buildingPreview(nullptr)
 {
 }
 
@@ -137,7 +140,216 @@ bool HomeVillageMap::isOnGrassland(const Vec2& pos, const Size& buildingSize) co
         }
     }
 
-    CCLOG("建筑完全在草地上");
+    CCLOG("所有瓦片都在草地上");
     return true;
+}
+
+// 开始建筑放置模式
+void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
+{
+    CCLOG("Starting building placement mode for building type: %d", static_cast<int>(buildingType));
+    
+    isPlacingBuilding = true;
+    currentBuildingType = buildingType;
+    
+    // 创建建筑预览精灵
+    std::string spritePath;
+    switch (buildingType) {
+        case BuildingType::CANNON:
+            spritePath = ResPath::CANNONLEVEL1;
+            break;
+        case BuildingType::TOWN_HALL:
+            spritePath = ResPath::TOWNHALLLEVEL1;
+            break;
+        default:
+            // 可以设置默认预览图片或从BuildingConfig获取
+            const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, 1);
+            if (stats) {
+                spritePath = stats->spriteName;
+            }
+            break;
+    }
+    
+    buildingPreview = Sprite::create(spritePath);
+    if (!buildingPreview) {
+        // 如果加载失败，创建占位符
+        buildingPreview = Sprite::create();
+        auto placeholder = LayerColor::create(Color4B(100, 200, 100, 128), 64, 64);
+        buildingPreview->addChild(placeholder);
+        buildingPreview->setContentSize(Size(64, 64));
+    }
+    
+    // 设置预览建筑的透明度，表示这是预览状态
+    buildingPreview->setOpacity(150);
+    buildingPreview->setVisible(false); // 初始时隐藏，等触摸时显示
+    this->addChild(buildingPreview, 100); // 高层级确保在最上层
+    
+    // 创建建筑放置的触摸监听器
+    auto touchListener = EventListenerTouchOneByOne::create();
+    touchListener->setSwallowTouches(true);
+    
+    touchListener->onTouchBegan = [this](Touch* touch, Event* event) -> bool {
+        if (isPlacingBuilding) {
+            Vec2 touchPos = touch->getLocation();
+            this->onTouchBeganForBuilding(touchPos);
+            return true;
+        }
+        return false;
+    };
+    
+    touchListener->onTouchMoved = [this](Touch* touch, Event* event) {
+        if (isPlacingBuilding) {
+            Vec2 touchPos = touch->getLocation();
+            this->onTouchMovedForBuilding(touchPos);
+        }
+    };
+    
+    touchListener->onTouchEnded = [this](Touch* touch, Event* event) {
+        if (isPlacingBuilding) {
+            Vec2 touchPos = touch->getLocation();
+            this->onTouchEndedForBuilding(touchPos);
+        }
+    };
+    
+    // 添加监听器，使用高优先级确保优先处理建筑放置
+    _eventDispatcher->addEventListenerWithFixedPriority(touchListener, -1);
+    
+    // 保存监听器引用以便后续移除
+    buildingPreview->setUserData(touchListener);
+    
+    CCLOG("Building placement mode started successfully");
+}
+
+// 结束建筑放置模式
+void HomeVillageMap::endBuildingPlacement()
+{
+    CCLOG("Ending building placement mode");
+    
+    isPlacingBuilding = false;
+    
+    if (buildingPreview) {
+        // 移除触摸监听器
+        auto touchListener = static_cast<EventListenerTouchOneByOne*>(buildingPreview->getUserData());
+        if (touchListener) {
+            _eventDispatcher->removeEventListener(touchListener);
+        }
+        
+        // 移除预览精灵
+        buildingPreview->removeFromParent();
+        buildingPreview = nullptr;
+    }
+    
+    CCLOG("Building placement mode ended");
+}
+
+// 处理建筑放置的触摸开始
+void HomeVillageMap::onTouchBeganForBuilding(const Vec2& touchPos)
+{
+    if (!buildingPreview) return;
+    
+    buildingPreview->setVisible(true);
+    updateBuildingPreview(touchPos);
+    
+    CCLOG("Building placement touch began at (%.1f, %.1f)", touchPos.x, touchPos.y);
+}
+
+// 处理建筑放置的触摸移动
+void HomeVillageMap::onTouchMovedForBuilding(const Vec2& touchPos)
+{
+    updateBuildingPreview(touchPos);
+}
+
+// 处理建筑放置的触摸结束
+void HomeVillageMap::onTouchEndedForBuilding(const Vec2& touchPos)
+{
+    CCLOG("Building placement touch ended at (%.1f, %.1f)", touchPos.x, touchPos.y);
+    
+    // 转换触摸位置到地图坐标
+    Vec2 mapPos = this->convertToNodeSpace(touchPos);
+    
+    // 检查是否可以在此位置放置建筑
+    const BuildingData* buildingData = BuildingConfig::getBuildingData(currentBuildingType);
+    if (buildingData) {
+        Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16); // 假设每格16像素
+        
+        if (canPlaceBuilding(mapPos, buildingSize)) {
+            // 确认放置建筑
+            placeBuildingAtPosition(mapPos);
+            endBuildingPlacement();
+        } else {
+            CCLOG("Cannot place building at this position");
+            // 可以在这里添加错误提示
+        }
+    }
+}
+
+// 更新建筑预览位置和状态
+void HomeVillageMap::updateBuildingPreview(const Vec2& worldPos)
+{
+    if (!buildingPreview) return;
+    
+    // 转换世界坐标到地图坐标
+    Vec2 mapPos = this->convertToNodeSpace(worldPos);
+    
+    // 设置预览精灵位置
+    buildingPreview->setPosition(mapPos);
+    
+    // 检查当前位置是否可以放置建筑
+    const BuildingData* buildingData = BuildingConfig::getBuildingData(currentBuildingType);
+    if (buildingData) {
+        Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16);
+        
+        if (canPlaceBuilding(mapPos, buildingSize)) {
+            // 可以放置 - 绿色透明
+            buildingPreview->setColor(Color3B(100, 255, 100));
+        } else {
+            // 不可以放置 - 红色透明
+            buildingPreview->setColor(Color3B(255, 100, 100));
+        }
+    }
+}
+
+// 确认放置建筑
+void HomeVillageMap::placeBuildingAtPosition(const Vec2& pos)
+{
+    CCLOG("Placing building type %d at position (%.1f, %.1f)", 
+          static_cast<int>(currentBuildingType), pos.x, pos.y);
+    
+    // 创建实际的建筑精灵
+    std::string spritePath;
+    switch (currentBuildingType) {
+        case BuildingType::CANNON:
+            spritePath = ResPath::CANNONLEVEL1;
+            break;
+        case BuildingType::TOWN_HALL:
+            spritePath = ResPath::TOWNHALLLEVEL1;
+            break;
+        default:
+            const BuildingLevelStats* stats = BuildingConfig::getStats(currentBuildingType, 1);
+            if (stats) {
+                spritePath = stats->spriteName;
+            }
+            break;
+    }
+    
+    auto buildingSprite = Sprite::create(spritePath);
+    if (!buildingSprite) {
+        // 创建占位符
+        buildingSprite = Sprite::create();
+        auto placeholder = LayerColor::create(Color4B(100, 150, 200, 255), 64, 64);
+        buildingSprite->addChild(placeholder);
+        buildingSprite->setContentSize(Size(64, 64));
+    }
+    
+    buildingSprite->setPosition(pos);
+    this->addChild(buildingSprite, 5); // 在地图之上，但比UI低
+    
+    CCLOG("Building placed successfully!");
+    
+    // TODO: 在这里可以添加其他逻辑，如：
+    // 1. 更新游戏数据
+    // 2. 扣除资源
+    // 3. 保存建筑到存档系统
+    // 4. 播放放置音效
 }
 

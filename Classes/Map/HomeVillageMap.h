@@ -9,6 +9,9 @@
 #include "cocos2d.h"
 #include "SceneMap.h"
 #include "Constant/Constant.h"
+#include "Building/BuildingData.h"
+
+USING_NS_CC;
 
 class HomeVillageMap : public SceneMap {
 public:
@@ -28,6 +31,11 @@ public:
 	// 家乡基地特有的检测方法
 	bool isOnGrassland(const Vec2& pos, const Size& buildingSize) const;  // 检查是否完全在草地上
 
+	// 建筑放置相关方法
+	void startBuildingPlacement(BuildingType buildingType);  // 开始建筑放置模式
+	void endBuildingPlacement();                             // 结束建筑放置模式
+	bool isInBuildingPlacementMode() const { return isPlacingBuilding; }
+
 	// 析构函数公开，允许正常释放
 	virtual ~HomeVillageMap();
 
@@ -42,4 +50,19 @@ private:
 	TMXLayer* backgroundLayer;   // 背景层
 	TMXLayer* grassLayer;        // 草地层
 
+	// 建筑放置相关
+	bool isPlacingBuilding;           // 是否处于建筑放置模式
+	BuildingType currentBuildingType; // 当前要放置的建筑类型
+	Sprite* buildingPreview;          // 建筑预览精灵
+	
+	// 建筑放置相关事件处理
+	void onTouchBeganForBuilding(const Vec2& touchPos);
+	void onTouchMovedForBuilding(const Vec2& touchPos);
+	void onTouchEndedForBuilding(const Vec2& touchPos);
+	
+	// 更新建筑预览位置和状态
+	void updateBuildingPreview(const Vec2& worldPos);
+	
+	// 确认放置建筑
+	void placeBuildingAtPosition(const Vec2& pos);
 };

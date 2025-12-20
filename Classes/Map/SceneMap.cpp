@@ -31,6 +31,12 @@ bool SceneMap::init(const std::string& tmxFile) {
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 	Size mapContentSize = tileMap->getContentSize();
 
+	Size mapSize = tileMap->getMapSize();
+	Size tileSize = tileMap->getTileSize();
+
+	CCLOG("mapSize = %.0f x %.0f", mapSize.width, mapSize.height);
+	CCLOG("tileSize = %.0f x %.0f", tileSize.width, tileSize.height);
+
 	Vec2 initialPos;
 	initialPos.x = 0;  // X轴左对齐
 
@@ -43,12 +49,12 @@ bool SceneMap::init(const std::string& tmxFile) {
 
 	tileMap->setPosition(initialPos);
 
-	CCLOG("=== 地图位置调整 ===");
-	CCLOG("地图尺寸: %.0fx%.0f, 窗口尺寸: %.0fx%.0f",
-		mapContentSize.width, mapContentSize.height,
-		visibleSize.width, visibleSize.height);
-	CCLOG("地图初始位置: (%.0f, %.0f)", initialPos.x, initialPos.y);
-	CCLOG("偏移量: Y轴向上偏移 %.0f 像素", -(initialPos.y));
+	//CCLOG("=== 地图位置调整 ===");
+	//CCLOG("地图尺寸: %.0fx%.0f, 窗口尺寸: %.0fx%.0f",
+	//	mapContentSize.width, mapContentSize.height,
+	//	visibleSize.width, visibleSize.height);
+	//CCLOG("地图初始位置: (%.0f, %.0f)", initialPos.x, initialPos.y);
+	//CCLOG("偏移量: Y轴向上偏移 %.0f 像素", -(initialPos.y));
 
 	this->addChild(tileMap);
 
@@ -69,17 +75,24 @@ bool SceneMap::init(const std::string& tmxFile) {
 		ResPath::ZOOMINBUTTON, ResPath::ZOOMINBUTTONPRESSED,
 		CC_CALLBACK_0(SceneMap::zoomIn, this)
 	);
-	zoomInBtn->setPosition(visibleSize.width - 50, visibleSize.height - 30);
+	zoomInBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.95f));
 
 	// 缩小按钮
 	auto zoomOutBtn = MenuItemImage::create(
 		ResPath::ZOOMOUTBUTTON, ResPath::ZOOMOUTBUTTONPRESSED,
 		CC_CALLBACK_0(SceneMap::zoomOut, this)
 	);
-	zoomOutBtn->setPosition(visibleSize.width - 50, visibleSize.height - 80);
+	zoomOutBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.88f));
+
+	//添加商店按钮
+	auto shopBtn = MenuItemImage::create(
+		ResPath::SHOP, ResPath::SHOPPRESSED,
+		CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // 点击回调
+
+	shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
 
 	// 创建菜单并添加到场景
-	auto menu = Menu::create(zoomInBtn, zoomOutBtn, nullptr);
+	auto menu = Menu::create(zoomInBtn, zoomOutBtn, shopBtn ,nullptr);
 	menu->setPosition(Vec2::ZERO); // 菜单锚点设为原点，方便按钮定位
 	this->addChild(menu, 10); // 层级设为10，确保按钮在最上层
 
@@ -253,35 +266,100 @@ Size SceneMap::getTileSize() const {
 }
 
 // 添加坐标转换方法
+//cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
+//	if (!tileMap) {
+//		return tmxPos;
+//	}
+//	
+//	Size tileSize = tileMap->getTileSize();
+//	Size mapSize = tileMap->getMapSize();
+//	
+//	// y坐标转换
+//	Vec2 cocos2dPos;
+//	cocos2dPos.x = tmxPos.x * tileSize.width;
+//	cocos2dPos.y = mapSize.height * tileSize.height - tmxPos.y * tileSize.height;
+//	
+//	return cocos2dPos;
+//}
+
 cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
-	if (!tileMap) {
-		return tmxPos;
-	}
-	
-	Size tileSize = tileMap->getTileSize();
-	
-	// 对于"left-up"渲染顺序的TMX地图，坐标系与cocos2d-x一致
-	// TMX瓦片坐标转换为Cocos2d世界坐标 - 无需Y轴翻转
-	Vec2 cocos2dPos;
-	cocos2dPos.x = tmxPos.x * tileSize.width;
-	cocos2dPos.y = tmxPos.y * tileSize.height;
-	
-	return cocos2dPos;
+	if (!tileMap) return tmxPos;
+
+	// 1. 获取地图参数
+	Size tileSize = tileMap->getTileSize();   // 16×16
+	Vec2 mapOrigin = tileMap->getPosition();  // 地图节点的世界坐标（含位移）
+	float scale = tileMap->getScale();        // 地图缩放系数
+
+	// 2. Y轴栅格轴的Staggered转换核心公式
+	// 水平步长：图块宽度 × 0.75（交错列的水平偏移）
+	float stepX = tileSize.width * 0.75f;
+	// 垂直步长：图块高度 + 偶数列的垂直偏移（图块高度/2）
+	float yOffset = (static_cast<int>(tmxPos.x) % 2) * (tileSize.height / 2);
+
+	// 计算世界坐标
+	float x = tmxPos.x * stepX;
+	float y = tmxPos.y * tileSize.height + yOffset;
+
+	// 3. 应用地图的缩放和位移
+	x *= scale;
+	y *= scale;
+	x += mapOrigin.x;
+	y += mapOrigin.y;
+
+	// （可选）转为瓦片中心坐标
+	x += (tileSize.width / 2) * scale;
+	y += (tileSize.height / 2) * scale;
+
+	return Vec2(x, y);
 }
 
+//cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
+//	if (!tileMap) {
+//		return cocosPos;
+//	}
+//	
+//	Size tileSize = tileMap->getTileSize();
+//	Size mapSize = tileMap->getMapSize();
+//	
+//	// Cocos2d世界坐标转换为TMX瓦片坐标
+//	Vec2 tmxPos;
+//	tmxPos.x = static_cast<int>(cocosPos.x / tileSize.width);
+//	tmxPos.y = static_cast<int>(mapSize.height - cocosPos.y / tileSize.height);		// y坐标转换
+//	
+//	return tmxPos;
+//}
+
 cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
-	if (!tileMap) {
-		return cocosPos;
-	}
-	
-	Size tileSize = tileMap->getTileSize();
-	
-	// Cocos2d世界坐标转换为TMX瓦片坐标 - 无需Y轴翻转
-	Vec2 tmxPos;
-	tmxPos.x = static_cast<int>(cocosPos.x / tileSize.width);
-	tmxPos.y = static_cast<int>(cocosPos.y / tileSize.height);
-	
-	return tmxPos;
+	if (!tileMap) return cocosPos;
+
+	// 1. 获取地图参数
+	Size tileSize = tileMap->getTileSize();   // 16×16
+	Vec2 mapOrigin = tileMap->getPosition();  // 地图节点的世界坐标
+	float scale = tileMap->getScale();        // 地图缩放系数
+	Size mapSize = tileMap->getMapSize();     // 60列 × 120行
+
+	// 2. 抵消地图的缩放和位移
+	float x = (cocosPos.x - mapOrigin.x) / scale;
+	float y = (cocosPos.y - mapOrigin.y) / scale;
+
+	// 3. 抵消瓦片中心的偏移（若TMXToCocos2d中加了中心偏移）
+	x -= (tileSize.width / 2);
+	y -= (tileSize.height / 2);
+
+	// 4. Y轴栅格轴的Staggered逆转换
+	float stepX = tileSize.width * 0.75f;
+	// 先计算列坐标（X）
+	float tileX = x / stepX;
+	// 修正偶数列的垂直偏移
+	float yOffset = (static_cast<int>(tileX) % 2) * (tileSize.height / 2);
+	// 再计算行坐标（Y）
+	float tileY = (y - yOffset) / tileSize.height;
+
+	// 5. 取整并限制边界（避免越界）
+	tileX = clampf(floor(tileX), 0, mapSize.width - 1);
+	tileY = clampf(floor(tileY), 0, mapSize.height - 1);
+
+	return Vec2(tileX, tileY);
 }
 
 // 设置滚动视图
@@ -389,4 +467,38 @@ void SceneMap::onMouseScroll(EventMouse* event) {
 
 	// 更新当前缩放系数
 	currentScale = newScale;
+}
+
+void SceneMap::onShopButtonClicked(Ref* sender) {
+	this->scheduleOnce([this](float dt) {
+		this->enterShop();
+	}, 0.0f, "enter_shop");	  //后面的过渡场景有延时，所以这里的延时设置为0.0f
+}
+
+void SceneMap::enterShop() {
+	CCLOG("Click shop button, jump to shop scene!");
+
+	// 创建商店场景
+	auto shopScene = ShopScene::create();
+
+	if (!shopScene) {
+		CCLOG("Warning: Failed to enter shopScene!");
+		// 显示错误信息给用户
+		statusLabel->setString("Failed to enter shopScene! Please try again.");
+		statusLabel->setColor(Color3B::RED);
+		return;
+	}
+	CCLOG("enter shopScene successfully");
+
+	auto scene = Scene::create();
+
+	if (!scene) {
+		CCLOG("shopScene: Failed to create scene!");
+		return;
+	}
+	scene->addChild(shopScene);
+
+	// 使用过渡效果切换场景
+	auto transition = TransitionFade::create(1.0f, scene);
+	Director::getInstance()->replaceScene(transition);
 }

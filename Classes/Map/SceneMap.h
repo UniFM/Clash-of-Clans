@@ -11,6 +11,7 @@
 #include "cocos2d.h"
 #include "Constant/Constant.h"
 #include "Control/Control.h"
+#include "Scene/ShopScene.h"
 
 USING_NS_CC;
 
@@ -46,9 +47,16 @@ public:
 	// 鼠标滚轮缩放方法
 	void onMouseScroll(EventMouse* event);
 
-protected:
+	// 商店按钮回调
+	void onShopButtonClicked(Ref* sender);
+
+	// 进入商店场景
+	void enterShop();
+
 	// 获取地图层
 	TMXLayer* getLayer(const std::string& layerName) const;
+
+protected:
 
 	// 基础碰撞检测方法
 	bool checkTileCollision(const Vec2& pos) const;    // 检测单个瓦片碰撞
@@ -79,6 +87,8 @@ protected:
 	// 鼠标
 	const float scrollStep = 0.1f; // 滚轮每次缩放步长
 
+	// 商店获取成功标志
+	cocos2d::Label* statusLabel;
 };
 
 #endif
