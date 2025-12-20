@@ -60,18 +60,28 @@ list(APPEND GAME_SOURCE
      Classes/Scene/SplashScene.cpp
      Classes/Scene/LoginScene.cpp
      Classes/Scene/MainMenuScene.cpp
+     Classes/Scene/ShopScene.cpp
      Classes/Map/SceneMap.cpp
      Classes/Map/HomeVillageMap.cpp
      Classes/Constant/Constant.cpp
+     Classes/Control/Control.cpp
+     Classes/Building/Building.cpp
+     Classes/Building/BuildingData.cpp
+     Classes/Building/BuildingPlaceManager.cpp
      )
 list(APPEND GAME_HEADER
      Classes/Scene/AppDelegate.h
      Classes/Scene/SplashScene.h
      Classes/Scene/LoginScene.h
      Classes/Scene/MainMenuScene.h
+     Classes/Scene/ShopScene.h
      Classes/Map/SceneMap.h
      Classes/Map/HomeVillageMap.h
      Classes/Constant/Constant.h
+     Classes/Control/Control.h
+     Classes/Building/Building.h
+     Classes/Building/BuildingData.h
+     Classes/Building/BuildingPlaceManager.h
      )
 
 if(ANDROID)

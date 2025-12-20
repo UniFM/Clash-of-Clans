@@ -20,6 +20,9 @@ public:
     // 登录按钮回调
     void onLoginButtonClicked(cocos2d::Ref* sender, cocos2d::ui::Widget::TouchEventType type);
 
+    // 进入村庄地图
+    void enterVillageMap();
+
 private:
     cocos2d::ui::TextField* usernameField;
     cocos2d::ui::TextField* passwordField;
@@ -28,9 +31,6 @@ private:
 
     // 执行登录验证
     bool performLogin(const std::string& username, const std::string& password);
-
-    // 进入村庄地图
-    void enterVillageMap();
 
     CREATE_FUNC(LoginScene);
 };

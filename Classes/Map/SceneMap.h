@@ -11,6 +11,7 @@
 #include "cocos2d.h"
 #include "Constant/Constant.h"
 #include "Control/Control.h"
+#include "Scene/ShopScene.h"
 
 USING_NS_CC;
 
@@ -19,66 +20,75 @@ public:
 	// 初始化瓦片地图
 	virtual bool init(const std::string& tmxFile);
 
-	// 通用碰撞检测接口
-	virtual bool isPositionValid(const Vec2& pos) const;    // 检测位置是否合法
-	virtual bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const;    // 检测建筑能否放置
-	virtual TerrainType getTerrainType(const Vec2& pos) const;    // 获取地形类型
-	Size getMapSize() const;    // 获取地图尺寸
-	Size getTileSize() const;    // 获取瓦片尺寸
-	TMXTiledMap* getTiledMap() const { return tileMap; }  // 获取TMX瓦片地图对象
+	// ͨ����ײ���ӿ�
+	virtual bool isPositionValid(const Vec2& pos) const;    // ���λ���Ƿ�Ϸ�
+	virtual bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const;    // ��⽨���ܷ����
+	virtual TerrainType getTerrainType(const Vec2& pos) const;    // ��ȡ��������
+	Size getMapSize() const;    // ��ȡ��ͼ�ߴ�
+	Size getTileSize() const;    // ��ȡ��Ƭ�ߴ�
+	TMXTiledMap* getTiledMap() const { return tileMap; }  // ��ȡTMX��Ƭ��ͼ����
 	cocos2d::Vec2 TMXToCocos2d(const cocos2d::Vec2& tmxPos) const;
 	cocos2d::Vec2 Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const;
 
-	// 替换为多点触摸的函数
+	// �滻Ϊ��㴥���ĺ���
 	void onTouchesBegan(const std::vector<Touch*>& touches, Event* event);
 	void onTouchesMoved(const std::vector<Touch*>& touches, Event* event);
 	void onTouchesEnded(const std::vector<Touch*>& touches, Event* event);
 
-	//// 触摸事件处理  移除单指
+	//// �����¼�����  �Ƴ���ָ
 	//bool onTouchBegan(Touch* touch, Event* event);
 	//void onTouchMoved(Touch* touch, Event* event);
 	//void onTouchEnded(Touch* touch, Event* event);
 
-	//缩放地图
+	//���ŵ�ͼ
 	void zoomIn();
 	void zoomOut();
 
-	// 鼠标滚轮缩放方法
+	// ���������ŷ���
 	void onMouseScroll(EventMouse* event);
 
-protected:
-	// 获取地图层
+	// �̵갴ť�ص�
+	void onShopButtonClicked(Ref* sender);
+
+	// �����̵곡��
+	void enterShop();
+
+	// ��ȡ��ͼ��
 	TMXLayer* getLayer(const std::string& layerName) const;
 
-	// 基础碰撞检测方法
-	bool checkTileCollision(const Vec2& pos) const;    // 检测单个瓦片碰撞
-	bool isWithinMapBounds(const Vec2& pos) const;    // 检测位置是否在地图边界内
-	TMXLayer* getCollisionLayer() const;    // 获取碰撞层
+protected:
 
-	// 地图对象
+	// ������ײ��ⷽ��
+	bool checkTileCollision(const Vec2& pos) const;    // ��ⵥ����Ƭ��ײ
+	bool isWithinMapBounds(const Vec2& pos) const;    // ���λ���Ƿ��ڵ�ͼ�߽���
+	TMXLayer* getCollisionLayer() const;    // ��ȡ��ײ��
+
+	// ��ͼ����
 	TMXTiledMap* tileMap;
-	TMXLayer* collisionLayer;  // 碰撞检测层
+	TMXLayer* collisionLayer;  // ��ײ����
 
-	// 滚动相关
-	Vec2 lastTouchPos;  // 上次触摸位置
+	// �������
+	Vec2 lastTouchPos;  // �ϴδ���λ��
 
-	// 设置滚动视图
+	// ���ù�����ͼ
 	void setupScrollView();
 
-	float currentScale = 1.0f;	// 当前缩放系数
+	float currentScale = 1.0f;	// ��ǰ����ϵ��
 
-	const float scaleStep = 0.1f; // 每次缩放步长
-	const float minScale = 0.5f;  // 最小缩放限制
-	const float maxScale = 3.0f;  // 最大缩放限制
+	const float scaleStep = 0.1f; // ÿ�����Ų���
+	const float minScale = 0.5f;  // ��С��������
+	const float maxScale = 3.0f;  // �����������
 
-	//触摸缩放
-	bool isTwoTouch = false;       // 是否双指触摸
-	float initTwoTouchDistance;    // 双指初始距离
-	Vec2 initTwoTouchCenter;       // 双指初始中心点（屏幕坐标）
+	//��������
+	bool isTwoTouch = false;       // �Ƿ�˫ָ����
+	float initTwoTouchDistance;    // ˫ָ��ʼ����
+	Vec2 initTwoTouchCenter;       // ˫ָ��ʼ���ĵ㣨��Ļ���꣩
 
-	// 鼠标
-	const float scrollStep = 0.1f; // 滚轮每次缩放步长
+	// ���
+	const float scrollStep = 0.1f; // ����ÿ�����Ų���
 
+	// �̵��ȡ�ɹ���־
+	cocos2d::Label* statusLabel;
 };
 
 #endif

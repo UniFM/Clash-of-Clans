@@ -1,71 +1,95 @@
 #pragma once
 /*************************************************************
 * @file     : Constant.h
-* @function £º³£Á¿Àà
-* @author   : Ò¶ÜÆº¬
-* @note     £º°üº¬Õû¸öÏîÄ¿ÖĞµÄËùÓĞ³£Á¿
+* @function ï¼šå¸¸é‡ç±»
+* @author   : å¶èŠ·å«
+* @note     ï¼šåŒ…å«æ•´ä¸ªé¡¹ç›®ä¸­çš„æ‰€æœ‰å¸¸é‡
 **************************************************************/
 #include "cocos2d.h"
 #include <string>
 
-static cocos2d::Size smallResolutionSize = cocos2d::Size(1280, 720);   // Ğ¡ÆÁÄ»
-static cocos2d::Size mediumResolutionSize = cocos2d::Size(1280, 720);  // ÖĞµÈÆÁÄ»
-static cocos2d::Size largeResolutionSize = cocos2d::Size(1920, 1080);  // ´óÆÁÄ»
+static cocos2d::Size smallResolutionSize = cocos2d::Size(1280, 720);   // å°å±å¹•
+static cocos2d::Size mediumResolutionSize = cocos2d::Size(1280, 720);  // ä¸­ç­‰å±å¹•
+static cocos2d::Size largeResolutionSize = cocos2d::Size(1920, 1080);  // å¤§å±å¹•
 
-// µØÍ¼ÀàĞÍÃ¶¾Ù
+// åœ°å›¾ç±»å‹æšä¸¾
 enum class MapType {
-    HomeVillage,        // ¼ÒÏç»ùµØ
-    BuilderBase,       // ½¨Öş´óÊ¦»ùµØ
-    BattleMap,         // Õ½¶·µØÍ¼
+    HomeVillage,        // å®¶ä¹¡åŸºåœ°
+    BuilderBase,       // å»ºç­‘å¤§å¸ˆåŸºåœ°
+    BattleMap,         // æˆ˜æ–—åœ°å›¾
 };
 
-// µØĞÎÀàĞÍÃ¶¾Ù
+// åœ°å½¢ç±»å‹æšä¸¾
 enum class TerrainType {
-    Grass,              // ²İµØ
-    Occupied            // ÒÑÕ¼ÓÃ
-    //Water,              // Ë®Óò
+    Grass,              // è‰åœ°
+    Occupied            // å·²å ç”¨
+    //Water,              // æ°´åŸŸ
     //Buildable
 };
 
-// ±øÖÖÀàĞÍÃ¶¾Ù
+// å…µç§ç±»å‹æšä¸¾
 enum class Troops {
-    Barbarian,   // Ò°ÂùÈË
-    Archer,    // ¹­¼ıÊÖ
-    WallBreaker,    //Õ¨µ¯ÈË
-    Giant,  //¾ŞÈË
-    Goblin  //¸ç²¼ÁÖ
+    Barbarian,   // é‡è›®äºº
+    Archer,    // å¼“ç®­æ‰‹
+    WallBreaker,    //ç‚¸å¼¹äºº
+    Giant,  //å·¨äºº
+    Goblin  //å“¥å¸ƒæ—
 };
 
-// µØÍ¼²ÎÊı
+// åœ°å›¾å‚æ•°
 constexpr int MAP_SIZE_WIDTH = 968;
-constexpr int MAP_SIZE_HEIGHT = 968;    // µØÍ¼´óĞ¡
+constexpr int MAP_SIZE_HEIGHT = 968;    // åœ°å›¾å¤§å°
 constexpr int Tile_SIZE_WIDTH = 16;
-constexpr int Tile_SIZE_HEIGHT = 16;    // ÍßÆ¬´óĞ¡
+constexpr int Tile_SIZE_HEIGHT = 16;    // ç“¦ç‰‡å¤§å°
 
-// ×ÊÔ´Â·¾¶,±ÜÃâÈ«¾Ö³åÍ»
+// èµ„æºè·¯å¾„,é¿å…å…¨å±€å†²çª
 namespace ResPath {
-	//¸ùÂ·¾¶
+	//æ ¹è·¯å¾„
 	constexpr const char* ROOT = "";
 
-    //SceneÂ·¾¶
-    constexpr const char* SPLASHSCENE = "Scene/Cover.png";    //SplashSceneÓÎÏ·¿ªÆÁ
+    //Sceneè·¯å¾„
+    constexpr const char* SPLASHSCENE = "Scene/Cover.png";    //SplashSceneæ¸¸æˆå¼€å±
     constexpr const char* LOGINBACKGROUND = "Scene/LoginBackground.png";
 
-    //ÍßÆ¬µØÍ¼TMX
-	const std::string TMX_HOMEVILLAGEMAP = "Map/HomeVillage.tmx";    // ¼ÒÏç»ùµØ
+    //ç“¦ç‰‡åœ°å›¾TMX
+	const std::string TMX_HOMEVILLAGEMAP = "Map/HomeVillage.tmx";    // å®¶ä¹¡åŸºåœ°
 
-    // ÏÔÊ¾ÆÁ´óĞ¡,Éè¼Æ±ÈÀı 16:9
+    // æ˜¾ç¤ºå±å¤§å°,è®¾è®¡æ¯”ä¾‹ 16:9
     const cocos2d::Size WINDOWS(1280.0f, 720.0f);
 
 
 
 
-    //±øÖÖSprite
+    //å…µç§Sprite
 
 
-    //Í¼±êicons
+    //å›¾æ ‡icons
     constexpr const char* ZOOMINBUTTON = "Icon/zoom_in_button.png";
     constexpr const char* ZOOMOUTBUTTON = "Icon/zoom_out_button.png";
     constexpr const char* ZOOMINBUTTONPRESSED = "Icon/zoom_in_button_pressed.png";
     constexpr const char* ZOOMOUTBUTTONPRESSED = "Icon/zoom_out_button_pressed.png";
+    constexpr const char* SHOP = "Icon/shop.png";
+    constexpr const char* CLOSEBUTTON = "Icon/close_button.png";
+    constexpr const char* CLOSEBUTTONPRESSED = "Icon/close_button_pressed.png";
+    constexpr const char* SHOPPRESSED = "shop_pressed.png";
+
+    //å•†åº—shop
+    constexpr const char* SHOPBACKGROUND = "Shop/ShopBackground.png";
+    constexpr const char* SHOPCATEGORYGREENBUTTON = "Shop/green.png";
+    constexpr const char* SHOPCATEGORYGREYGREENBUTTON = "Shop/greygreen.png";
+    constexpr const char* AVAILABLEBUILDINGCARDBACKGROUND = "Shop/availableBuildingCardBackground.png";
+    constexpr const char* UNAVAILABLEBUILDINGCARDBACKGROUND = "Shop/unavailableBuildingCardBackground.png";
+
+
+    //å»ºç­‘building
+    //é˜²å¾¡å»ºç­‘
+    constexpr const char* CANNONLEVEL1 = "Building/Cannon_level1.png";
+
+
+    //èµ„æºå»ºç­‘
+    //å†›äº‹å»ºç­‘
+    constexpr const char* TOWNHALLLEVEL1 = "Building/Town_Hall_level1.png";
+
+
+
 }

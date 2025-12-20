@@ -1,45 +1,68 @@
 #pragma once
 /*************************************************************
 * @file     : HomeVillageMap.h
-* @function £º¼ÒÏç»ùµØÀà
-* @author   : Ò¶ÜÆº¬
-* @note     £º°üº¬µØÍ¼Íø¸ñÏµÍ³¡¢½¨Öş·ÅÖÃ¡¢Åö×²¼ì²âµÈºËĞÄ¹¦ÄÜ
+* @function ï¼šå®¶ä¹¡åŸºåœ°ç±»
+* @author   : å¶èŠ·å«
+* @note     ï¼šåŒ…å«åœ°å›¾ç½‘æ ¼ç³»ç»Ÿã€å»ºç­‘æ”¾ç½®ã€ç¢°æ’æ£€æµ‹ç­‰æ ¸å¿ƒåŠŸèƒ½
 **************************************************************/
 
 #include "cocos2d.h"
 #include "SceneMap.h"
 #include "Constant/Constant.h"
+#include "Building/BuildingData.h"
+
+USING_NS_CC;
 
 class HomeVillageMap : public SceneMap {
 public:
-	// Ê¹ÓÃµ¥Àı£¬Ìá¹©È«¾Ö·ÃÎÊ
+	// ä½¿ç”¨å•ä¾‹ï¼Œæä¾›å…¨å±€è®¿é—®
 	static HomeVillageMap* getInstance();
 
-	// É¾³ı¿½±´¹¹ÔìºÍ¸³Öµ²Ù×÷£¬·ÀÖ¹¸´ÖÆÊµÀı
+	// åˆ é™¤æ‹·è´æ„é€ å’Œèµ‹å€¼æ“ä½œï¼Œé˜²æ­¢å¤åˆ¶å®ä¾‹
 	HomeVillageMap(const HomeVillageMap&) = delete;
 	HomeVillageMap& operator=(const HomeVillageMap&) = delete;
 
-	// ³õÊ¼»¯µØÍ¼
+	// åˆå§‹åŒ–åœ°å›¾
 	bool init(const std::string& tmxFile) override;
 
-	// ÖØĞ´»ùÀà·½·¨£¬Ìí¼Ó¼ÒÏç»ùµØÌØÓĞÂß¼­
+	// é‡å†™åŸºç±»æ–¹æ³•ï¼Œæ·»åŠ å®¶ä¹¡åŸºåœ°ç‰¹æœ‰é€»è¾‘
 	bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const override;
 
-	// ¼ÒÏç»ùµØÌØÓĞµÄ¼ì²â·½·¨
-	bool isOnGrassland(const Vec2& pos, const Size& buildingSize) const;  // ¼ì²éÊÇ·ñÍêÈ«ÔÚ²İµØÉÏ
+	// å®¶ä¹¡åŸºåœ°ç‰¹æœ‰çš„æ£€æµ‹æ–¹æ³•
+	bool isOnGrassland(const Vec2& pos, const Size& buildingSize) const;  // æ£€æŸ¥æ˜¯å¦å®Œå…¨åœ¨è‰åœ°ä¸Š
 
-	// Îö¹¹º¯Êı¹«¿ª£¬ÔÊĞíÕı³£ÊÍ·Å
+	// å»ºç­‘æ”¾ç½®ç›¸å…³æ–¹æ³•
+	void startBuildingPlacement(BuildingType buildingType);  // å¼€å§‹å»ºç­‘æ”¾ç½®æ¨¡å¼
+	void endBuildingPlacement();                             // ç»“æŸå»ºç­‘æ”¾ç½®æ¨¡å¼
+	bool isInBuildingPlacementMode() const { return isPlacingBuilding; }
+
+	// ææ„å‡½æ•°å…¬å¼€ï¼Œå…è®¸æ­£å¸¸é‡Šæ”¾
 	virtual ~HomeVillageMap();
 
 private:
-	// ¹¹Ôìº¯ÊıË½ÓĞ»¯ 
+	// æ„é€ å‡½æ•°ç§æœ‰åŒ– 
 	HomeVillageMap();
 
-	// ¾²Ì¬ÊµÀıÖ¸Õë
+	// é™æ€å®ä¾‹æŒ‡é’ˆ
 	static HomeVillageMap* sInstance;
 
-	// TMXµØÍ¼²ã
-	TMXLayer* backgroundLayer;   // ±³¾°²ã
-	TMXLayer* grassLayer;        // ²İµØ²ã
+	// TMXåœ°å›¾å±‚
+	TMXLayer* backgroundLayer;   // èƒŒæ™¯å±‚
+	TMXLayer* grassLayer;        // è‰åœ°å±‚
 
+	// å»ºç­‘æ”¾ç½®ç›¸å…³
+	bool isPlacingBuilding;           // æ˜¯å¦å¤„äºå»ºç­‘æ”¾ç½®æ¨¡å¼
+	BuildingType currentBuildingType; // å½“å‰è¦æ”¾ç½®çš„å»ºç­‘ç±»å‹
+	Sprite* buildingPreview;          // å»ºç­‘é¢„è§ˆç²¾çµ
+	
+	// å»ºç­‘æ”¾ç½®ç›¸å…³äº‹ä»¶å¤„ç†
+	void onTouchBeganForBuilding(const Vec2& touchPos);
+	void onTouchMovedForBuilding(const Vec2& touchPos);
+	void onTouchEndedForBuilding(const Vec2& touchPos);
+	
+	// æ›´æ–°å»ºç­‘é¢„è§ˆä½ç½®å’ŒçŠ¶æ€
+	void updateBuildingPreview(const Vec2& worldPos);
+	
+	// ç¡®è®¤æ”¾ç½®å»ºç­‘
+	void placeBuildingAtPosition(const Vec2& pos);
 };
