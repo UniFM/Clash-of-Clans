@@ -1,94 +1,78 @@
 #pragma once
 /*************************************************************
 * @file     : SceneMap.h
-* @function £ºËùÓĞµØÍ¼µÄ»ùÀà - ²¿Âä³åÍ»µØÍ¼ÏµÍ³
-* @author   : Ò¶ÜÆº¬
-* @note     £º°üº¬µØÍ¼Íø¸ñÏµÍ³¡¢½¨Öş·ÅÖÃ¡¢Åö×²¼ì²âµÈºËĞÄ¹¦ÄÜ
+* @function ï¼šä¸»æ¸¸æˆåœºæ™¯ - æ‘åº„ç®¡ç†
+* @author   :
+* @note     ï¼šç®¡ç†æ‘åº„åœºæ™¯çš„UIå’Œå»ºç­‘ç³»ç»Ÿ
 **************************************************************/
+#ifndef __SCENE_MAP_H__
+#define __SCENE_MAP_H__
 
-#ifndef __SCENEMAP_H__
-#define __SCENEMAP_H__
 #include "cocos2d.h"
-#include "Constant/Constant.h"
-#include "Control/Control.h"
-#include "Scene/ShopScene.h"
+#include "HomeVillageMap.h"
+#include "Building/Building.h"
+#include "Building/ResourceManager.h"
+#include "Building/BuildingPreview.h"
 
 USING_NS_CC;
 
-class SceneMap : public Node {
+/**
+ * ä¸»æ¸¸æˆåœºæ™¯ - æ‘åº„ç®¡ç†
+ */
+class SceneMap : public Scene
+{
 public:
-	// ³õÊ¼»¯ÍßÆ¬µØÍ¼
-	virtual bool init(const std::string& tmxFile);
+    // ä½¿ç”¨å•ä¾‹ï¼Œæä¾›å…¨å±€è®¿é—®
+    static SceneMap* getInstance();
 
-	// Í¨ÓÃÅö×²¼ì²â½Ó¿Ú
-	virtual bool isPositionValid(const Vec2& pos) const;    // ¼ì²âÎ»ÖÃÊÇ·ñºÏ·¨
-	virtual bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const;    // ¼ì²â½¨ÖşÄÜ·ñ·ÅÖÃ
-	virtual TerrainType getTerrainType(const Vec2& pos) const;    // »ñÈ¡µØĞÎÀàĞÍ
-	Size getMapSize() const;    // »ñÈ¡µØÍ¼³ß´ç
-	Size getTileSize() const;    // »ñÈ¡ÍßÆ¬³ß´ç
-	TMXTiledMap* getTiledMap() const { return tileMap; }  // »ñÈ¡TMXÍßÆ¬µØÍ¼¶ÔÏó
-	cocos2d::Vec2 TMXToCocos2d(const cocos2d::Vec2& tmxPos) const;
-	cocos2d::Vec2 Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const;
+    // åˆ é™¤æ‹·è´æ„é€ å’Œèµ‹å€¼æ“ä½œï¼Œé˜²æ­¢å¤åˆ¶å®ä¾‹
+    SceneMap(const SceneMap&) = delete;
+    SceneMap& operator=(const SceneMap&) = delete;
 
-	// Ìæ»»Îª¶àµã´¥ÃşµÄº¯Êı
-	void onTouchesBegan(const std::vector<Touch*>& touches, Event* event);
-	void onTouchesMoved(const std::vector<Touch*>& touches, Event* event);
-	void onTouchesEnded(const std::vector<Touch*>& touches, Event* event);
+    // é‡æ–°åˆå§‹åŒ–äº‹ä»¶ç›‘å¬å™¨ï¼ˆç”¨äºåœºæ™¯åˆ‡æ¢åï¼‰
+    void reinitializeEventListeners();
 
-	//// ´¥ÃşÊÂ¼ş´¦Àí  ÒÆ³ıµ¥Ö¸
-	//bool onTouchBegan(Touch* touch, Event* event);
-	//void onTouchMoved(Touch* touch, Event* event);
-	//void onTouchEnded(Touch* touch, Event* event);
+    virtual bool init() override;
+    virtual void onEnter() override;
+    
+    // ææ„å‡½æ•° - ç¡®ä¿æ­£ç¡®æ¸…ç†èµ„æº
+    virtual ~SceneMap();
 
-	//Ëõ·ÅµØÍ¼
-	void zoomIn();
-	void zoomOut();
+private:
+    // æ„é€ å‡½æ•°ç§æœ‰åŒ– 
+    SceneMap();
 
-	// Êó±ê¹öÂÖËõ·Å·½·¨
-	void onMouseScroll(EventMouse* event);
+    // é™æ€å®ä¾‹æŒ‡é’ˆ
+    static SceneMap* sInstance;
 
-	// ÉÌµê°´Å¥»Øµ÷
-	void onShopButtonClicked(Ref* sender);
+    HomeVillageMap* _homeVillageMap;
+    Vector<Building*> _buildings;
+    BuildingPreview* _buildingPreview;
 
-	// ½øÈëÉÌµê³¡¾°
-	void enterShop();
+    // UI
+    Label* _goldLabel;
+    Label* _elixirLabel;
+    Label* _populationLabel;
 
-	// »ñÈ¡µØÍ¼²ã
-	TMXLayer* getLayer(const std::string& layerName) const;
+    // å»ºç­‘æ”¾ç½®çŠ¶æ€
+    bool _isPlacingBuilding;
+    bool _isMovingBuilding;
+    BuildingType _selectedBuildingType;
+    Building* _selectedBuilding;  // é€‰ä¸­çš„å»ºç­‘ï¼ˆç”¨äºç§»åŠ¨ï¼‰
 
-protected:
+    void setupUI(); 
+    void onBattleButtonClicked(Ref* sender);
+    void onShopButtonClicked(Ref* sender);  // å•†åº—æŒ‰é’®å›è°ƒ
+    bool onMapTouched(Touch* touch, Event* event);
+    void onMouseMoved(Event* event);  // é¼ æ ‡ç§»åŠ¨äº‹ä»¶ï¼ˆç”¨äºé¢„è§ˆï¼‰
 
-	// »ù´¡Åö×²¼ì²â·½·¨
-	bool checkTileCollision(const Vec2& pos) const;    // ¼ì²âµ¥¸öÍßÆ¬Åö×²
-	bool isWithinMapBounds(const Vec2& pos) const;    // ¼ì²âÎ»ÖÃÊÇ·ñÔÚµØÍ¼±ß½çÄÚ
-	TMXLayer* getCollisionLayer() const;    // »ñÈ¡Åö×²²ã
+    // å»ºç­‘æ”¾ç½®ç›¸å…³æ–¹æ³•
+    void checkPendingBuildingPlacement();  // æ£€æŸ¥æ¥è‡ªå•†åº—çš„å»ºç­‘æ”¾ç½®è¯·æ±‚
+    void startBuildingPlacement(BuildingType buildingType);  // å¼€å§‹å»ºç­‘æ”¾ç½®
+    void resetBuildingPlacementState(); // é‡ç½®å»ºç­‘æ”¾ç½®çŠ¶æ€
 
-	// µØÍ¼¶ÔÏó
-	TMXTiledMap* tileMap;
-	TMXLayer* collisionLayer;  // Åö×²¼ì²â²ã
-
-	// ¹ö¶¯Ïà¹Ø
-	Vec2 lastTouchPos;  // ÉÏ´Î´¥ÃşÎ»ÖÃ
-
-	// ÉèÖÃ¹ö¶¯ÊÓÍ¼
-	void setupScrollView();
-
-	float currentScale = 1.0f;	// µ±Ç°Ëõ·ÅÏµÊı
-
-	const float scaleStep = 0.1f; // Ã¿´ÎËõ·Å²½³¤
-	const float minScale = 0.5f;  // ×îĞ¡Ëõ·ÅÏŞÖÆ
-	const float maxScale = 3.0f;  // ×î´óËõ·ÅÏŞÖÆ
-
-	//´¥ÃşËõ·Å
-	bool isTwoTouch = false;       // ÊÇ·ñË«Ö¸´¥Ãş
-	float initTwoTouchDistance;    // Ë«Ö¸³õÊ¼¾àÀë
-	Vec2 initTwoTouchCenter;       // Ë«Ö¸³õÊ¼ÖĞĞÄµã£¨ÆÁÄ»×ø±ê£©
-
-	// Êó±ê
-	const float scrollStep = 0.1f; // ¹öÂÖÃ¿´ÎËõ·Å²½³¤
-
-	// ÉÌµê»ñÈ¡³É¹¦±êÖ¾
-	cocos2d::Label* statusLabel;
+    void update(float dt) override;
 };
 
-#endif
+#endif // __SCENE_MAP_H__
+

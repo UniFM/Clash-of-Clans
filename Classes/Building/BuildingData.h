@@ -14,7 +14,10 @@ enum class BuildingType {
     ARCHER_TOWER,       // 弓箭塔
     CANNON,            // 加农炮
     ARMY_CAMP,         // 兵营
-    TOWN_HALL          // 大本营
+    TOWN_HALL,          // 大本营
+    BARRACKS,            // 兵营
+    GOLD_STORAGE,         // 储金罐
+    ELIXIR_STORAGE       //圣水瓶
 };
 
 // 单等级建筑数据

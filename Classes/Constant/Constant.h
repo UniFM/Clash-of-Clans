@@ -37,10 +37,20 @@ enum class Troops {
 };
 
 // 地图参数
-constexpr int MAP_SIZE_WIDTH = 968;
-constexpr int MAP_SIZE_HEIGHT = 968;    // 地图大小
-constexpr int Tile_SIZE_WIDTH = 16;
-constexpr int Tile_SIZE_HEIGHT = 16;    // 瓦片大小
+//constexpr int MAP_SIZE_WIDTH = 968;
+//constexpr int MAP_SIZE_HEIGHT = 968;    // 地图大小
+//constexpr int Tile_SIZE_WIDTH = 16;
+//constexpr int Tile_SIZE_HEIGHT = 16;    // 瓦片大小
+    // Map dimensions
+constexpr float MAP_WIDTH = 3460.0f;
+constexpr float MAP_HEIGHT = 2480.0f;
+constexpr float GRASS_RECT_WIDTH= 2400.0f;
+constexpr float GRASS_RECT_HEIGHT = 1800.0f;
+constexpr float GRASS_OFFSET_X = 530.0f;
+constexpr float GRASS_OFFSET_Y = 252.0f;
+constexpr  int GRID_COLS = 44;
+constexpr int GRID_ROWS = 44;
+
 
 // 资源路径,避免全局冲突
 namespace ResPath {
@@ -51,8 +61,8 @@ namespace ResPath {
     constexpr const char* SPLASHSCENE = "Scene/Cover.png";    //SplashScene游戏开屏
     constexpr const char* LOGINBACKGROUND = "Scene/LoginBackground.png";
 
-    //瓦片地图TMX
-	const std::string TMX_HOMEVILLAGEMAP = "Map/HomeVillage.tmx";    // 家乡基地
+    //PNG地图
+	const std::string HOMEVILLAGEMAP = "Map/HomeVillage.png";    // 家乡基地
 
     // 显示屏大小,设计比例 16:9
     const cocos2d::Size WINDOWS(1280.0f, 720.0f);
@@ -71,7 +81,10 @@ namespace ResPath {
     constexpr const char* SHOP = "Icon/shop.png";
     constexpr const char* CLOSEBUTTON = "Icon/close_button.png";
     constexpr const char* CLOSEBUTTONPRESSED = "Icon/close_button_pressed.png";
-    constexpr const char* SHOPPRESSED = "shop_pressed.png";
+    constexpr const char* SHOPPRESSED = "Icon/shop_pressed.png";
+    constexpr const char* UNBUILDABLEBUTTON = "Icon/unbuildable_button.png";
+    constexpr const char* CONFIRMCONSTRUCTIONBUTTON = "Icon/confirm_construction_button.png";
+    constexpr const char* CANCELCONSTRUCTIONBUTTON = "Icon/cancel_construction_button.png";
 
     //商店shop
     constexpr const char* SHOPBACKGROUND = "Shop/ShopBackground.png";

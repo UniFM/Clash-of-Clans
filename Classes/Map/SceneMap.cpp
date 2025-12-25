@@ -1,504 +1,828 @@
-/*************************************************************
-* @file     : SceneMap.cpp
-* @function ：所有地图的基类实现 - 部落冲突地图系统
-* @author   : 叶芷含
-* @note     ：实现地图网格系统、建筑放置、碰撞检测等核心功能
-**************************************************************/
+#include "SceneMap.h"
+#include "Building/TownHall.h"
+#include "Building/ResourceBuilding.h"
+#include "Building/Barracks.h"
+#include "Building/DefenseTower.h"
+#include "Building/StorageBuilding.h"
+#include "BattleScene.h"
+#include "Control/AudioManager.h"
+#include "Control/GameManager.h"
+#include "Building/BuildingPreview.h"
 
-#include "SceneMap.h"-
-#include <algorithm>
-#include <cmath>
-#include "Constant/Constant.h"
+// ??????????????
+SceneMap* SceneMap::sInstance = nullptr;
 
-USING_NS_CC;
-
-// 初始化瓦片地图
-bool SceneMap::init(const std::string& tmxFile) {
-	if (!Node::init()) {
-		return false;
-	}
-
-	// 创建并添加TMX地图
-	tileMap = TMXTiledMap::create(tmxFile);
-	if (!tileMap) {
-		return false;
-	}
-
-	//// 设置地图属性
-	//tileMap->setAnchorPoint(Vec2(0.0, 0.0));
-
-	// 计算地图初始位置 
-	Size visibleSize = Director::getInstance()->getVisibleSize();
-	Size mapContentSize = tileMap->getContentSize();
-
-	Size mapSize = tileMap->getMapSize();
-	Size tileSize = tileMap->getTileSize();
-
-	CCLOG("mapSize = %.0f x %.0f", mapSize.width, mapSize.height);
-	CCLOG("tileSize = %.0f x %.0f", tileSize.width, tileSize.height);
-
-	Vec2 initialPos;
-	initialPos.x = 0;  // X轴左对齐
-
-	if (mapContentSize.height > visibleSize.height) {
-		initialPos.y = -(mapContentSize.height - visibleSize.height)/2;
-	}
-	else {
-		initialPos.y = (mapContentSize.height - visibleSize.height) / 2;
-	}
-
-	tileMap->setPosition(initialPos);
-
-	//CCLOG("=== 地图位置调整 ===");
-	//CCLOG("地图尺寸: %.0fx%.0f, 窗口尺寸: %.0fx%.0f",
-	//	mapContentSize.width, mapContentSize.height,
-	//	visibleSize.width, visibleSize.height);
-	//CCLOG("地图初始位置: (%.0f, %.0f)", initialPos.x, initialPos.y);
-	//CCLOG("偏移量: Y轴向上偏移 %.0f 像素", -(initialPos.y));
-
-	this->addChild(tileMap);
-
-	//// 实现地图初始的时候横向自适应窗口
-	//Size winSize = Director::getInstance()->getVisibleSize();	//查看窗口可见区域
-	//float mapOriginalWidth = tileMap->getMapSize().width * tileMap->getTileSize().width;	//地图原始宽度像素大小
-	////float mapOriginalHeight = tileMap->getMapSize().height * tileMap->getTileSize().height;	//地图原始高度像素大小
-	//float adaptScale = winSize.width / mapOriginalWidth;
-
-	//tileMap->setScale(adaptScale);
-	//currentScale = adaptScale;
-
-	// 获取碰撞层
-	collisionLayer = getLayer("Collision");
-
-	// 放大按钮
-	auto zoomInBtn = MenuItemImage::create(
-		ResPath::ZOOMINBUTTON, ResPath::ZOOMINBUTTONPRESSED,
-		CC_CALLBACK_0(SceneMap::zoomIn, this)
-	);
-	zoomInBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.95f));
-
-	// 缩小按钮
-	auto zoomOutBtn = MenuItemImage::create(
-		ResPath::ZOOMOUTBUTTON, ResPath::ZOOMOUTBUTTONPRESSED,
-		CC_CALLBACK_0(SceneMap::zoomOut, this)
-	);
-	zoomOutBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.88f));
-
-	//添加商店按钮
-	auto shopBtn = MenuItemImage::create(
-		ResPath::SHOP, ResPath::SHOPPRESSED,
-		CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // 点击回调
-
-	shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
-
-	// 创建菜单并添加到场景
-	auto menu = Menu::create(zoomInBtn, zoomOutBtn, shopBtn ,nullptr);
-	menu->setPosition(Vec2::ZERO); // 菜单锚点设为原点，方便按钮定位
-	this->addChild(menu, 10); // 层级设为10，确保按钮在最上层
-
-	// 多点触摸监听器
-	auto touchListener = EventListenerTouchAllAtOnce::create();
-	// 绑定多点触摸的三个回调
-	touchListener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
-	touchListener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
-	touchListener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
-
-	// 添加监听器到事件分发器
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
-
-	// 添加鼠标滚轮监听器
-	auto mouseListener = EventListenerMouse::create();
-	// 绑定滚轮事件
-	mouseListener->onMouseScroll = CC_CALLBACK_1(SceneMap::onMouseScroll, this);
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
-
-	return true;
+// ??????
+SceneMap::SceneMap() :
+    _homeVillageMap(nullptr),
+    _buildingPreview(nullptr),
+    _goldLabel(nullptr),
+    _elixirLabel(nullptr),
+    _populationLabel(nullptr),
+    _isPlacingBuilding(false),
+    _isMovingBuilding(false),
+    _selectedBuildingType(BuildingType::TOWN_HALL),
+    _selectedBuilding(nullptr)
+{
 }
 
-// 检测位置是否合法
-bool SceneMap::isPositionValid(const Vec2& pos) const {
-	return isWithinMapBounds(pos) && !checkTileCollision(pos);
+// ????????
+SceneMap::~SceneMap() {
+    CCLOG("SceneMap destructor called");
+    
+    // ????????????
+    if (_eventDispatcher) {
+        // ?????????????м?????
+        _eventDispatcher->removeEventListenersForTarget(this);
+        
+        // ?????????????
+        _eventDispatcher->removeCustomEventListeners("building_placed");
+        _eventDispatcher->removeCustomEventListeners("building_moved");
+    }
+    
+    // ?????е?????
+    this->unscheduleUpdate();
+    
+    // ????BuildingPreview
+    if (_buildingPreview) {
+        if (_buildingPreview->getParent())
+            _buildingPreview->removeFromParent();
+        //_buildingPreview->cancel(); // Cancel might use invalid map
+        _buildingPreview = nullptr;
+    }
+    
+    // ???SceneMap???????HomeVillageMap????????????????????????????
+    // ???????????HomeVillageMap???????????????????????????
+    if (_homeVillageMap) {
+        CCLOG("Removing HomeVillageMap from scene but keeping singleton instance alive");
+        // ?????removeChild false????????????????HomeVillageMap?????
+        if (_homeVillageMap->getParent() == this)
+            this->removeChild(_homeVillageMap, false);
+        _homeVillageMap = nullptr; // ????????
+    }
+    
+    // ?????????б????????????????????????????HomeVillageMap??
+    _buildings.clear();
+    
+    // ?????????????????????????
+    if (sInstance == this) {
+        sInstance = nullptr;
+    }
+    
+    CCLOG("SceneMap destructor completed");
 }
 
-// 检测建筑能否放置（正交地图）
-bool SceneMap::canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const {
-	if (!tileMap) {
-		return false;
-	}
-
-	// 检查建筑的每个瓦片位置
-	Size tileSize = tileMap->getTileSize();
-	int tilesX = static_cast<int>(std::ceil(buildingSize.width / tileSize.width));
-	int tilesY = static_cast<int>(std::ceil(buildingSize.height / tileSize.height));
-
-	// 检查建筑占用的所有瓦片
-	for (int x = 0; x < tilesX; x++) {
-		for (int y = 0; y < tilesY; y++) {
-			Vec2 checkPos = Vec2(pos.x + x * tileSize.width, pos.y + y * tileSize.height);
-			if (!isPositionValid(checkPos)) {
-				return false;
-			}
-		}
-	}
-
-	return true;
+// ??????????
+SceneMap* SceneMap::getInstance() {
+    if (!sInstance) {
+        sInstance = new (std::nothrow) SceneMap();
+        if (sInstance && sInstance->init()) {
+            sInstance->autorelease();
+            sInstance->retain(); // Keep it alive
+        }
+        else {
+            CC_SAFE_DELETE(sInstance);
+        }
+    }
+    return sInstance;
 }
 
-// 检测单个瓦片碰撞
-bool SceneMap::checkTileCollision(const Vec2& pos) const {
-	if (!collisionLayer || !tileMap) {
-		// 如果没有Collision层，使用Grass层作为碰撞检测
-		TMXLayer* grassLayer = getLayer("Grass");
-		if (!grassLayer) {
-			return false; // 没有任何碰撞层，允许通行
-		}
-		
-		// 将世界坐标转换为瓦片坐标
-		Size tileSize = tileMap->getTileSize();
-		Size mapSize = tileMap->getMapSize();
-
-		// 世界坐标转瓦片坐标
-		int tileX = static_cast<int>(pos.x / tileSize.width);
-		int tileY = static_cast<int>(pos.y / tileSize.height);
-
-		// 检查边界
-		if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-			return true; // 超出边界视为碰撞
-		}
-
-		// 关键修正：对于"left-up"渲染顺序的TMX地图，Y坐标无需翻转
-		// 因为cocos2d-x的坐标系(左下角为原点)与left-up渲染顺序是一致的
-		// 直接使用原始坐标进行查询
-		unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-		// 如果有草地瓦片(gid != 0)，说明可以通行，返回false表示无碰撞
-		// 如果没有草地瓦片(gid == 0)，说明不能通行，返回true表示有碰撞
-		return gid == 0;
-	}
-
-	// 原有的Collision层逻辑
-	Size tileSize = tileMap->getTileSize();
-	Size mapSize = tileMap->getMapSize();
-
-	int tileX = static_cast<int>(pos.x / tileSize.width);
-	int tileY = static_cast<int>(pos.y / tileSize.height);
-
-	if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-		return true;
-	}
-
-	// 对于"left-up"渲染顺序，直接使用原始坐标
-	unsigned int gid = collisionLayer->getTileGIDAt(Vec2(tileX, tileY));
-	return gid != 0;
-}
-
-// 检测位置是否在地图边界内
-bool SceneMap::isWithinMapBounds(const Vec2& pos) const {
-	if (!tileMap) {
-		return false;
-	}
-
-	Size mapSize = tileMap->getMapSize();
-	Size tileSize = tileMap->getTileSize();
-
-	// 计算地图的实际像素大小
-	float mapWidth = mapSize.width * tileSize.width;
-	float mapHeight = mapSize.height * tileSize.height;
-
-	// 检查位置是否在地图范围内
-	return pos.x >= 0 && pos.x < mapWidth && pos.y >= 0 && pos.y < mapHeight;
-}
-
-// 获取地图层
-TMXLayer* SceneMap::getLayer(const std::string& layerName) const {
-	if (tileMap) {
-		return tileMap->getLayer(layerName);
-	}
-	return nullptr;
-}
-
-// 获取碰撞层
-TMXLayer* SceneMap::getCollisionLayer() const {
-	return collisionLayer;
-}
-
-// 获取地形类型
-TerrainType SceneMap::getTerrainType(const Vec2& pos) const {
-	if (!isWithinMapBounds(pos)) {
-		return TerrainType::Grass; // 默认返回草地类型
-	}
-
-	TMXLayer* grassLayer = getLayer("Grass");
-	if (!grassLayer || !tileMap) {
-		return TerrainType::Grass;
-	}
-
-	// 坐标转换（世界坐标到瓦片坐标）
-	Size tileSize = tileMap->getTileSize();
-	Size mapSize = tileMap->getMapSize();
-
-	int tileX = static_cast<int> (pos.x / tileSize.width);
-	int tileY = static_cast<int> (pos.y / tileSize.height);
-
-	// 边界检查
-	if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-		return TerrainType::Grass;
-	}
-
-	// 对于"left-up"渲染顺序，直接使用原始坐标
-	unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-	return gid != 0 ? TerrainType::Grass : TerrainType::Grass; // 简化逻辑，都返回Grass
-}
-
-// 获取地图尺寸
-Size SceneMap::getMapSize() const {
-	if (tileMap) {
-		return tileMap->getMapSize();
-	}
-	return Size::ZERO;
-}
-
-// 获取瓦片尺寸
-Size SceneMap::getTileSize() const {
-	if (tileMap) {
-		return tileMap->getTileSize();
-	}
-	return Size::ZERO;
-}
-
-// 添加坐标转换方法
-//cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
-//	if (!tileMap) {
-//		return tmxPos;
-//	}
-//	
-//	Size tileSize = tileMap->getTileSize();
-//	Size mapSize = tileMap->getMapSize();
-//	
-//	// y坐标转换
-//	Vec2 cocos2dPos;
-//	cocos2dPos.x = tmxPos.x * tileSize.width;
-//	cocos2dPos.y = mapSize.height * tileSize.height - tmxPos.y * tileSize.height;
-//	
-//	return cocos2dPos;
+//Scene* SceneMap::createScene()
+//{
+//    // ??? CREATE_FUNC ????????
+//    SceneMap* scene = new (std::nothrow) SceneMap();
+//    if (scene && scene->init())
+//    {
+//        scene->autorelease();
+//        return scene;
+//    }
+//    CC_SAFE_DELETE(scene);
+//    return nullptr;
 //}
 
-cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
-	if (!tileMap) return tmxPos;
+bool SceneMap::init()
+{
+    if (!Scene::init()) {
+        CCLOG("Failed to init SceneMap! ");
+        return false;
+    }
 
-	// 1. 获取地图参数
-	Size tileSize = tileMap->getTileSize();   // 16×16
-	Vec2 mapOrigin = tileMap->getPosition();  // 地图节点的世界坐标（含位移）
-	float scale = tileMap->getScale();        // 地图缩放系数
+    // ??????????????
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto background = LayerColor::create(Color4B(50, 50, 50, 255), visibleSize.width, visibleSize.height);
+    this->addChild(background, -10);
 
-	// 2. Y轴栅格轴的Staggered转换核心公式
-	// 水平步长：图块宽度 × 0.75（交错列的水平偏移）
-	float stepX = tileSize.width * 0.75f;
-	// 垂直步长：图块高度 + 偶数列的垂直偏移（图块高度/2）
-	float yOffset = (static_cast<int>(tmxPos.x) % 2) * (tileSize.height / 2);
+    // ?????? - ?????????
+    _homeVillageMap = HomeVillageMap::getInstance("Map/1.png");
+    if (_homeVillageMap)
+    {
+        // ????????и??????????????????
+        auto parent = _homeVillageMap->getParent();
+        if (parent) {
+            CCLOG("HomeVillageMap already has a parent, removing from previous parent");
+            parent->removeChild(_homeVillageMap, false); // false?????cleanup????????
+        }
+        
+        this->addChild(_homeVillageMap, 0);
+        CCLOG("Map layer created successfully with singleton instance");
 
-	// 计算世界坐标
-	float x = tmxPos.x * stepX;
-	float y = tmxPos.y * tileSize.height + yOffset;
+        // ??????????????
+        if (_buildingPreview)
+        {
+            CCLOG("SceneMap::init - removing old building preview");
+            if (_buildingPreview->getParent()) {
+                _buildingPreview->removeFromParent();
+            }
+            _buildingPreview = nullptr;
+        }
 
-	// 3. 应用地图的缩放和位移
-	x *= scale;
-	y *= scale;
-	x += mapOrigin.x;
-	y += mapOrigin.y;
+        _buildingPreview = BuildingPreview::create(_homeVillageMap);
+        if (_buildingPreview)
+        {
+            this->addChild(_buildingPreview, 150);  // ???????
+            CCLOG("BuildingPreview created successfully");
+        }
+        else
+            CCLOG("ERROR: Failed to create BuildingPreview");
+    }
+    else
+    {
+        CCLOG("ERROR: Failed to create map layer - this should not happen with placeholder support");
+        // ???????????
+        auto fallbackBg = LayerColor::create(Color4B(20, 120, 20, 255), visibleSize.width, visibleSize.height);
+        this->addChild(fallbackBg, 0);
 
-	// （可选）转为瓦片中心坐标
-	x += (tileSize.width / 2) * scale;
-	y += (tileSize.height / 2) * scale;
+        auto label = Label::createWithSystemFont("Map Loading Failed", "fonts/arial.ttf", 48);
+        if (label)
+        {
+            label->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+            label->setColor(Color3B::WHITE);
+            this->addChild(label, 1);
+        }
+    }
 
-	return Vec2(x, y);
+    // ?????UI???
+    setupUI();
+
+    // ??????????????
+    reinitializeEventListeners();
+
+    // ????????????GameManager???????????????????
+    bool hasPendingPlacement = false;
+    auto gameManager = GameManager::getInstance();
+    if (gameManager->hasPendingBuildingPlacement())
+    {
+        hasPendingPlacement = true;
+        // ???????????????????? checkPendingBuildingPlacement
+        // ??? BuildingPreview ????????????????
+    }
+
+    // ????????????????????????????????????
+    // ?????pending placement??resetBuildingPlacementState ???????????????
+    resetBuildingPlacementState();
+
+    // ???????????????????????????
+    checkPendingBuildingPlacement();
+
+    // ???????н?????_buildings?б????????浵?????
+    if (_homeVillageMap)
+    {
+        // ??????????????????б?
+        bool hasBuildings = false;
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        
+        if (buildingsContainer && buildingsContainer->getChildrenCount() > 0) {
+            hasBuildings = true;
+            CCLOG("Found existing buildings (%d), skipping default TownHall creation", 
+                  (int)buildingsContainer->getChildrenCount());
+            
+            // ?????н????????SceneMap???б???
+            auto existingBuildings = buildingsContainer->getChildren();
+            for (auto building : existingBuildings) {
+                auto buildingObj = dynamic_cast<Building*>(building);
+                if (buildingObj) {
+                    _buildings.pushBack(buildingObj);
+                }
+            }
+        }
+        
+        // ?????н??????????????????????????????
+        if (!hasBuildings) {
+            CCLOG("No existing buildings found, creating default TownHall");
+            
+            // ????????λ??
+            int centerGridX = _homeVillageMap->getGridCols() / 2;
+            int centerGridY = _homeVillageMap->getGridRows() / 2;
+
+            auto townHall = TownHall::create(1);
+            if (townHall)
+            {
+                Size gridSize = townHall->getGridSize();
+                // ??????????????
+                centerGridX -= (int)gridSize.width / 2;
+                centerGridY -= (int)gridSize.height / 2;
+
+                if (_homeVillageMap->canPlaceBuilding(centerGridX, centerGridY, gridSize))
+                {
+                    townHall->setGridPosition(centerGridX, centerGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(centerGridX, centerGridY);
+                    townHall->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(townHall);
+                    _buildings.pushBack(townHall);
+                    _homeVillageMap->markGridsOccupied(centerGridX, centerGridY, gridSize, true);
+                    CCLOG("TownHall created at grid (%d, %d)", centerGridX, centerGridY);
+                }
+            }
+        }
+    }
+
+    this->scheduleUpdate();
+
+    // ???????????
+    auto audioMgr = AudioManager::getInstance();
+    // audioMgr->playBackgroundMusic("sounds/background.mp3", true);
+
+    CCLOG("SceneMap initialized successfully");
+    CCLOG("Visible size: %.0f x %.0f", visibleSize.width, visibleSize.height);
+
+    return true;
 }
 
-//cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
-//	if (!tileMap) {
-//		return cocosPos;
-//	}
-//	
-//	Size tileSize = tileMap->getTileSize();
-//	Size mapSize = tileMap->getMapSize();
-//	
-//	// Cocos2d世界坐标转换为TMX瓦片坐标
-//	Vec2 tmxPos;
-//	tmxPos.x = static_cast<int>(cocosPos.x / tileSize.width);
-//	tmxPos.y = static_cast<int>(mapSize.height - cocosPos.y / tileSize.height);		// y坐标转换
-//	
-//	return tmxPos;
-//}
+void SceneMap::onEnter()
+{
+    Scene::onEnter();
+    CCLOG("SceneMap::onEnter called");
 
-cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
-	if (!tileMap) return cocosPos;
-
-	// 1. 获取地图参数
-	Size tileSize = tileMap->getTileSize();   // 16×16
-	Vec2 mapOrigin = tileMap->getPosition();  // 地图节点的世界坐标
-	float scale = tileMap->getScale();        // 地图缩放系数
-	Size mapSize = tileMap->getMapSize();     // 60列 × 120行
-
-	// 2. 抵消地图的缩放和位移
-	float x = (cocosPos.x - mapOrigin.x) / scale;
-	float y = (cocosPos.y - mapOrigin.y) / scale;
-
-	// 3. 抵消瓦片中心的偏移（若TMXToCocos2d中加了中心偏移）
-	x -= (tileSize.width / 2);
-	y -= (tileSize.height / 2);
-
-	// 4. Y轴栅格轴的Staggered逆转换
-	float stepX = tileSize.width * 0.75f;
-	// 先计算列坐标（X）
-	float tileX = x / stepX;
-	// 修正偶数列的垂直偏移
-	float yOffset = (static_cast<int>(tileX) % 2) * (tileSize.height / 2);
-	// 再计算行坐标（Y）
-	float tileY = (y - yOffset) / tileSize.height;
-
-	// 5. 取整并限制边界（避免越界）
-	tileX = clampf(floor(tileX), 0, mapSize.width - 1);
-	tileY = clampf(floor(tileY), 0, mapSize.height - 1);
-
-	return Vec2(tileX, tileY);
+    // ?????????????????
+    reinitializeEventListeners();
+    
+    // ??鲢??????????????
+    // ????????????????????????? pending ????????????????
+    resetBuildingPlacementState();
+    
+    // ??? pending ???????
+    checkPendingBuildingPlacement();
 }
 
-// 设置滚动视图
-void SceneMap::setupScrollView() {
-	// 启用触摸事件
-	auto listener = EventListenerTouchAllAtOnce::create();
-	listener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
-	listener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
-	listener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
+void SceneMap::setupUI()
+{
+    auto visibleSize = Director::getInstance()->getVisibleSize();
 
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+    // ??????
+    // ???
+    _goldLabel = Label::createWithTTF("Gold: 0", "fonts/Marker Felt.ttf", 24);
+    if (!_goldLabel){
+        CCLOG("goldLabel initialized failed! ");
+        return;
+    }
+
+    if (_goldLabel)
+    {
+        _goldLabel->setPosition(100, visibleSize.height - 50);
+        _goldLabel->setColor(Color3B::YELLOW);
+        this->addChild(_goldLabel, 100);
+    }
+
+    // ??
+    _elixirLabel = Label::createWithTTF("Elixir: 0", "fonts/Marker Felt.ttf", 24);
+    if (!_elixirLabel)
+    {
+        CCLOG("elixirLabel initialized failed! ");
+        return;
+    }
+    if (_elixirLabel)
+    {
+        _elixirLabel->setPosition(100, visibleSize.height - 100);
+        _elixirLabel->setColor(Color3B::MAGENTA);
+        this->addChild(_elixirLabel, 100);
+    }
+
+    //// ??? (?????????????????????????Barracks?д???)
+    //_populationLabel = Label::createWithTTF("Population: 0/50", "fonts/Marker Felt.ttf", 24);
+    //if (!_populationLabel)
+    //{
+    //    CCLOG("populationLabel initialized failed! ");
+    //    return;
+    //}
+    //if (_populationLabel)
+    //{
+    //    _populationLabel->setPosition(100, visibleSize.height - 150);
+    //    _populationLabel->setColor(Color3B::GREEN);
+    //    this->addChild(_populationLabel, 100);
+    //}
+
+    // ?????????????UI????
+    auto resourceMgr = ResourceManager::getInstance();
+    resourceMgr->setUI(_goldLabel, _elixirLabel, _populationLabel);
+    resourceMgr->reset();
+
+    // ?????????
+    Vector<MenuItem*> menuItems;
+
+    // ??????
+    auto battleBtn = MenuItemImage::create(
+        "Icon/BattleIcon.png", "Icon/BattleIconPressed.png",   //????&???? ??
+        CC_CALLBACK_1(SceneMap::onBattleButtonClicked, this));    // ???????
+
+    battleBtn->setPosition(Vec2(visibleSize.width * 0.05f, visibleSize.height * 0.08f));
+    menuItems.pushBack(battleBtn);
+
+    // ????
+    auto shopBtn = MenuItemImage::create(
+        "Icon/shop.png", "Icon/shopPressed.png",
+        CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // ???????
+
+    shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
+    menuItems.pushBack(shopBtn);
+
+    auto menu = Menu::createWithArray(menuItems);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 100);
 }
 
-// 多点触摸开始
-void SceneMap::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) {
-	if (touches.size() >= 2) {
-		isTwoTouch = true;
-		auto touch1 = touches[0];
-		auto touch2 = touches[1];
-		initTwoTouchDistance = touch1->getLocation().distance(touch2->getLocation());
-		initTwoTouchCenter = (touch1->getLocation() + touch2->getLocation()) / 2.0f;
-	}
-	else if (touches.size() == 1) {
-		isTwoTouch = false;
-		lastTouchPos = touches[0]->getLocation();
-	}
+void SceneMap::onBattleButtonClicked(Ref* sender)
+{
+    // Create a simple popup for mode selection
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    
+    // Background shade
+    auto shade = LayerColor::create(Color4B(0, 0, 0, 200));
+    this->addChild(shade, 200);
+    
+    // Menu Items
+    auto title = Label::createWithTTF("Select Battle Mode", "fonts/Marker Felt.ttf", 48);
+    title->setPosition(visibleSize.width / 2, visibleSize.height / 2 + 150);
+    shade->addChild(title);
+
+    auto multiplayerBtn = MenuItemLabel::create(
+        Label::createWithTTF("Multiplayer (Test)", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+            auto scene = BattleScene::createScene(0);
+            Director::getInstance()->pushScene(scene);
+        });
+        
+    auto level1Btn = MenuItemLabel::create(
+        Label::createWithTTF("Goblin Forest (Level 1)", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+            auto scene = BattleScene::createScene(1);
+            Director::getInstance()->pushScene(scene);
+        });
+        
+    auto level2Btn = MenuItemLabel::create(
+        Label::createWithTTF("Goblin Outpost (Level 2)", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+            auto scene = BattleScene::createScene(2);
+            Director::getInstance()->pushScene(scene);
+        });
+        
+    auto cancelBtn = MenuItemLabel::create(
+        Label::createWithTTF("Cancel", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+        });
+        
+    auto menu = Menu::create(multiplayerBtn, level1Btn, level2Btn, cancelBtn, nullptr);
+    menu->alignItemsVerticallyWithPadding(30);
+    menu->setPosition(visibleSize.width / 2, visibleSize.height / 2 - 20);
+    shade->addChild(menu);
+    
+    // Catch touches to prevent clicking through
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true);
+    listener->onTouchBegan = [](Touch* t, Event* e){ return true; };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, shade);
 }
 
-// 多点触摸移动（缩放+移动逻辑）
-void SceneMap::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) {
-	if (!tileMap) return;
+void SceneMap::onShopButtonClicked(Ref* sender)
+{
+    CCLOG("Shop button clicked, switching to shop scene");
 
-	if (touches.size() >= 2 && isTwoTouch) {
-		// 双指缩放逻辑
-		auto touch1 = touches[0];
-		auto touch2 = touches[1];
-		float currentDistance = touch1->getLocation().distance(touch2->getLocation());
-		float scaleRatio = currentDistance / initTwoTouchDistance;
-		float newScale = clampf(currentScale * scaleRatio, minScale, maxScale);
-		float scaleDelta = newScale / currentScale;
-
-		Vec2 currentCenter = (touch1->getLocation() + touch2->getLocation()) / 2.0f;
-		Vec2 offset = currentCenter - initTwoTouchCenter;
-		Vec2 newMapPos = tileMap->getPosition() - offset * scaleDelta;
-
-		tileMap->setScale(newScale);
-		tileMap->setPosition(newMapPos);
-
-		currentScale = newScale;
-		initTwoTouchDistance = currentDistance;
-		initTwoTouchCenter = currentCenter;
-	}
-	else if (touches.size() == 1 && !isTwoTouch) {
-		// 单指移动逻辑
-		Vec2 currentPos = touches[0]->getLocation();
-		Vec2 delta = currentPos - lastTouchPos;
-		tileMap->setPosition(tileMap->getPosition() + delta);
-		lastTouchPos = currentPos;
-	}
+    // ??? GameManager ?л????????
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoShopScene();
 }
 
-// 多点触摸结束
-void SceneMap::onTouchesEnded(const std::vector<Touch*>& touches, Event* event) {
-	if (touches.size() < 2) {
-		isTwoTouch = false;
-	}
+// ???????????????shop????
+// void SceneMap::setupBuildingMenu()
+// {
+//     auto visibleSize = Director::getInstance()->getVisibleSize();
+
+//     // ????????
+//     std::vector<std::pair<std::string, BuildingType>> buildingTypes = {
+//         {"Town Hall", BuildingType::TOWN_HALL},
+//         {"Gold Mine", BuildingType::GOLD_MINE},
+//         {"Elixir Collector", BuildingType::ELIXIR_COLLECTOR},
+//         {"Barracks", BuildingType::BARRACKS},
+//         {"Archer Tower", BuildingType::ARCHER_TOWER},
+//         {"Cannon", BuildingType::CANNON},
+//         {"Gold Storage", BuildingType::GOLD_STORAGE},
+//         {"Elixir Storage", BuildingType::ELIXIR_COLLECTOR}
+//     };
+
+//     Vector<MenuItem*> menuItems;
+//     float startY = visibleSize.height - 200;
+//     float spacing = 40;
+
+//     for (size_t i = 0; i < buildingTypes.size(); ++i)
+//     {
+//         BuildingType buildingType = buildingTypes[i].second;
+//         auto label = Label::createWithTTF(buildingTypes[i].first, "fonts/Marker Felt.ttf", 20);
+//         if (!label)
+//         {
+//             label = Label::createWithSystemFont(buildingTypes[i].first, "Arial", 20);
+//         }
+//         if (label)
+//         {
+//             auto item = MenuItemLabel::create(label,
+//                 [this, buildingType](Ref* sender) {
+//                     this->onBuildingSelected(sender, buildingType);
+//                 });
+//             item->setPosition(visibleSize.width - 150, startY - i * spacing);
+//             menuItems.pushBack(item);
+//         }
+//     }
+
+//     _buildingMenu = Menu::createWithArray(menuItems);
+//     _buildingMenu->setPosition(Vec2::ZERO);
+//     this->addChild(_buildingMenu, 100);
+// }
+
+// void SceneMap::onBuildingSelected(Ref* sender, BuildingType type)
+// {
+//     // ???????????????????????????
+//     if (_buildingPreview && (_buildingPreview->isPreviewing() || _buildingPreview->isMoving()))
+//     {
+//         _buildingPreview->cancel();
+//     }
+
+//     _isPlacingBuilding = true;
+//     _selectedBuildingType = type;
+
+//     // ??????
+//     if (_buildingPreview)
+//     {
+//         _buildingPreview->startPreview(type);
+//     }
+
+//     // ????UI??
+//     // ...
+// }
+
+bool SceneMap::onMapTouched(Touch* touch, Event* event)
+{
+    Vec2 touchPos = touch->getLocation();
+    
+    CCLOG("SceneMap::onMapTouched called at (%.2f, %.2f)", touchPos.x, touchPos.y);
+
+    // ???BuildingPreview?????Ч
+    if (!_buildingPreview) {
+        CCLOG("BuildingPreview is null, cannot process touch");
+        return false;
+    }
+
+    // ?????????????????????????????
+    if (_buildingPreview->isPreviewing() && !_buildingPreview->isPreviewDragging())
+    {
+        CCLOG("Preview building detected, starting drag detection");
+        _buildingPreview->startPreviewDragDetection(touchPos);
+        return true;
+    }
+
+    // ??????????????????????
+    if (_buildingPreview->isMoving())
+    {
+        CCLOG("Building is moving, updating position");
+        _buildingPreview->updatePreviewPosition(touchPos);
+        return true;
+    }
+
+    // ????????????????????н?????
+    if (_buildingPreview->isSimpleDragging())
+    {
+        CCLOG("Building is simple dragging, updating position");
+        _buildingPreview->updatePreviewPosition(touchPos);
+        return true;
+    }
+
+    // ???????н???????????????????????????
+    // ??????????????????
+    if (!_isMovingBuilding)
+    {
+        CCLOG("Checking for building click - moving:%s", 
+              _isMovingBuilding ? "true" : "false");
+        
+        // ???HomeVillageMap???      
+        if (!_homeVillageMap) {
+            CCLOG("HomeVillageMap is null, cannot check buildings");
+            return false;
+        }
+        
+        // ????????????????????
+        Vec2 mapPos = _homeVillageMap->getMapPosition();
+        float zoom = _homeVillageMap->getZoom();
+        Vec2 worldPos = (touchPos - mapPos) / zoom;
+
+        CCLOG("SceneMap::onMapTouched - checking for building at world pos (%.2f, %.2f)", worldPos.x, worldPos.y);
+        CCLOG("Current buildings count: %d", (int)_buildings.size());
+
+        // ???BuildingPreview?????
+        Building* clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, _buildings);
+        
+        if (clickedBuilding)
+        {
+            CCLOG("Building found via BuildingPreview, starting simple drag");
+            _buildingPreview->startSimpleDrag(clickedBuilding);
+            return true;
+        }
+        
+        // ????????HomeVillageMap???????м?飨???????
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        if (buildingsContainer) {
+            Vector<Building*> containerBuildings;
+            auto existingBuildings = buildingsContainer->getChildren();
+            CCLOG("Buildings in container: %d", (int)existingBuildings.size());
+            
+            for (auto building : existingBuildings) {
+                auto buildingObj = dynamic_cast<Building*>(building);
+                if (buildingObj) {
+                    containerBuildings.pushBack(buildingObj);
+                }
+            }
+            
+            // ???BuildingPreview?????????????????е????
+            clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, containerBuildings);
+            
+            if (clickedBuilding)
+            {
+                CCLOG("Building found in container via BuildingPreview, starting simple drag");
+                
+                // ?????????????SceneMap???б???
+                bool found = false;
+                for (auto existingBuilding : _buildings) {
+                    if (existingBuilding == clickedBuilding) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    _buildings.pushBack(clickedBuilding);
+                    CCLOG("Added building to SceneMap buildings list");
+                }
+                
+                _buildingPreview->startSimpleDrag(clickedBuilding);
+                return true;
+            }
+        }
+        
+        CCLOG("No building found at touch position");
+    }
+    else
+    {
+        CCLOG("Cannot check buildings - moving:%s preview:%s", 
+              _isMovingBuilding ? "true" : "false",
+              _buildingPreview ? "valid" : "null");
+    }
+
+    // ??????????κν?????????false????????????
+    // ???????UI?????????????UI??????
+    return false;
 }
-//缩放功能的实现
-void SceneMap::zoomIn() {
-	currentScale += scaleStep;
-	currentScale = clampf(currentScale, minScale, maxScale);
-	tileMap->setScale(currentScale);
+
+void SceneMap::onMouseMoved(Event* event)
+{
+    if (!_buildingPreview) {
+        return;
+    }
+    
+    EventMouse* mouseEvent = static_cast<EventMouse*>(event);
+    Vec2 mousePos = Vec2(mouseEvent->getCursorX(), mouseEvent->getCursorY());
+
+    // ?????????????????????λ??
+    if (_buildingPreview->isPreviewing() && _buildingPreview->isPreviewDragging())
+    {
+        _buildingPreview->updatePreviewPosition(mousePos);
+    }
+    // ????????????
+    else if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging())
+    {
+        _buildingPreview->updatePreviewPosition(mousePos);
+    }
 }
 
-void SceneMap::zoomOut() {
-	currentScale -= scaleStep;
-	currentScale = clampf(currentScale, minScale, maxScale);
-	tileMap->setScale(currentScale);
+void SceneMap::update(float dt)
+{
+    // ???????UI
+    auto resourceMgr = ResourceManager::getInstance();
+    resourceMgr->updateUI();
 }
 
-// 实现鼠标滚轮缩放逻辑
-void SceneMap::onMouseScroll(EventMouse* event) {
-	if (!tileMap) return;
-
-	// 获取滚轮方向（向上为正，向下为负）
-	float scrollY = event->getScrollY();
-	if (scrollY == 0) return;
-
-	// 计算新的缩放系数
-	float newScale = currentScale + (scrollY > 0 ? scrollStep : -scrollStep);
-	newScale = clampf(newScale, minScale, maxScale); // 限制范围
-	if (newScale == currentScale) return; // 无变化则返回
-
-	// 以鼠标当前位置为中心缩放
-	Vec2 mouseWorldPos = event->getLocation(); // 鼠标屏幕坐标
-	Vec2 mapLocalPos = tileMap->convertToNodeSpace(mouseWorldPos); // 鼠标在地图节点的本地坐标
-
-	// 计算缩放后的地图位置偏移
-	float scaleRatio = newScale / currentScale;
-	Vec2 newMapPos = tileMap->getPosition() - (mapLocalPos * (scaleRatio - 1)) * tileMap->getScale();
-
-	// 应用缩放和位置
-	tileMap->setScale(newScale);
-	tileMap->setPosition(newMapPos);
-
-	// 更新当前缩放系数
-	currentScale = newScale;
+void SceneMap::checkPendingBuildingPlacement()
+{
+    auto gameManager = GameManager::getInstance();
+    if (gameManager->hasPendingBuildingPlacement())
+    {
+        BuildingType buildingType = gameManager->getPendingBuildingType();
+        CCLOG("Found pending building placement for type: %d", (int)buildingType);
+        
+        // ????????????????????????
+        // ????????????????BuildingPreview????????????????????????????????????
+        // ?????????startBuildingPlacement?з????????????????????????
+        // ????????????? resetBuildingPlacementState ??????????????????????????????
+        // ????????? init ?е??????????????????????????????????????????
+        // ?????????? startBuildingPlacement ????????????????
+        
+        // startBuildingPlacement ?????? _isPlacingBuilding = true ?????? preview->startPreview
+        startBuildingPlacement(buildingType);
+        
+        // ?????????????????????????????
+        gameManager->clearPendingBuildingPlacement();
+    }
 }
 
-void SceneMap::onShopButtonClicked(Ref* sender) {
-	this->scheduleOnce([this](float dt) {
-		this->enterShop();
-	}, 0.0f, "enter_shop");	  //后面的过渡场景有延时，所以这里的延时设置为0.0f
+void SceneMap::startBuildingPlacement(BuildingType buildingType)
+{
+    // ???????????????????????
+    if (_buildingPreview && (_buildingPreview->isPreviewing() || _buildingPreview->isMoving()))
+    {
+        _buildingPreview->cancel();
+    }
+
+    _isPlacingBuilding = true;
+    _selectedBuildingType = buildingType;
+
+    // ??????
+    if (_buildingPreview)
+    {
+        _buildingPreview->startPreview(buildingType);
+        CCLOG("Started building placement preview for type: %d", (int)buildingType);
+    }
+    else
+    {
+        CCLOG("ERROR: BuildingPreview not available for building placement");
+    }
 }
 
-void SceneMap::enterShop() {
-	CCLOG("Click shop button, jump to shop scene!");
+void SceneMap::reinitializeEventListeners()
+{
+    CCLOG("SceneMap::reinitializeEventListeners - setting up event listeners");
+    
+    // ????????????????У????????
+    if (!this->isRunning()) {
+        CCLOG("Scene is not running, scheduling event listener initialization");
+        this->scheduleOnce([this](float dt) {
+            this->reinitializeEventListeners();
+        }, 0.1f, "delayed_event_init");
+        return;
+    }
+    
+    // ???????????
+    if (_eventDispatcher) {
+        _eventDispatcher->removeEventListenersForTarget(this);
+    }
+    
+    CCLOG("Registering touch event listener...");
+    
+    // ????????????? - ??????????-1???????HomeVillageMap??????
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true); // ????????????????????(HomeVillageMap)
+    listener->onTouchBegan = CC_CALLBACK_2(SceneMap::onMapTouched, this);
+    listener->onTouchMoved = [this](Touch* touch, Event* event) {
+        Vec2 touchPos = touch->getLocation();
+        
+        // ???????????????????????
+        if (_buildingPreview && _buildingPreview->isPreviewing())
+        {
+            // ????????????У?????λ??
+            if (!_buildingPreview->isPreviewDragging())
+            {
+                if (_buildingPreview->checkDragStart(touchPos))
+                {
+                    // ??????
+                    _buildingPreview->updatePreviewPosition(touchPos);
+                }
+            }
+            else
+            {
+                // ??????????
+                _buildingPreview->updatePreviewPosition(touchPos);
+            }
+        }
+        // ??????????????????н?????
+        else if (_buildingPreview && (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()))
+        {
+            _buildingPreview->updatePreviewPosition(touchPos);
+        }
+        };
+    listener->onTouchEnded = [this](Touch* touch, Event* event) {
+        // ??????????
+        if (_buildingPreview && _buildingPreview->isPreviewDragging())
+        {
+            _buildingPreview->endPreviewDrag();
+        }
+        // ?????????
+        else if (_buildingPreview && _buildingPreview->isSimpleDragging())
+        {
+            _buildingPreview->endSimpleDrag();
+        }
+        };
+    _eventDispatcher->addEventListenerWithFixedPriority(listener, -1);
 
-	// 创建商店场景
-	auto shopScene = ShopScene::create();
+    // ????????????????????????
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+    auto mouseListener = EventListenerMouse::create();
+    mouseListener->onMouseMove = CC_CALLBACK_1(SceneMap::onMouseMoved, this);
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+#endif
 
-	if (!shopScene) {
-		CCLOG("Warning: Failed to enter shopScene!");
-		// 显示错误信息给用户
-		statusLabel->setString("Failed to enter shopScene! Please try again.");
-		statusLabel->setColor(Color3B::RED);
-		return;
-	}
-	CCLOG("enter shopScene successfully");
+    // ???????? - ???????????
+    auto buildingPlacedListener = EventListenerCustom::create("building_placed",
+        [this](EventCustom* event) {
+            // ???SceneMap?????Ч
+            if (!this || !this->getScene()) {
+                CCLOG("SceneMap object or scene is invalid, ignoring building_placed event");
+                return;
+            }
+            
+            Building* building = static_cast<Building*>(event->getUserData());
+            CCLOG("Building placed event received for building: %p", building);
+            
+            if (building) {
+                // ??????б???????????б??У?
+                bool found = false;
+                for (auto existingBuilding : this->_buildings) {
+                    if (existingBuilding == building) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    this->_buildings.pushBack(building);
+                    CCLOG("Added building to SceneMap buildings list (total: %d)", (int)this->_buildings.size());
+                } else {
+                    CCLOG("Building already in SceneMap buildings list");
+                }
+                
+                // ???÷?????
+                this->_isPlacingBuilding = false;
+                CCLOG("Building placed event processed successfully, _isPlacingBuilding set to false");
+            } else {
+                CCLOG("Warning: Building placed event received with null building");
+                // ?????????????
+                this->_isPlacingBuilding = false;
+            }
+        });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingPlacedListener, this);
 
-	auto scene = Scene::create();
+    auto buildingMovedListener = EventListenerCustom::create("building_moved",
+        [this](EventCustom* event) {
+            // ???SceneMap?????Ч
+            if (this && this->getScene() && !this->getScene()->isRunning()) {
+                CCLOG("SceneMap object or scene is invalid, ignoring building_moved event");
+                return;
+            }
+            
+            // ???????????????
+            this->_isMovingBuilding = false;
+            this->_selectedBuilding = nullptr;
+            CCLOG("Building moved event received and processed");
+        });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingMovedListener, this);
+    
+    CCLOG("SceneMap event listeners reinitialized successfully");
+}
 
-	if (!scene) {
-		CCLOG("shopScene: Failed to create scene!");
-		return;
-	}
-	scene->addChild(shopScene);
-
-	// 使用过渡效果切换场景
-	auto transition = TransitionFade::create(1.0f, scene);
-	Director::getInstance()->replaceScene(transition);
+void SceneMap::resetBuildingPlacementState()
+{
+    CCLOG("SceneMap::resetBuildingPlacementState - resetting building states");
+    
+    // ???????д???????????????о?????????
+    auto gameManager = GameManager::getInstance();
+    if (gameManager && gameManager->hasPendingBuildingPlacement()) {
+        CCLOG("Found pending building placement, skipping state reset to preserve building preview");
+        return;
+    }
+    
+    _isPlacingBuilding = false;
+    _isMovingBuilding = false;
+    _selectedBuilding = nullptr;
+    
+    // ????κ???????е????
+    if (_buildingPreview) {
+        // ??????????????????????????????????????????????????????????????????????
+        // ??????????PendingPlacement??????????cancel??
+        // ??????SceneMap::init ??????????????????
+        // ??????ShopScene??????PendingPlacement ????? TRUE??
+        // ????????? if (gameManager->hasPendingBuildingPlacement()) ????????????
+        
+        if (_buildingPreview->isPreviewing() || _buildingPreview->isMoving()) {
+            _buildingPreview->cancel();
+            CCLOG("Cancelled existing building preview/move operations");
+        }
+    }
+    
+    CCLOG("Building placement state reset completed");
 }

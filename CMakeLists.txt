@@ -68,6 +68,24 @@ list(APPEND GAME_SOURCE
      Classes/Building/Building.cpp
      Classes/Building/BuildingData.cpp
      Classes/Building/BuildingPlaceManager.cpp
+     Classes/Building/ResourceManager.cpp
+     Classes/Building/Building.cpp
+     Classes/Building/Barracks.cpp
+     Classes/Building/DefenseTower.cpp
+     Classes/Building/ResourceBuilding.cpp
+     Classes/Building/StorageBuilding.cpp
+     Classes/Building/TownHall.cpp
+     Classes/Building/BuildingPreview.cpp
+     Classes/Troops/Unit.cpp
+     Classes/Troops/Archer.cpp
+     Classes/Troops/Barbarian.cpp
+     Classes/Troops/Bomber.cpp
+     Classes/Troops/Giant.cpp
+     Classes/Control/AIController.cpp
+     Classes/Map/BattleScene.cpp
+     Classes/Control/PathFinder.cpp
+     Classes/Control/GameManager.cpp
+     Classes/Control/AudioManager.cpp
      )
 list(APPEND GAME_HEADER
      Classes/Scene/AppDelegate.h
@@ -82,6 +100,24 @@ list(APPEND GAME_HEADER
      Classes/Building/Building.h
      Classes/Building/BuildingData.h
      Classes/Building/BuildingPlaceManager.h
+     Classes/Building/ResourceManager.h
+     Classes/Building/Building.h
+     Classes/Building/Barracks.h
+     Classes/Building/DefenseTower.h
+     Classes/Building/ResourceBuilding.h
+     Classes/Building/StorageBuilding.h
+     Classes/Building/TownHall.h
+     Classes/Building/BuildingPreview.h
+     Classes/Troops/Unit.h
+     Classes/Troops/Archer.h
+     Classes/Troops/Barbarian.h
+     Classes/Troops/Bomber.h
+     Classes/Troops/Giant.h
+     Classes/Control/AIController.h
+     Classes/Map/BattleScene.h
+     Classes/Control/PathFinder.h
+     Classes/Control/GameManager.h
+     Classes/Control/AudioManager.h
      )
 
 if(ANDROID)

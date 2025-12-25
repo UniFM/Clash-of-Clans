@@ -23,8 +23,10 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
-#include "SplashScene.h"
-#include "Constant/Constant.h"
+#include "Scene/SplashScene.h"
+#include "Control/GameManager.h"
+#include "Map/HomeVillageMap.h"
+
 #define CC_ENABLE_MULTI_TOUCH 1  // 开启多点触摸宏
 
 // #define USE_AUDIO_ENGINE 1
@@ -136,4 +138,13 @@ void AppDelegate::applicationWillEnterForeground() {
 #if USE_AUDIO_ENGINE
     AudioEngine::resumeAll();
 #endif
+}
+
+// 应用程序即将终止
+void AppDelegate::applicationWillTerminate() {
+    CCLOG("Application will terminate, cleaning up singletons");
+    
+    // 清理单例
+    GameManager::destroyInstance();
+    HomeVillageMap::destroyInstance();
 }
