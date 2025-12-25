@@ -18,7 +18,7 @@ public:
     virtual bool init(const std::string& mapImagePath) override;
     virtual ~HomeVillageMap();
 
-    // Specific to HomeVillage: placing buildings
+    // 家乡特有方法：放置建筑物
     void setPendingBuildingPlacement(BuildingType buildingType) {
         _pendingBuildingType = buildingType;
         _hasPendingBuilding = true;

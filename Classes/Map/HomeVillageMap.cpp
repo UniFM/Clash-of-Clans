@@ -69,7 +69,7 @@ void HomeVillageMap::destroyInstance() {
 
 bool HomeVillageMap::init(const std::string& mapImagePath)
 {
-    // Set map parameters specific to HomeVillage
+    // 设置特定于家乡村庄的地图参数
     _mapWidth = 3460.0f;
     _mapHeight = 2480.0f;
     _grassRectWidth = 2400.0f;
@@ -83,57 +83,12 @@ bool HomeVillageMap::init(const std::string& mapImagePath)
     {
         return false;
     }
-    
-    // Additional initialization for HomeVillage if needed
-    
+        
     return true;
 }
 
 bool HomeVillageMap::onTouchBegan(Touch* touch, Event* event)
 {
-    // HomeVillageMap specific logic:
-    // It seems the original code returned false to let GameScene handle touch if not dragging?
-    // "Return false to let GameScene touch events wait"
-    // But if we want map dragging, we should handle it.
-    // The original code:
-    // _lastTouchPos = touch->getLocation();
-    // _isDragging = false; 
-    // return false; 
-    
-    // If I return false here, onTouchMoved won't be called for this node.
-    // So map dragging wouldn't work if it returns false.
-    // Wait, the original code had:
-    // return false;
-    // AND:
-    // void onTouchMoved(...) { if (!_isDragging) return; ... }
-    
-    // This implies that HomeVillageMap dragging was DISABLED in the original code I read?
-    // Or maybe GameScene calls move manually?
-    // Let's look at the original Read output again.
-    
-    /*
-    bool HomeVillageMap::onTouchBegan(Touch* touch, Event* event)
-    {
-        // ...
-        _lastTouchPos = touch->getLocation();
-        _isDragging = false; // Initial state
-        return false; // Return false so GameScene can handle it?
-    }
-    */
-    
-    // If it returns false, `onTouchMoved` is NEVER called.
-    // So the original code's `onTouchMoved` implementation was dead code unless `onTouchBegan` logic was conditional.
-    // But the code I saw just said `return false;`.
-    // Maybe I missed something or it was commented out code?
-    // "Return false means GameScene's touch event priority waits?" No.
-    // If a listener returns false in onTouchBegan, it doesn't swallow the touch, and it doesn't receive subsequent events for that touch.
-    
-    // However, looking at the user request: "Single player battle map mode... Logic same as village".
-    // Usually map should be draggable.
-    // In `BaseMap`, I implemented dragging.
-    // I will let `HomeVillageMap` behave like `BaseMap` (draggable).
-    // If the original intention was to disable dragging in some cases, I'll ignore it for now as I'm refactoring for a "Battle Map" which definitely needs dragging.
-    
     return BaseMap::onTouchBegan(touch, event);
 }
 
