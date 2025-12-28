@@ -11,6 +11,7 @@ BaseMap::BaseMap()
     , _gridCellWidth(0.0f)
     , _gridCellHeight(0.0f)
     , _buildingsContainer(nullptr)
+    , _troopsContainer(nullptr)  // 初始化部队容器
     , _mapWidth(0.0f)
     , _mapHeight(0.0f)
     , _grassRectWidth(0.0f)
@@ -100,6 +101,12 @@ bool BaseMap::init(const std::string& mapImagePath)
     _buildingsContainer->setAnchorPoint(Vec2(0, 0));
     _buildingsContainer->setPosition(Vec2::ZERO);
     this->addChild(_buildingsContainer, 10);
+
+    // {update} 创建部队容器
+    _troopsContainer = Node::create();
+    _troopsContainer->setAnchorPoint(Vec2(0, 0));
+    _troopsContainer->setPosition(Vec2::ZERO);
+    this->addChild(_troopsContainer, 100); // 部队在建筑之上
 
     initOccupiedGrids();
 
@@ -222,6 +229,13 @@ void BaseMap::updateMapTransform()
     {
         _buildingsContainer->setPosition(_mapPosition);
         _buildingsContainer->setScale(_zoom);
+    }
+    
+    // 让部队容器也跟随地图缩放和移动
+    if (_troopsContainer)
+    {
+        _troopsContainer->setPosition(_mapPosition);
+        _troopsContainer->setScale(_zoom);
     }
 }
 

@@ -8,6 +8,9 @@
 #include "LoginScene.h"
 #include "Control/GameManager.h"
 #include "Constant/Constant.h"
+#include "audio/include/AudioEngine.h"
+
+using namespace cocos2d;
 
 USING_NS_CC;
    
@@ -27,13 +30,16 @@ bool SplashScene::init()
 
     // 初始化游戏管理器状态
     auto gameManager = GameManager::getInstance();
-    gameManager->setGameState(GameManager::GameState::SPLASH);
+    gameManager->setGameState(GameState::SPLASH);
 
     // 添加游戏封面
     auto cover = Sprite::create(ResPath::SPLASHSCENE);
     cover->setPosition(Vec2(visibleSize.width / 2 + origin.x,
         visibleSize.height / 2 + origin.y));
     this->addChild(cover);
+
+    // 播放背景音乐
+    AudioEngine::play2d(ResPath::SOUND_BG_MUSIC, true, 0.5f);
 
     // 添加提示文字
     auto hintLabel = Label::createWithTTF("Click anywhere to continue", "fonts/arial.ttf", 24);
@@ -53,6 +59,7 @@ bool SplashScene::init()
     // 添加触摸监听器
     auto touchListener = EventListenerTouchOneByOne::create();
     touchListener->onTouchBegan = [this](Touch* touch, Event* event) {
+        AudioEngine::play2d(ResPath::SOUND_BUTTON);
         this->gotoLogin(0.0f);
         return true;
         };

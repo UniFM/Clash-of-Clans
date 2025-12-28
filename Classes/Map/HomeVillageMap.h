@@ -3,7 +3,9 @@
 
 #include "cocos2d.h"
 #include "BaseMap.h"
-#include "Building/BuildingData.h" 
+#include "buildings/BuildingsData.h" 
+
+enum class BuildingType;
 
 class HomeVillageMap : public BaseMap
 {
@@ -25,6 +27,9 @@ public:
     }
 
     void startBuildingPlacement(BuildingType buildingType);
+
+    // [新增] 移植自 SceneMap 的功能：更新部队显示
+    void updateTroopDisplay();
 
 protected:
     virtual bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event) override;

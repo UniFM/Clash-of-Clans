@@ -3,7 +3,7 @@
 * @file     : Constant.h
 * @function ：常量类
 * @author   : 叶芷含
-* @note     ：包含整个项目中的所有常量
+* @note     ：常量路径
 **************************************************************/
 #include "cocos2d.h"
 #include <string>
@@ -31,7 +31,7 @@ enum class TerrainType {
 enum class Troops {
     Barbarian,   // 野蛮人
     Archer,    // 弓箭手
-    WallBreaker,    //炸弹人
+    //WallBreaker,    //炸弹人
     Giant,  //巨人
     Goblin  //哥布林
 };
@@ -95,14 +95,24 @@ namespace ResPath {
 
 
     //建筑building
-    //防御建筑
-    constexpr const char* CANNONLEVEL1 = "Building/Cannon_level1.png";
+    // 军队建筑
+    constexpr const char* BARRACKSLEVEL1 = "buildings/Barracks1.png";
 
+    //防御建筑
+    constexpr const char* CANNONLEVEL1 = "buildings/Cannon1.png";
+    constexpr const char* ARCHERTOWERLEVEL1 = "buildings/Archer_Tower1.png";
 
     //资源建筑
-    //军事建筑
-    constexpr const char* TOWNHALLLEVEL1 = "Building/Town_Hall_level1.png";
+    constexpr const char* ELIXIRCOLLECTORLEVEL1 = "buildings/Elixir_Collector1.png";
+    constexpr const char* GOLDMINELEVEL1 = "buildings/Gold_Mine1.png";
+    constexpr const char* ELIXIRSTORAGELEVEL1 = "buildings/Elixir_Storage1.png";
+    constexpr const char* GOLDSTORAGELEVEL1 = "buildings/Gold_Storage1.png";
 
+    constexpr const char* TOWNHALLLEVEL1 = "buildings/Town_Hall1.png";
+
+    // 音效
+    constexpr const char* SOUND_BUTTON = "sounds/button.mp3";
+    constexpr const char* SOUND_BG_MUSIC = "music/backgroundMusic_1.mp3";
 
 
 }

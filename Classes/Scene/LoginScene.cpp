@@ -7,6 +7,10 @@
 #include "LoginScene.h"
 #include "Control/GameManager.h"
 #include "Map/SceneMap.h"
+#include "Constant/Constant.h"
+#include "audio/include/AudioEngine.h"
+
+using namespace cocos2d;
 
 USING_NS_CC;
 
@@ -114,6 +118,7 @@ bool LoginScene::init()
 void LoginScene::onLoginButtonClicked(Ref* sender, ui::Widget::TouchEventType type)
 {
     if (type == ui::Widget::TouchEventType::ENDED) {
+        AudioEngine::play2d(ResPath::SOUND_BUTTON);
         std::string username = usernameField->getString();
         std::string password = passwordField->getString();
 

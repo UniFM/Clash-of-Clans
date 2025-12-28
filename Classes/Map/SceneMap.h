@@ -1,48 +1,63 @@
 #pragma once
 /*************************************************************
 * @file     : SceneMap.h
-* @function ï¼šä¸»æ¸¸æˆåœºæ™¯ - æ‘åº„ç®¡ç†
+* @function £ºÖ÷ÓÎÏ·³¡¾° - ´å×¯¹ÜÀí
 * @author   :
-* @note     ï¼šç®¡ç†æ‘åº„åœºæ™¯çš„UIå’Œå»ºç­‘ç³»ç»Ÿ
+* @note     £º¹ÜÀí´å×¯³¡¾°µÄUIºÍ½¨ÖşÏµÍ³
 **************************************************************/
 #ifndef __SCENE_MAP_H__
 #define __SCENE_MAP_H__
 
 #include "cocos2d.h"
 #include "HomeVillageMap.h"
-#include "Building/Building.h"
-#include "Building/ResourceManager.h"
-#include "Building/BuildingPreview.h"
+#include "buildings/BuildingsData.h"
+#include "buildings/BuildingPreview.h"
+#include "Control/GameManager.h"
+
 
 USING_NS_CC;
 
 /**
- * ä¸»æ¸¸æˆåœºæ™¯ - æ‘åº„ç®¡ç†
+ * Ö÷ÓÎÏ·³¡¾° - ´å×¯¹ÜÀí
  */
 class SceneMap : public Scene
 {
 public:
-    // ä½¿ç”¨å•ä¾‹ï¼Œæä¾›å…¨å±€è®¿é—®
+    // Ê¹ÓÃµ¥Àı£¬Ìá¹©È«¾Ö·ÃÎÊ
     static SceneMap* getInstance();
 
-    // åˆ é™¤æ‹·è´æ„é€ å’Œèµ‹å€¼æ“ä½œï¼Œé˜²æ­¢å¤åˆ¶å®ä¾‹
+    // É¾³ı¿½±´¹¹ÔìºÍ¸³Öµ²Ù×÷£¬·ÀÖ¹¸´ÖÆÊµÀı
     SceneMap(const SceneMap&) = delete;
     SceneMap& operator=(const SceneMap&) = delete;
 
-    // é‡æ–°åˆå§‹åŒ–äº‹ä»¶ç›‘å¬å™¨ï¼ˆç”¨äºåœºæ™¯åˆ‡æ¢åï¼‰
+    // ÖØĞÂ³õÊ¼»¯ÊÂ¼ş¼àÌıÆ÷£¨ÓÃÓÚ³¡¾°ÇĞ»»ºó£©
     void reinitializeEventListeners();
 
     virtual bool init() override;
     virtual void onEnter() override;
     
-    // ææ„å‡½æ•° - ç¡®ä¿æ­£ç¡®æ¸…ç†èµ„æº
+    // Îö¹¹º¯Êı - È·±£ÕıÈ·ÇåÀí×ÊÔ´
     virtual ~SceneMap();
 
+    // =======================update qy===================================
+    //  ¶ÔÍâ¿ª·ÅºËĞÄ·½·¨
+    void calculateTotalGoldProduceSpeed();  // ¼ÆËã½ğ¿ó×Ü²úËÙ
+    void refreshResourceUI();               // ²ú³ö½ğ±ÒºóË¢ĞÂUI£¨Ô­ÓĞ£©
+    void refreshResourceImmediately();      // ĞÂÔö£ºÖ÷¶¯²Ù×÷£¨Éı¼¶µÈ£©ºó¼´Ê±Ë¢ĞÂUI
+    // ĞÂÔö£º½ğ±ÒÈİÁ¿¼ÆËã·½·¨ÉùÃ÷
+    int getSingleBuildingGoldCapacity(Building* building); // »ñÈ¡µ¥¸ö½¨ÖşÈİÁ¿
+    void calculateTotalGoldCapacity();                      // ¼ÆËãÈ«¾Ö×ÜÈİÁ¿
+    //  Ê¥Ë®ÏµÍ³£¨ĞÂÔö£©
+    void calculateTotalElixirProduceSpeed();
+    int getSingleBuildingElixirCapacity(Building* building);
+    void calculateTotalElixirCapacity();
+    // =========================update qy===================================
+
 private:
-    // æ„é€ å‡½æ•°ç§æœ‰åŒ– 
+    // ¹¹Ôìº¯ÊıË½ÓĞ»¯ 
     SceneMap();
 
-    // é™æ€å®ä¾‹æŒ‡é’ˆ
+    // ¾²Ì¬ÊµÀıÖ¸Õë
     static SceneMap* sInstance;
 
     HomeVillageMap* _homeVillageMap;
@@ -53,25 +68,38 @@ private:
     Label* _goldLabel;
     Label* _elixirLabel;
     Label* _populationLabel;
+    // =========================update qy===================================
+    Sprite* _goldIcon;
+    Sprite* _elixirIcon;
+    // =========================update qy===================================
 
-    // å»ºç­‘æ”¾ç½®çŠ¶æ€
+    // ½¨Öş·ÅÖÃ×´Ì¬
     bool _isPlacingBuilding;
     bool _isMovingBuilding;
     BuildingType _selectedBuildingType;
-    Building* _selectedBuilding;  // é€‰ä¸­çš„å»ºç­‘ï¼ˆç”¨äºç§»åŠ¨ï¼‰
+    Building* _selectedBuilding;  // Ñ¡ÖĞµÄ½¨Öş£¨ÓÃÓÚÒÆ¶¯£©
 
     void setupUI(); 
     void onBattleButtonClicked(Ref* sender);
-    void onShopButtonClicked(Ref* sender);  // å•†åº—æŒ‰é’®å›è°ƒ
+    void onShopButtonClicked(Ref* sender);  // ÉÌµê°´Å¥»Øµ÷
     bool onMapTouched(Touch* touch, Event* event);
-    void onMouseMoved(Event* event);  // é¼ æ ‡ç§»åŠ¨äº‹ä»¶ï¼ˆç”¨äºé¢„è§ˆï¼‰
+    void onMouseMoved(Event* event);  // Êó±êÒÆ¶¯ÊÂ¼ş£¨ÓÃÓÚÔ¤ÀÀ£©
 
-    // å»ºç­‘æ”¾ç½®ç›¸å…³æ–¹æ³•
-    void checkPendingBuildingPlacement();  // æ£€æŸ¥æ¥è‡ªå•†åº—çš„å»ºç­‘æ”¾ç½®è¯·æ±‚
-    void startBuildingPlacement(BuildingType buildingType);  // å¼€å§‹å»ºç­‘æ”¾ç½®
-    void resetBuildingPlacementState(); // é‡ç½®å»ºç­‘æ”¾ç½®çŠ¶æ€
+    // ½¨Öş·ÅÖÃÏà¹Ø·½·¨
+    void checkPendingBuildingPlacement();  // ¼ì²éÀ´×ÔÉÌµêµÄ½¨Öş·ÅÖÃÇëÇó
+    void startBuildingPlacement(BuildingType buildingType);  // ¿ªÊ¼½¨Öş·ÅÖÃ
+    void resetBuildingPlacementState(); // ÖØÖÃ½¨Öş·ÅÖÃ×´Ì¬
 
-    void update(float dt) override;
+    //void update(float dt) override;
+
+    void onEnterTransitionDidFinish();
+    void onTroopSelectionButtonClicked(Ref* pSender);
+
+    // =========================update qy===================================
+    void setupResourceUI();
+
+    // =========================update qy===================================
+
 };
 
 #endif // __SCENE_MAP_H__

@@ -176,31 +176,34 @@ void ShopScene::initResourceBar()
     resourceBarNode = Node::create();
     this->addChild(resourceBarNode, 3); // 确保在背景之上
     
-    // 从背景图片中的资源条区域获取资源数据并显示文本
-    // 由于资源条已经在背景中，我们只需要在对应位置添加数字文本
+    // 从GameManager获取实际资源数据并显示
+    auto gameManager = GameManager::getInstance();
     
     // 金币数量文本 (对应背景中金币图标位置)
-    auto goldLabel = Label::createWithTTF("1000", "fonts/Marker Felt.ttf", 30);
+    int goldAmount = gameManager->getResource(ResourceType::GOLD);
+    auto goldLabel = Label::createWithTTF(std::to_string(goldAmount), "fonts/Marker Felt.ttf", 30);
     goldLabel->setPosition(Vec2(visibleSize.width * 0.15f, visibleSize.height * 0.065f));
     goldLabel->setColor(Color3B::WHITE);
     goldLabel->setTag(1001); // 用于后续更新
     resourceBarNode->addChild(goldLabel);
     
-    // 圣水数量文本 (对应背景中圣水图标位置)
-    auto elixirLabel = Label::createWithTTF("6789", "fonts/Marker Felt.ttf", 30);
+    // 圣水数量文本 (对应后台中圣水图标位置)
+    int elixirAmount = gameManager->getResource(ResourceType::ELIXIR);
+    auto elixirLabel = Label::createWithTTF(std::to_string(elixirAmount), "fonts/Marker Felt.ttf", 30);
     elixirLabel->setPosition(Vec2(visibleSize.width * 0.45f, visibleSize.height * 0.065f));
     elixirLabel->setColor(Color3B::WHITE);
     elixirLabel->setTag(1002); // 用于后续更新
     resourceBarNode->addChild(elixirLabel);
     
-    // 宝石数量文本 (对应背景中宝石图标位置)
-    auto gemLabel = Label::createWithTTF("50", "fonts/Marker Felt.ttf", 30);
+    // 宝石数量文本 (对应后台中宝石图标位置)
+    int gemAmount = gameManager->getResource(ResourceType::GEMS);
+    auto gemLabel = Label::createWithTTF(std::to_string(gemAmount), "fonts/Marker Felt.ttf", 30);
     gemLabel->setPosition(Vec2(visibleSize.width * 0.76f, visibleSize.height * 0.065f));
     gemLabel->setColor(Color3B::WHITE);
     gemLabel->setTag(1003); // 用于后续更新
     resourceBarNode->addChild(gemLabel);
-    
-    CCLOG("Resource bar initialized with text overlays on background");
+
+    CCLOG("Resource bar initialized with actual resource data from GameManager");
 }
 
 void ShopScene::initCloseButton()
@@ -306,16 +309,7 @@ void ShopScene::refreshBuildingList()
 Node* ShopScene::createBuildingItem(BuildingType buildingType)
 {
     auto container = Node::create();
-    
-    // 获取建筑数据
-    const BuildingData* buildingData = BuildingConfig::getBuildingData(buildingType);
-    const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, 1);
-    
-    if (!buildingData || !stats) {
-        CCLOG("Warning: Could not get data for building type %d", static_cast<int>(buildingType));
-        return container;
-    }
-    
+            
     // 检查是否可以建造 (这里简化为总是可以建造，实际应该检查大本营等级)
     bool canBuild = true; // 实际实现时应该检查大本营等级等条件
     
@@ -344,12 +338,27 @@ Node* ShopScene::createBuildingItem(BuildingType buildingType)
         case BuildingType::CANNON:
             buildingSpritePath = ResPath::CANNONLEVEL1;
             break;
-        case BuildingType::TOWN_HALL:
-            buildingSpritePath = ResPath::TOWNHALLLEVEL1;
+        case BuildingType::GOLD_MINE:
+            buildingSpritePath = ResPath::GOLDMINELEVEL1;
+            break;
+        case BuildingType::BARRACKS:
+            buildingSpritePath = ResPath::BARRACKSLEVEL1;
+            break;
+        case BuildingType::ELIXIR_COLLECTOR:
+            buildingSpritePath = ResPath::ELIXIRCOLLECTORLEVEL1;
+            break;
+        case BuildingType::ARCHER_TOWER:
+            buildingSpritePath = ResPath::ARCHERTOWERLEVEL1;
+            break;
+        case BuildingType::GOLD_STORAGE:
+            buildingSpritePath = ResPath::GOLDSTORAGELEVEL1; // 暂时使用金矿图标
+            break;
+        case BuildingType::ELIXIR_STORAGE:
+            buildingSpritePath = ResPath::ELIXIRSTORAGELEVEL1; // 暂时使用圣水收集器图标
             break;
         // 其他建筑类型可以在这里添加
         default:
-            buildingSpritePath = stats->spriteName; // 使用配置中的路径
+            buildingSpritePath = ResPath::CANNONLEVEL1; // 使用配置中的路径
             break;
     }
     
@@ -369,14 +378,76 @@ Node* ShopScene::createBuildingItem(BuildingType buildingType)
     buildingSprite->setScale(0.8f); // 适当缩放
     container->addChild(buildingSprite);
     
-    // 建筑名称标签
-    auto nameLabel = Label::createWithTTF(buildingData->name, "fonts/Marker Felt.ttf", 14);
+    // 建筑名称标签 - 根据建筑类型显示实际名称
+    std::string buildingName;
+    switch (buildingType) {
+        case BuildingType::CANNON:
+            buildingName = "加农炮";
+            break;
+        case BuildingType::GOLD_MINE:
+            buildingName = "金矿";
+            break;
+        case BuildingType::BARRACKS:
+            buildingName = "兵营";
+            break;
+        case BuildingType::ELIXIR_COLLECTOR:
+            buildingName = "圣水收集器";
+            break;
+        case BuildingType::ARCHER_TOWER:
+            buildingName = "弓箭塔";
+            break;
+        case BuildingType::TOWN_HALL:
+            buildingName = "大本营";
+            break;
+        case BuildingType::GOLD_STORAGE:
+            buildingName = "储金罐";
+            break;
+        case BuildingType::ELIXIR_STORAGE:
+            buildingName = "圣水瓶";
+            break;
+        default:
+            buildingName = "未知建筑";
+            break;
+    }
+    
+    auto nameLabel = Label::createWithTTF(buildingName, "fonts/Marker Felt.ttf", 14);
     nameLabel->setPosition(Vec2(0, -10));
     nameLabel->setColor(Color3B::WHITE);
     container->addChild(nameLabel);
     
-    // 价格标签
-    std::string priceText = std::to_string(stats->goldCost) + " Gold";
+    // 价格标签 - 根据建筑类型显示实际价格
+    int buildingCost = 0;
+    switch (buildingType) {
+        case BuildingType::CANNON:
+            buildingCost = 1000;
+            break;
+        case BuildingType::GOLD_MINE:
+            buildingCost = 150;
+            break;
+        case BuildingType::BARRACKS:
+            buildingCost = 100;
+            break;
+        case BuildingType::ELIXIR_COLLECTOR:
+            buildingCost = 150;
+            break;
+        case BuildingType::ARCHER_TOWER:
+            buildingCost = 500;
+            break;
+        case BuildingType::TOWN_HALL:
+            buildingCost = 0; // 通常不在商店购买
+            break;
+        case BuildingType::GOLD_STORAGE:
+            buildingCost = 300;
+            break;
+        case BuildingType::ELIXIR_STORAGE:
+            buildingCost = 300;
+            break;
+        default:
+            buildingCost = 100;
+            break;
+    }
+    
+    std::string priceText = std::to_string(buildingCost);
     auto priceLabel = Label::createWithTTF(priceText, "fonts/Marker Felt.ttf", 12);
     priceLabel->setPosition(Vec2(0, -35));
     priceLabel->setColor(canBuild ? Color3B::YELLOW : Color3B::RED);
@@ -411,15 +482,56 @@ void ShopScene::onBuildingSelected(BuildingType buildingType)
     // 检查是否买得起
     if (!canAffordBuilding(buildingType)) {
         CCLOG("Cannot afford building type %d", static_cast<int>(buildingType));
-        // 可以在这里显示提示信息
+        
+        // 显示资源不足提示
+        showInsufficientResourcesMessage();
         return;
     }
     
-    CCLOG("Building selected for purchase: %d", static_cast<int>(buildingType));
+    // 计算建筑成本并扣除资源
+    int buildingCost = 0;
+    switch (buildingType) {
+        case BuildingType::CANNON:
+            buildingCost = 1000;
+            break;
+        case BuildingType::GOLD_MINE:
+            buildingCost = 150;
+            break;
+        case BuildingType::BARRACKS:
+            buildingCost = 100;
+            break;
+        case BuildingType::ELIXIR_COLLECTOR:
+            buildingCost = 150;
+            break;
+        case BuildingType::ARCHER_TOWER:
+            buildingCost = 500;
+            break;
+        case BuildingType::GOLD_STORAGE:
+            buildingCost = 300;
+            break;
+        case BuildingType::ELIXIR_STORAGE:
+            buildingCost = 300;
+            break;
+        default:
+            buildingCost = 100;
+            break;
+    }
     
-    // 使用正确的方法切换到村庄场景并开始建筑放置
+    // 扣除资源
     auto gameManager = GameManager::getInstance();
-    gameManager->gotoVillageSceneWithBuildingPlacement(buildingType);
+    if (gameManager->spendResource(ResourceType::GOLD, buildingCost)) {
+        CCLOG("Building purchased! Type: %d, Cost: %d gold", static_cast<int>(buildingType), buildingCost);
+        
+        // 更新资源显示
+        updateResourceDisplay();
+        
+        // 使用正确的方法切换到村庄场景并开始建筑放置
+        gameManager->gotoVillageSceneWithBuildingPlacement(buildingType);
+    } else {
+        // 理论上不应该到这里，因为前面已经检查过了
+        CCLOG("Failed to spend resources!");
+        showInsufficientResourcesMessage();
+    }
 }
 
 std::vector<BuildingType> ShopScene::getBuildingsByCategory(ShopCategory category)
@@ -428,20 +540,23 @@ std::vector<BuildingType> ShopScene::getBuildingsByCategory(ShopCategory categor
     
     switch (category) {
         case ShopCategory::ARMY:
-            buildings = {BuildingType::ARMY_CAMP};
+            // 军队类建筑：兵营
+            buildings = {BuildingType::BARRACKS};
             break;
             
         case ShopCategory::RESOURCES:
-            buildings = {BuildingType::GOLD_MINE, BuildingType::ELIXIR_COLLECTOR};
+            // 资源类建筑：金矿、圣水收集器、储金罐、圣水瓶
+            buildings = {BuildingType::GOLD_MINE, BuildingType::ELIXIR_COLLECTOR, 
+                        BuildingType::GOLD_STORAGE, BuildingType::ELIXIR_STORAGE};
             break;
             
         case ShopCategory::DEFENSE:
-            // 添加加农炮作为测试用例
+            // 防御类建筑：弓箭塔、加农炮
             buildings = {BuildingType::ARCHER_TOWER, BuildingType::CANNON};
             break;
             
         case ShopCategory::TRAPS:
-            // 暂时为空，可以后续添加陷阱建筑
+            // 陷阱类建筑暂时为空，可以后续添加
             break;
     }
     
@@ -450,31 +565,63 @@ std::vector<BuildingType> ShopScene::getBuildingsByCategory(ShopCategory categor
 
 void ShopScene::updateResourceDisplay()
 {
-    // 更新资源显示 (这里使用模拟数据，实际应该从游戏数据获取)
+    // 从GameManager获取实际资源数据
+    auto gameManager = GameManager::getInstance();
+    
     auto goldLabel = dynamic_cast<Label*>(resourceBarNode->getChildByTag(1001));
     if (goldLabel) {
-        goldLabel->setString("12345"); // 只显示数字，因为图标在背景中
+        int goldAmount = gameManager->getResource(ResourceType::GOLD);
+        goldLabel->setString(std::to_string(goldAmount));
     }
     
     auto elixirLabel = dynamic_cast<Label*>(resourceBarNode->getChildByTag(1002));
     if (elixirLabel) {
-        elixirLabel->setString("6789"); // 只显示数字，因为图标在背景中
+        int elixirAmount = gameManager->getResource(ResourceType::ELIXIR);
+        elixirLabel->setString(std::to_string(elixirAmount));
     }
     
     auto gemLabel = dynamic_cast<Label*>(resourceBarNode->getChildByTag(1003));
     if (gemLabel) {
-        gemLabel->setString("89"); // 只显示数字，因为图标在背景中
+        int gemAmount = gameManager->getResource(ResourceType::GEMS);
+        gemLabel->setString(std::to_string(gemAmount));
     }
 }
 
 bool ShopScene::canAffordBuilding(BuildingType buildingType, int level)
 {
-    const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, level);
-    if (!stats) return false;
+    // 获取建筑成本
+    int buildingCost = 0;
+    switch (buildingType) {
+        case BuildingType::CANNON:
+            buildingCost = 1000;
+            break;
+        case BuildingType::GOLD_MINE:
+            buildingCost = 150;
+            break;
+        case BuildingType::BARRACKS:
+            buildingCost = 100;
+            break;
+        case BuildingType::ELIXIR_COLLECTOR:
+            buildingCost = 150;
+            break;
+        case BuildingType::ARCHER_TOWER:
+            buildingCost = 500;
+            break;
+        case BuildingType::GOLD_STORAGE:
+            buildingCost = 300;
+            break;
+        case BuildingType::ELIXIR_STORAGE:
+            buildingCost = 300;
+            break;
+        default:
+            buildingCost = 100;
+            break;
+    }
     
-    // 这里应该检查实际的资源数量，现在假设都买得起
-    // 实际实现应该从游戏数据管理器获取当前资源
-    return true; // 简化实现
+    // 从GameManager获取当前金币数量进行实际检查
+    auto gameManager = GameManager::getInstance();
+    int currentGold = gameManager->getResource(ResourceType::GOLD);
+    return currentGold >= buildingCost;
 }
 
 void ShopScene::onCloseButtonClicked(Ref* sender)
@@ -491,36 +638,30 @@ void ShopScene::onBackKeyPressed()
     onCloseButtonClicked(nullptr);
 }
 
-//if (!shopBackground) {
-//    // 如果没有资源，用颜色块代替
-//    shopBackground = Scale9Sprite::create();
-//    shopBackground->setColor(Color3B(50, 50, 50));
-//}
-
-//shopBackground->setContentSize(Size(visibleSize.width * 0.9f, visibleSize.height * 0.8f));
-//shopBackground->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-
-//// 添加提示文字
-//auto hintLabel = Label::createWithTTF("Click anywhere to continue", "fonts/arial.ttf", 24);
-//if (hintLabel) {
-//    hintLabel->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height * 0.2f + origin.y));
-//    hintLabel->setColor(Color3B::WHITE);
-//    this->addChild(hintLabel);
-
-//    // 添加闪烁效果
-//    auto fadeIn = FadeIn::create(1.0f);
-//    auto fadeOut = FadeOut::create(1.0f);
-//    auto blink = Sequence::create(fadeOut, fadeIn, nullptr);
-//    auto repeat = RepeatForever::create(blink);
-//    hintLabel->runAction(repeat);
-//}
-
-//// 添加触摸监听器
-//auto touchListener = EventListenerTouchOneByOne::create();
-//touchListener->onTouchBegan = [this](Touch* touch, Event* event) {
-//    this->gotoLogin(0.0f);
-//    return true;
-//    };
-//this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(touchListener, this);
-
-//return true;
+void ShopScene::showInsufficientResourcesMessage()
+{
+    // 创建提示标签，显示在屏幕中央
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    
+    auto messageLabel = Label::createWithTTF("Insufficient resources! Cannot proceed!", "fonts/Marker Felt.ttf", 36);
+    messageLabel->setPosition(Vec2(visibleSize.width * 0.5f, visibleSize.height * 0.5f));
+    messageLabel->setColor(Color3B::RED);
+    messageLabel->setLocalZOrder(1000); // 确保显示在最上层
+    
+    this->addChild(messageLabel);
+    
+    // 创建红色闪烁效果
+    auto fadeOut = FadeOut::create(0.5f);
+    auto fadeIn = FadeIn::create(0.5f);
+    auto blink = Sequence::create(fadeOut, fadeIn, nullptr);
+    auto repeat = Repeat::create(blink, 3); // 闪烁3次
+    
+    // 最后移除消息
+    auto delay = DelayTime::create(0.5f);
+    auto remove = RemoveSelf::create();
+    
+    auto sequence = Sequence::create(repeat, delay, remove, nullptr);
+    messageLabel->runAction(sequence);
+    
+    CCLOG("显示资源不足提示: Insufficient resources! Cannot proceed!");
+}

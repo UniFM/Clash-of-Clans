@@ -1,13 +1,16 @@
 #include "SceneMap.h"
-#include "Building/TownHall.h"
-#include "Building/ResourceBuilding.h"
-#include "Building/Barracks.h"
-#include "Building/DefenseTower.h"
-#include "Building/StorageBuilding.h"
+//#include "buildings/TownHall.h"
 #include "BattleScene.h"
-#include "Control/AudioManager.h"
 #include "Control/GameManager.h"
-#include "Building/BuildingPreview.h"
+#include "buildings/BuildingPreview.h"
+#include "Control/BuildingsElixirCapacityConfig.h"
+#include "Control/BuildingsGoldCapacityConfig.h"
+#include "buildings/BuildingsData.h"
+
+// =========================update qy===================================
+const int MOUSE_LEFT_BUTTON = 0;
+const int MOUSE_RIGHT_BUTTON = 1;
+// =========================update qy===================================
 
 // 静态实例初始化
 SceneMap* SceneMap::sInstance = nullptr;
@@ -23,6 +26,8 @@ SceneMap::SceneMap() :
     _isMovingBuilding(false),
     _selectedBuildingType(BuildingType::TOWN_HALL),
     _selectedBuilding(nullptr)
+    , _goldIcon(nullptr)
+    , _elixirIcon(nullptr)
 {
 }
 
@@ -163,6 +168,9 @@ bool SceneMap::init()
 
     // 设置UI界面
     setupUI();
+    // =========================update qy===================================
+    setupResourceUI();
+    // =========================update qy===================================
 
     // 重新初始化事件监听器
     reinitializeEventListeners();
@@ -205,22 +213,21 @@ bool SceneMap::init()
             }
         }
 
+        // =========================update qy===================================
+        
         // 如果没有已有建筑，创建默认的市政厅
         if (!hasBuildings) {
-            CCLOG("No existing buildings found, creating default TownHall");
-
-            // 计算中心位置
+            CCLOG("No existing buildings found, creating default TownHall/GoldMine/GoldStorage/ElixirCollector/ElixirStorage");
             int centerGridX = _homeVillageMap->getGridCols() / 2;
             int centerGridY = _homeVillageMap->getGridRows() / 2;
 
+            // 创建大本营
             auto townHall = TownHall::create(1);
             if (townHall)
             {
                 Size gridSize = townHall->getGridSize();
-                // 调整到中心位置
                 centerGridX -= (int)gridSize.width / 2;
                 centerGridY -= (int)gridSize.height / 2;
-
                 if (_homeVillageMap->canPlaceBuilding(centerGridX, centerGridY, gridSize))
                 {
                     townHall->setGridPosition(centerGridX, centerGridY);
@@ -232,20 +239,167 @@ bool SceneMap::init()
                     CCLOG("TownHall created at grid (%d, %d)", centerGridX, centerGridY);
                 }
             }
+
+            // 创建金矿
+            int goldMineGridX = centerGridX - 4;
+            int goldMineGridY = centerGridY;
+            auto goldMine = GoldMine::create(1);
+            if (goldMine)
+            {
+                Size goldMineGridSize = goldMine->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(goldMineGridX, goldMineGridY, goldMineGridSize))
+                {
+                    goldMine->setGridPosition(goldMineGridX, goldMineGridY);
+                    Vec2 goldMineWorldPos = _homeVillageMap->gridToWorld(goldMineGridX, goldMineGridY);
+                    goldMine->setPosition(goldMineWorldPos);
+                    _homeVillageMap->addBuilding(goldMine);
+                    _buildings.pushBack(goldMine);
+                    _homeVillageMap->markGridsOccupied(goldMineGridX, goldMineGridY, goldMineGridSize, true);
+                    CCLOG("GoldMine created at grid (%d, %d)", goldMineGridX, goldMineGridY);
+                }
+            }
+
+            // 创建储金罐
+            int goldStorageGridX = centerGridX + 4;
+            int goldStorageGridY = centerGridY;
+            auto goldStorage = GoldStorage::create(1);
+            if (goldStorage)
+            {
+                Size goldStorageGridSize = goldStorage->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(goldStorageGridX, goldStorageGridY, goldStorageGridSize))
+                {
+                    goldStorage->setGridPosition(goldStorageGridX, goldStorageGridY);
+                    Vec2 goldStorageWorldPos = _homeVillageMap->gridToWorld(goldStorageGridX, goldStorageGridY);
+                    goldStorage->setPosition(goldStorageWorldPos);
+                    _homeVillageMap->addBuilding(goldStorage);
+                    _buildings.pushBack(goldStorage);
+                    _homeVillageMap->markGridsOccupied(goldStorageGridX, goldStorageGridY, goldStorageGridSize, true);
+                    CCLOG("GoldStorage created at grid (%d, %d)", goldStorageGridX, goldStorageGridY);
+                }
+            }
+
+            // ========== 新增：创建圣水收集器 ==========
+            int elixirCollectorGridX = centerGridX - 4;
+            int elixirCollectorGridY = centerGridY + 4;
+            auto elixirCollector = ElixirCollector::create(1);
+            if (elixirCollector)
+            {
+                Size gridSize = elixirCollector->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(elixirCollectorGridX, elixirCollectorGridY, gridSize))
+                {
+                    elixirCollector->setGridPosition(elixirCollectorGridX, elixirCollectorGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(elixirCollectorGridX, elixirCollectorGridY);
+                    elixirCollector->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(elixirCollector);
+                    _buildings.pushBack(elixirCollector);
+                    _homeVillageMap->markGridsOccupied(elixirCollectorGridX, elixirCollectorGridY, gridSize, true);
+                    CCLOG("ElixirCollector created at grid (%d, %d)", elixirCollectorGridX, elixirCollectorGridY);
+                }
+            }
+
+            // ========== 新增：创建圣水瓶 ==========
+            int elixirStorageGridX = centerGridX + 4;
+            int elixirStorageGridY = centerGridY + 4;
+            auto elixirStorage = ElixirStorage::create(1);
+            if (elixirStorage)
+            {
+                Size gridSize = elixirStorage->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(elixirStorageGridX, elixirStorageGridY, gridSize))
+                {
+                    elixirStorage->setGridPosition(elixirStorageGridX, elixirStorageGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(elixirStorageGridX, elixirStorageGridY);
+                    elixirStorage->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(elixirStorage);
+                    _buildings.pushBack(elixirStorage);
+                    _homeVillageMap->markGridsOccupied(elixirStorageGridX, elixirStorageGridY, gridSize, true);
+                    CCLOG("ElixirStorage created at grid (%d, %d)", elixirStorageGridX, elixirStorageGridY);
+                }
+            }
+            // ========== 新增：创建1级加农炮 ==========
+            auto cannon = Cannon::create(1);
+            if (cannon)
+            {
+                Size gridSize = cannon->getGridSize();
+                int cannonGridX = centerGridX - 6;
+                int cannonGridY = centerGridY - 4;
+                if (_homeVillageMap->canPlaceBuilding(cannonGridX, cannonGridY, gridSize))
+                {
+                    cannon->setGridPosition(cannonGridX, cannonGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(cannonGridX, cannonGridY);
+                    cannon->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(cannon);
+                    _buildings.pushBack(cannon);
+                    _homeVillageMap->markGridsOccupied(cannonGridX, cannonGridY, gridSize, true);
+                }
+            }
+
+            // ========== 新增：创建1级箭塔 ==========
+            auto archerTower = ArcherTower::create(1);
+            if (archerTower)
+            {
+                Size gridSize = archerTower->getGridSize();
+                int archerGridX = centerGridX + 6;
+                int archerGridY = centerGridY - 4;
+                if (_homeVillageMap->canPlaceBuilding(archerGridX, archerGridY, gridSize))
+                {
+                    archerTower->setGridPosition(archerGridX, archerGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(archerGridX, archerGridY);
+                    archerTower->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(archerTower);
+                    _buildings.pushBack(archerTower);
+                    _homeVillageMap->markGridsOccupied(archerGridX, archerGridY, gridSize, true);
+                }
+            }
+            // ========== 新增：创建1级兵营 ==========
+            auto barracks = Barracks::create(1);
+            if (barracks)
+            {
+                Size gridSize = barracks->getGridSize();
+                int barracksGridX = centerGridX;
+                int barracksGridY = centerGridY - 4;
+                if (_homeVillageMap->canPlaceBuilding(barracksGridX, barracksGridY, gridSize))
+                {
+                    barracks->setGridPosition(barracksGridX, barracksGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(barracksGridX, barracksGridY);
+                    barracks->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(barracks);
+                    _buildings.pushBack(barracks);
+                    _homeVillageMap->markGridsOccupied(barracksGridX, barracksGridY, gridSize, true);
+                    CCLOG("Barracks created at grid (%d, %d)", barracksGridX, barracksGridY);
+                }
+            }
         }
     }
+    // =========================update qy===================================
 
     this->scheduleUpdate();
 
-    // 播放背景音乐
-    auto audioMgr = AudioManager::getInstance();
-    // audioMgr->playBackgroundMusic("sounds/background.mp3", true);
+    // 金币产速定时器
+    this->schedule([this](float dt) {
+        GameManager::getInstance()->updateGoldProduce(dt);
+        }, 0.2f, "gold_accumulate_only");
+
+    // ========== 新增：圣水产速定时器 ==========
+    this->schedule([this](float dt) {
+        GameManager::getInstance()->updateElixirProduce(dt);
+        }, 0.2f, "elixir_accumulate_only");
+
+    // 初始化计算所有产速与容量
+    this->calculateTotalGoldProduceSpeed();
+    this->calculateTotalGoldCapacity();
+    this->calculateTotalElixirProduceSpeed();
+    this->calculateTotalElixirCapacity();
+
+    // =========================update qy===================================
+
+    //// 播放背景音乐
+    //auto audioMgr = AudioManager::getInstance();
+    //// audioMgr->playBackgroundMusic("sounds/background.mp3", true);
 
     CCLOG("SceneMap initialized successfully");
-    CCLOG("Visible size: %.0f x %.0f", visibleSize.width, visibleSize.height);
-
     return true;
 }
+
 
 void SceneMap::onEnter()
 {
@@ -263,57 +417,94 @@ void SceneMap::onEnter()
     checkPendingBuildingPlacement();
 }
 
+// =========================update qy===================================
+// 获取单个建筑金币容量（原有）
+int SceneMap::getSingleBuildingGoldCapacity(Building* building)
+{
+    if (building == nullptr) return 0;
+
+    int level = building->getLevel();
+    BuildingType type = building->getBuildingType();
+    int singleCapacity = 0;
+
+    if (type == BuildingType::TOWN_HALL)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = TOWN_HALL_LEVEL_1_GOLD_CAPACITY; break;
+        case 2: singleCapacity = TOWN_HALL_LEVEL_2_GOLD_CAPACITY; break;
+        case 3: singleCapacity = TOWN_HALL_LEVEL_3_GOLD_CAPACITY; break;
+        default: singleCapacity = TOWN_HALL_LEVEL_1_GOLD_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::GOLD_MINE)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = GOLD_MINE_LEVEL_1_GOLD_CAPACITY; break;
+        case 2: singleCapacity = GOLD_MINE_LEVEL_2_GOLD_CAPACITY; break;
+        case 3: singleCapacity = GOLD_MINE_LEVEL_3_GOLD_CAPACITY; break;
+        default: singleCapacity = GOLD_MINE_LEVEL_1_GOLD_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::GOLD_STORAGE)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = GOLD_STORAGE_LEVEL_1_GOLD_CAPACITY; break;
+        case 2: singleCapacity = GOLD_STORAGE_LEVEL_2_GOLD_CAPACITY; break;
+        case 3: singleCapacity = GOLD_STORAGE_LEVEL_3_GOLD_CAPACITY; break;
+        default: singleCapacity = GOLD_STORAGE_LEVEL_1_GOLD_CAPACITY; break;
+        }
+    }
+    return singleCapacity;
+}
+
+// ========== 新增：获取单个建筑圣水容量 ==========
+int SceneMap::getSingleBuildingElixirCapacity(Building* building)
+{
+    if (building == nullptr) return 0;
+    int level = building->getLevel();
+    BuildingType type = building->getBuildingType();
+    int singleCapacity = 0;
+
+    if (type == BuildingType::TOWN_HALL)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = TOWN_HALL_LEVEL_1_ELIXIR_CAPACITY; break;
+        case 2: singleCapacity = TOWN_HALL_LEVEL_2_ELIXIR_CAPACITY; break;
+        case 3: singleCapacity = TOWN_HALL_LEVEL_3_ELIXIR_CAPACITY; break;
+        default: singleCapacity = TOWN_HALL_LEVEL_1_ELIXIR_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::ELIXIR_COLLECTOR)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = ELIXIR_COLLECTOR_LEVEL_1_ELIXIR_CAPACITY; break;
+        case 2: singleCapacity = ELIXIR_COLLECTOR_LEVEL_2_ELIXIR_CAPACITY; break;
+        case 3: singleCapacity = ELIXIR_COLLECTOR_LEVEL_3_ELIXIR_CAPACITY; break;
+        default: singleCapacity = ELIXIR_COLLECTOR_LEVEL_1_ELIXIR_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::ELIXIR_STORAGE)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = ELIXIR_STORAGE_LEVEL_1_ELIXIR_CAPACITY; break;
+        case 2: singleCapacity = ELIXIR_STORAGE_LEVEL_2_ELIXIR_CAPACITY; break;
+        case 3: singleCapacity = ELIXIR_STORAGE_LEVEL_3_ELIXIR_CAPACITY; break;
+        default: singleCapacity = ELIXIR_STORAGE_LEVEL_1_ELIXIR_CAPACITY; break;
+        }
+    }
+    return singleCapacity;
+}
+// =========================update qy===================================
+
 void SceneMap::setupUI()
 {
     auto visibleSize = Director::getInstance()->getVisibleSize();
-
-    // 创建UI元素
-    // 金币
-    _goldLabel = Label::createWithTTF("Gold: 0", "fonts/Marker Felt.ttf", 24);
-    if (!_goldLabel) {
-        CCLOG("goldLabel initialized failed! ");
-        return;
-    }
-
-    if (_goldLabel)
-    {
-        _goldLabel->setPosition(100, visibleSize.height - 50);
-        _goldLabel->setColor(Color3B::YELLOW);
-        this->addChild(_goldLabel, 100);
-    }
-
-    // 圣水
-    _elixirLabel = Label::createWithTTF("Elixir: 0", "fonts/Marker Felt.ttf", 24);
-    if (!_elixirLabel)
-    {
-        CCLOG("elixirLabel initialized failed! ");
-        return;
-    }
-    if (_elixirLabel)
-    {
-        _elixirLabel->setPosition(100, visibleSize.height - 100);
-        _elixirLabel->setColor(Color3B::MAGENTA);
-        this->addChild(_elixirLabel, 100);
-    }
-
-    //// 人口 (后续从兵营等建筑中获取)
-    //_populationLabel = Label::createWithTTF("Population: 0/50", "fonts/Marker Felt.ttf", 24);
-    //if (!_populationLabel)
-    //{
-    //    CCLOG("populationLabel initialized failed! ");
-    //    return;
-    //}
-    //if (_populationLabel)
-    //{
-    //    _populationLabel->setPosition(100, visibleSize.height - 150);
-    //    _populationLabel->setColor(Color3B::GREEN);
-    //    this->addChild(_populationLabel, 100);
-    //}
-
-    // 将UI元素绑定到资源管理器
-    auto resourceMgr = ResourceManager::getInstance();
-    resourceMgr->setUI(_goldLabel, _elixirLabel, _populationLabel);
-    resourceMgr->reset();
 
     // 创建功能按钮
     Vector<MenuItem*> menuItems;
@@ -326,7 +517,7 @@ void SceneMap::setupUI()
     battleBtn->setPosition(Vec2(visibleSize.width * 0.05f, visibleSize.height * 0.08f));
     menuItems.pushBack(battleBtn);
 
-    // 商店按钮
+    // yzh-商店按钮
     auto shopBtn = MenuItemImage::create(
         "Icon/shop.png", "Icon/shopPressed.png",
         CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // 点击回调
@@ -334,10 +525,87 @@ void SceneMap::setupUI()
     shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
     menuItems.pushBack(shopBtn);
 
+    // =========================update yxy===================================
+    // 选兵按钮
+    auto troopSelectionBtn = MenuItemImage::create(
+        "Icon/TroopIcon.png",                 // 正常状态图标路径
+        "Icon/TroopIconPressed.png",          // 按下状态图标路径
+        CC_CALLBACK_1(SceneMap::onTroopSelectionButtonClicked, this)); // 点击回调函数
+
+    // 设置缩放比例  像素有点大
+    troopSelectionBtn->setScale(0.05f);
+
+    // 将选兵按钮放在商店按钮左侧
+    troopSelectionBtn->setPosition(Vec2(visibleSize.width * 0.85f, visibleSize.height * 0.08f));
+    menuItems.pushBack(troopSelectionBtn);
+    // =========================update yxy===================================
+
     auto menu = Menu::createWithArray(menuItems);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 100);
 }
+
+// =========================update qy===================================
+void SceneMap::setupResourceUI()
+{
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    Node* resRootNode = Node::create();
+    resRootNode->setPosition(Vec2(origin.x + visibleSize.width - 60, origin.y + visibleSize.height - 100));
+    resRootNode->setAnchorPoint(Vec2(1, 1));
+    this->addChild(resRootNode, 9999);
+
+    _goldIcon = Sprite::create("Icon/gold_icon.png");
+    if (!_goldIcon) { _goldIcon = Sprite::create(); _goldIcon->setColor(Color3B::YELLOW); _goldIcon->setContentSize(Size(40, 40)); }
+    _goldIcon->setAnchorPoint(Vec2(1, 0.5)); _goldIcon->setPosition(Vec2(-10, 25)); resRootNode->addChild(_goldIcon);
+    _goldLabel = Label::createWithSystemFont("Gold: 0", "Arial", 30);
+    _goldLabel->setTextColor(Color4B::YELLOW); _goldLabel->setAnchorPoint(Vec2(1, 0.5)); _goldLabel->setPosition(Vec2(-_goldIcon->getContentSize().width - 20, 25)); resRootNode->addChild(_goldLabel);
+
+    _elixirIcon = Sprite::create("Icon/elixir_icon.png");
+    if (!_elixirIcon) { _elixirIcon = Sprite::create(); _elixirIcon->setColor(Color3B::BLUE); _elixirIcon->setContentSize(Size(40, 40)); }
+    _elixirIcon->setAnchorPoint(Vec2(1, 0.5)); _elixirIcon->setPosition(Vec2(-10, -25)); resRootNode->addChild(_elixirIcon);
+    _elixirLabel = Label::createWithSystemFont("Elixir: 0", "Arial", 30);
+    _elixirLabel->setTextColor(Color4B::BLUE); _elixirLabel->setAnchorPoint(Vec2(1, 0.5)); _elixirLabel->setPosition(Vec2(-_elixirIcon->getContentSize().width - 20, -25)); resRootNode->addChild(_elixirLabel);
+
+    refreshResourceUI();
+    CCLOG("SceneMap: 右上角金币圣水UI创建完成！");
+}
+
+
+// 主动操作专属即时刷新（升级扣除后调用）
+void SceneMap::refreshResourceImmediately()
+{
+    if (!_goldLabel || !_elixirLabel) return;
+    GameManager* gm = GameManager::getInstance();
+    if (!gm) return;
+
+    int gold = gm->getResource(ResourceType::GOLD);
+    int elixir = gm->getResource(ResourceType::ELIXIR);
+    int goldCap = gm->getGoldStorageCapacity();
+    int elixirCap = gm->getElixirStorageCapacity();
+
+    _goldLabel->setString(StringUtils::format("Gold: %d/%d", gold, goldCap));
+    _elixirLabel->setString(StringUtils::format("Elixir: %d/%d", elixir, elixirCap));
+    CCLOG("[即时刷新] 资源更新完成");
+}
+
+// 产金/产圣水刷新方法
+void SceneMap::refreshResourceUI()
+{
+    if (!_goldLabel || !_elixirLabel) return;
+    GameManager* gm = GameManager::getInstance();
+    if (!gm) return;
+
+    int gold = gm->getResource(ResourceType::GOLD);
+    int elixir = gm->getResource(ResourceType::ELIXIR);
+    int goldCap = gm->getGoldStorageCapacity();
+    int elixirCap = gm->getElixirStorageCapacity();
+
+    _goldLabel->setString(StringUtils::format("Gold: %d/%d", gold, goldCap));
+    _elixirLabel->setString(StringUtils::format("Elixir: %d/%d", elixir, elixirCap));
+}
+// =========================update qy===================================
+
 
 void SceneMap::onBattleButtonClicked(Ref* sender)
 {
@@ -404,11 +672,12 @@ void SceneMap::onShopButtonClicked(Ref* sender)
     gameManager->gotoShopScene();
 }
 
-// 建筑菜单设置（暂时注释）
+//// ========================= update yzh 使得shop返回主链接 ===================================
+//// 建筑菜单设置（暂时注释）
 // void SceneMap::setupBuildingMenu()
 // {
 //     auto visibleSize = Director::getInstance()->getVisibleSize();
-
+//
 //     // 建筑类型列表
 //     std::vector<std::pair<std::string, BuildingType>> buildingTypes = {
 //         {"Town Hall", BuildingType::TOWN_HALL},
@@ -420,11 +689,11 @@ void SceneMap::onShopButtonClicked(Ref* sender)
 //         {"Gold Storage", BuildingType::GOLD_STORAGE},
 //         {"Elixir Storage", BuildingType::ELIXIR_COLLECTOR}
 //     };
-
+//
 //     Vector<MenuItem*> menuItems;
 //     float startY = visibleSize.height - 200;
 //     float spacing = 40;
-
+//
 //     for (size_t i = 0; i < buildingTypes.size(); ++i)
 //     {
 //         BuildingType buildingType = buildingTypes[i].second;
@@ -443,13 +712,13 @@ void SceneMap::onShopButtonClicked(Ref* sender)
 //             menuItems.pushBack(item);
 //         }
 //     }
-
+//
 //     _buildingMenu = Menu::createWithArray(menuItems);
 //     _buildingMenu->setPosition(Vec2::ZERO);
 //     this->addChild(_buildingMenu, 100);
 // }
-
-// 建筑选择回调
+//
+//// 建筑选择回调
 // void SceneMap::onBuildingSelected(Ref* sender, BuildingType type)
 // {
 //     // 取消当前可能正在进行的预览或移动操作
@@ -457,167 +726,219 @@ void SceneMap::onShopButtonClicked(Ref* sender)
 //     {
 //         _buildingPreview->cancel();
 //     }
-
+//
 //     _isPlacingBuilding = true;
 //     _selectedBuildingType = type;
-
+//
 //     // 开始预览
 //     if (_buildingPreview)
 //     {
 //         _buildingPreview->startPreview(type);
 //     }
-
+//
 //     // 更新UI提示
 //     // ...
 // }
+ // ========================= update yzh 使得shop返回主链接 ===================================
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// 地图触摸逻辑：
+// 
+//bool SceneMap::onMapTouched(Touch* touch, Event* event)
+//{
+//    Vec2 touchPos = touch->getLocation();
+//
+//    CCLOG("SceneMap::onMapTouched called at (%.2f, %.2f)", touchPos.x, touchPos.y);
+//
+//    // 检查BuildingPreview是否有效
+//    if (!_buildingPreview) {
+//        CCLOG("BuildingPreview is null, cannot process touch");
+//        return false;
+//    }
+//
+//    // 如果正在预览建筑且未开始拖拽，开始拖拽检测
+//    if (_buildingPreview->isPreviewing() && !_buildingPreview->isPreviewDragging())
+//    {
+//        CCLOG("Preview building detected, starting drag detection");
+//        _buildingPreview->startPreviewDragDetection(touchPos);
+//        return true;
+//    }
+//
+//    // 如果正在移动建筑，更新位置
+//    if (_buildingPreview->isMoving())
+//    {
+//        CCLOG("Building is moving, updating position");
+//        _buildingPreview->updatePreviewPosition(touchPos);
+//        return true;
+//    }
+//
+//    // 如果是简单拖拽模式，更新位置
+//    if (_buildingPreview->isSimpleDragging())
+//    {
+//        CCLOG("Building is simple dragging, updating position");
+//        _buildingPreview->updatePreviewPosition(touchPos);
+//        return true;
+//    }
+//
+//    // 如果不是在移动建筑，检查是否点击了现有建筑
+//    // 准备开始移动操作
+//    if (!_isMovingBuilding)
+//    {
+//        CCLOG("Checking for building click - moving:%s",
+//            _isMovingBuilding ? "true" : "false");
+//
+//        // 检查HomeVillageMap是否有效    
+//        if (!_homeVillageMap) {
+//            CCLOG("HomeVillageMap is null, cannot check buildings");
+//            return false;
+//        }
+//
+//        // 转换触摸坐标到地图坐标系
+//        Vec2 mapPos = _homeVillageMap->getMapPosition();
+//        float zoom = _homeVillageMap->getZoom();
+//        Vec2 worldPos = (touchPos - mapPos) / zoom;
+//
+//        CCLOG("SceneMap::onMapTouched - checking for building at world pos (%.2f, %.2f)", worldPos.x, worldPos.y);
+//        CCLOG("Current buildings count: %d", (int)_buildings.size());
+//
+//        // 通过BuildingPreview检查点击位置是否有建筑
+//        Building* clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, _buildings);
+//
+//        if (clickedBuilding)
+//        {
+//            CCLOG("Building found via BuildingPreview, starting simple drag");
+//            _buildingPreview->startSimpleDrag(clickedBuilding);
+//            return true;
+//        }
+//
+//        // 从HomeVillageMap的建筑容器中再次检查
+//        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+//        if (buildingsContainer) {
+//            Vector<Building*> containerBuildings;
+//            auto existingBuildings = buildingsContainer->getChildren();
+//            CCLOG("Buildings in container: %d", (int)existingBuildings.size());
+//
+//            for (auto building : existingBuildings) {
+//                auto buildingObj = dynamic_cast<Building*>(building);
+//                if (buildingObj) {
+//                    containerBuildings.pushBack(buildingObj);
+//                }
+//            }
+//
+//            // 通过BuildingPreview检查容器中的建筑
+//            clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, containerBuildings);
+//
+//            if (clickedBuilding)
+//            {
+//                CCLOG("Building found in container via BuildingPreview, starting simple drag");
+//
+//                // 将找到的建筑添加到SceneMap的列表中
+//                bool found = false;
+//                for (auto existingBuilding : _buildings) {
+//                    if (existingBuilding == clickedBuilding) {
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//                if (!found) {
+//                    _buildings.pushBack(clickedBuilding);
+//                    CCLOG("Added building to SceneMap buildings list");
+//                }
+//
+//                _buildingPreview->startSimpleDrag(clickedBuilding);
+//                return true;
+//            }
+//        }
+//
+//        CCLOG("No building found at touch position");
+//    }
+//    else
+//    {
+//        CCLOG("Cannot check buildings - moving:%s preview:%s",
+//            _isMovingBuilding ? "true" : "false",
+//            _buildingPreview ? "valid" : "null");
+//    }
+//
+//    // 返回false允许事件继续传递
+//    // 这样UI元素可以接收到触摸事件
+//    return false;
+//}
+//
+//void SceneMap::onMouseMoved(Event* event)
+//{
+//    if (!_buildingPreview) {
+//        return;
+//    }
+//
+//    EventMouse* mouseEvent = static_cast<EventMouse*>(event);
+//    Vec2 mousePos = Vec2(mouseEvent->getCursorX(), mouseEvent->getCursorY());
+//
+//    // 如果正在预览并拖拽，更新预览位置
+//    if (_buildingPreview->isPreviewing() && _buildingPreview->isPreviewDragging())
+//    {
+//        _buildingPreview->updatePreviewPosition(mousePos);
+//    }
+//    // 如果正在移动建筑
+//    else if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging())
+//    {
+//        _buildingPreview->updatePreviewPosition(mousePos);
+//    }
+//}
+
+//void SceneMap::update(float dt)
+//{
+//    // 更新资源UI显示
+//    auto resourceMgr = ResourceManager::getInstance();
+//    resourceMgr->updateUI();
+//}
 
 bool SceneMap::onMapTouched(Touch* touch, Event* event)
 {
     Vec2 touchPos = touch->getLocation();
-
-    CCLOG("SceneMap::onMapTouched called at (%.2f, %.2f)", touchPos.x, touchPos.y);
-
-    // 检查BuildingPreview是否有效
-    if (!_buildingPreview) {
-        CCLOG("BuildingPreview is null, cannot process touch");
-        return false;
-    }
-
-    // 如果正在预览建筑且未开始拖拽，开始拖拽检测
-    if (_buildingPreview->isPreviewing() && !_buildingPreview->isPreviewDragging())
-    {
-        CCLOG("Preview building detected, starting drag detection");
-        _buildingPreview->startPreviewDragDetection(touchPos);
-        return true;
-    }
-
-    // 如果正在移动建筑，更新位置
-    if (_buildingPreview->isMoving())
-    {
-        CCLOG("Building is moving, updating position");
-        _buildingPreview->updatePreviewPosition(touchPos);
-        return true;
-    }
-
-    // 如果是简单拖拽模式，更新位置
-    if (_buildingPreview->isSimpleDragging())
-    {
-        CCLOG("Building is simple dragging, updating position");
-        _buildingPreview->updatePreviewPosition(touchPos);
-        return true;
-    }
-
-    // 如果不是在移动建筑，检查是否点击了现有建筑
-    // 准备开始移动操作
+    CCLOG("SceneMap::onMapTouched at (%.2f, %.2f)", touchPos.x, touchPos.y);
+    if (!_buildingPreview) return false;
+    if (_buildingPreview->isPreviewing() && !_buildingPreview->isPreviewDragging()) { _buildingPreview->startPreviewDragDetection(touchPos); return true; }
+    if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()) { _buildingPreview->updatePreviewPosition(touchPos); return true; }
     if (!_isMovingBuilding)
     {
-        CCLOG("Checking for building click - moving:%s",
-            _isMovingBuilding ? "true" : "false");
-
-        // 检查HomeVillageMap是否有效    
-        if (!_homeVillageMap) {
-            CCLOG("HomeVillageMap is null, cannot check buildings");
-            return false;
-        }
-
-        // 转换触摸坐标到地图坐标系
-        Vec2 mapPos = _homeVillageMap->getMapPosition();
-        float zoom = _homeVillageMap->getZoom();
-        Vec2 worldPos = (touchPos - mapPos) / zoom;
-
-        CCLOG("SceneMap::onMapTouched - checking for building at world pos (%.2f, %.2f)", worldPos.x, worldPos.y);
-        CCLOG("Current buildings count: %d", (int)_buildings.size());
-
-        // 通过BuildingPreview检查点击位置是否有建筑
+        if (!_homeVillageMap) return false;
+        Vec2 mapPos = _homeVillageMap->getMapPosition(); float zoom = _homeVillageMap->getZoom(); Vec2 worldPos = (touchPos - mapPos) / zoom;
         Building* clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, _buildings);
-
-        if (clickedBuilding)
-        {
-            CCLOG("Building found via BuildingPreview, starting simple drag");
-            _buildingPreview->startSimpleDrag(clickedBuilding);
-            return true;
-        }
-
-        // 从HomeVillageMap的建筑容器中再次检查
+        if (clickedBuilding) { _buildingPreview->startSimpleDrag(clickedBuilding); return true; }
         auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
-        if (buildingsContainer) {
+        if (buildingsContainer)
+        {
             Vector<Building*> containerBuildings;
             auto existingBuildings = buildingsContainer->getChildren();
-            CCLOG("Buildings in container: %d", (int)existingBuildings.size());
-
             for (auto building : existingBuildings) {
                 auto buildingObj = dynamic_cast<Building*>(building);
-                if (buildingObj) {
-                    containerBuildings.pushBack(buildingObj);
-                }
+                if (buildingObj) containerBuildings.pushBack(buildingObj);
             }
-
-            // 通过BuildingPreview检查容器中的建筑
             clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, containerBuildings);
-
             if (clickedBuilding)
             {
-                CCLOG("Building found in container via BuildingPreview, starting simple drag");
-
-                // 将找到的建筑添加到SceneMap的列表中
                 bool found = false;
-                for (auto existingBuilding : _buildings) {
-                    if (existingBuilding == clickedBuilding) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    _buildings.pushBack(clickedBuilding);
-                    CCLOG("Added building to SceneMap buildings list");
-                }
-
+                for (auto b : _buildings) if (b == clickedBuilding) { found = true; break; }
+                if (!found) _buildings.pushBack(clickedBuilding);
                 _buildingPreview->startSimpleDrag(clickedBuilding);
                 return true;
             }
         }
-
-        CCLOG("No building found at touch position");
     }
-    else
-    {
-        CCLOG("Cannot check buildings - moving:%s preview:%s",
-            _isMovingBuilding ? "true" : "false",
-            _buildingPreview ? "valid" : "null");
-    }
-
-    // 返回false允许事件继续传递
-    // 这样UI元素可以接收到触摸事件
     return false;
 }
 
 void SceneMap::onMouseMoved(Event* event)
 {
-    if (!_buildingPreview) {
-        return;
-    }
-
+    if (!_buildingPreview) return;
     EventMouse* mouseEvent = static_cast<EventMouse*>(event);
     Vec2 mousePos = Vec2(mouseEvent->getCursorX(), mouseEvent->getCursorY());
-
-    // 如果正在预览并拖拽，更新预览位置
-    if (_buildingPreview->isPreviewing() && _buildingPreview->isPreviewDragging())
-    {
-        _buildingPreview->updatePreviewPosition(mousePos);
-    }
-    // 如果正在移动建筑
-    else if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging())
-    {
-        _buildingPreview->updatePreviewPosition(mousePos);
-    }
+    if (_buildingPreview->isPreviewing() && _buildingPreview->isPreviewDragging()) _buildingPreview->updatePreviewPosition(mousePos);
+    else if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()) _buildingPreview->updatePreviewPosition(mousePos);
 }
 
-void SceneMap::update(float dt)
-{
-    // 更新资源UI显示
-    auto resourceMgr = ResourceManager::getInstance();
-    resourceMgr->updateUI();
-}
 
 void SceneMap::checkPendingBuildingPlacement()
 {
@@ -663,136 +984,261 @@ void SceneMap::startBuildingPlacement(BuildingType buildingType)
     }
 }
 
+
+///////////////////////////////////////////////////////////////////
+///////////////////////核心融合冲突/////////////////////////////////
+///////////////////////////////////////////////////////////////////
+//void SceneMap::reinitializeEventListeners()
+//{
+//    CCLOG("SceneMap::reinitializeEventListeners - setting up event listeners");
+//
+//    // 检查场景是否正在运行，否则延迟初始化
+//    if (!this->isRunning()) {
+//        CCLOG("Scene is not running, scheduling event listener initialization");
+//        this->scheduleOnce([this](float dt) {
+//            this->reinitializeEventListeners();
+//            }, 0.1f, "delayed_event_init");
+//        return;
+//    }
+//
+//    // 移除旧的监听器
+//    if (_eventDispatcher) {
+//        _eventDispatcher->removeEventListenersForTarget(this);
+//    }
+//
+//    CCLOG("Registering touch event listener...");
+//
+//    // =========================update qy===================================
+//    // comment : 鼠标右键
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+//    auto mouseListener = EventListenerMouse::create();
+//    mouseListener->onMouseDown = [this](Event* event) {
+//        EventMouse* e = static_cast<EventMouse*>(event);
+//        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+//        {
+//            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+//            Vec2 mapPos = _homeVillageMap->getMapPosition(); float zoom = _homeVillageMap->getZoom(); Vec2 targetPos = (mouseWorldPos - mapPos) / zoom;
+//            Building* targetBuilding = _buildingPreview->checkBuildingAtPosition(targetPos, _buildings);
+//            if (targetBuilding) targetBuilding->showMenuImmediately();
+//        }
+//        };
+//    mouseListener->onMouseUp = [this](Event* event) {
+//        EventMouse* e = static_cast<EventMouse*>(event);
+//        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+//        {
+//            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+//            for (auto& building : _buildings)
+//            {
+//                if (building && building->isMenuShow() && building->getUpgradeMenu())
+//                {
+//                    Vec2 localPos = building->getUpgradeMenu()->convertToNodeSpace(mouseWorldPos);
+//                    if (building->getUpgradeBtn() && building->getUpgradeBtn()->getBoundingBox().containsPoint(localPos)) {
+//                        building->upgradeBuilding();
+//                        this->calculateTotalGoldProduceSpeed();
+//                        this->calculateTotalElixirProduceSpeed();
+//                        CCLOG("建筑升级成功！立刻更新产速");
+//                    }
+//                    else if (building->getCancelBtn() && building->getCancelBtn()->getBoundingBox().containsPoint(localPos)) building->removeBuilding();
+//                    else if (building->getInfoBtn() && building->getInfoBtn()->getBoundingBox().containsPoint(localPos)) building->showBuildingInfo();
+//                }
+//            }
+//        }
+//        };
+//    _eventDispatcher->addEventListenerWithFixedPriority(mouseListener, -100);
+//#endif
+//    // =========================update qy===================================
+//
+//    // 创建触摸监听器 - 设置优先级-1确保比HomeVillageMap先接收
+//    auto listener upd EventListenerTouchOneByOne::create();
+//    listener->setSwallowTouches(true); // 吞噬触摸事件(不传递给HomeVillageMap)
+//    listener->onTouchBegan = CC_CALLBACK_2(SceneMap::onMapTouched, this);
+//    listener->onTouchMoved = [this](Touch* touch, Event* event) {
+//        Vec2 touchPos = touch->getLocation();
+//
+//        // 如果正在预览建筑，更新预览位置
+//        if (_buildingPreview && _buildingPreview->isPreviewing())
+//        {
+//            // 检查是否应该开始拖拽
+//            if (!_buildingPreview->isPreviewDragging())
+//            {
+//                if (_buildingPreview->checkDragStart(touchPos))
+//                {
+//                    // 开始拖拽
+//                    _buildingPreview->updatePreviewPosition(touchPos);
+//                }
+//            }
+//            else
+//            {
+//                // 持续更新位置
+//                _buildingPreview->updatePreviewPosition(touchPos);
+//            }
+//        }
+//        // 如果正在移动建筑
+//        else if (_buildingPreview && (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()))
+//        {
+//            _buildingPreview->updatePreviewPosition(touchPos);
+//        }
+//        };
+//    listener->onTouchEnded = [this](Touch* touch, Event* event) {
+//        // 结束预览拖拽
+//        if (_buildingPreview && _buildingPreview->isPreviewDragging())
+//        {
+//            _buildingPreview->endPreviewDrag();
+//        }
+//        // 结束简单拖拽
+//        else if (_buildingPreview && _buildingPreview->isSimpleDragging())
+//        {
+//            _buildingPreview->endSimpleDrag();
+//        }
+//        };
+//    _eventDispatcher->addEventListenerWithFixedPriority(listener, -1);
+//
+//    // 自定义事件 - 建筑放置完成
+//    auto buildingPlacedListener = EventListenerCustom::create("building_placed",
+//        [this](EventCustom* event) {
+//            // 检查SceneMap是否有效
+//            if (!this || !this->getScene()) {
+//                CCLOG("SceneMap object or scene is invalid, ignoring building_placed event");
+//                return;
+//            }
+//
+//            Building* building = static_cast<Building*>(event->getUserData());
+//            CCLOG("Building placed event received for building: %p", building);
+//
+//            if (building) {
+//                // 将建筑添加到列表中（避免重复）
+//                bool found = false;
+//                for (auto existingBuilding : this->_buildings) {
+//                    if (existingBuilding == building) {
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//
+//                if (!found) {
+//                    this->_buildings.pushBack(building);
+//                    CCLOG("Added building to SceneMap buildings list (total: %d)", (int)this->_buildings.size());
+//                }
+//                else {
+//                    CCLOG("Building already in SceneMap buildings list");
+//                }
+//
+//                // 重置放置状态
+//                this->_isPlacingBuilding = false;
+//                CCLOG("Building placed event processed successfully, _isPlacingBuilding set to false");
+//            }
+//            else {
+//                CCLOG("Warning: Building placed event received with null building");
+//                // 安全重置状态
+//                this->_isPlacingBuilding = false;
+//            }
+//            // ================================update qy=====================================
+//            this->calculateTotalGoldCapacity();
+//            this->calculateTotalElixirCapacity();
+//            // ================================update qy=====================================
+//        });
+//    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingPlacedListener, this);
+//
+//    auto buildingMovedListener = EventListenerCustom::create("building_moved",
+//        [this](EventCustom* event) {
+//            // 检查SceneMap是否有效
+//            if (this && this->getScene() && !this->getScene()->isRunning()) {
+//                CCLOG("SceneMap object or scene is invalid, ignoring building_moved event");
+//                return;
+//            }
+//
+//            // 重置移动状态
+//            this->_isMovingBuilding = false;
+//            this->_selectedBuilding = nullptr;
+//            CCLOG("Building moved event received and processed");
+//        });
+//    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingMovedListener, this);
+//
+//    CCLOG("SceneMap event listeners reinitialized successfully");
+//}
 void SceneMap::reinitializeEventListeners()
 {
-    CCLOG("SceneMap::reinitializeEventListeners - setting up event listeners");
-
-    // 检查场景是否正在运行，否则延迟初始化
+    CCLOG("SceneMap::reinitializeEventListeners");
     if (!this->isRunning()) {
-        CCLOG("Scene is not running, scheduling event listener initialization");
-        this->scheduleOnce([this](float dt) {
-            this->reinitializeEventListeners();
-            }, 0.1f, "delayed_event_init");
+        this->runAction(Sequence::create(
+            DelayTime::create(0.1f),
+            CallFunc::create([this]() {
+                this->reinitializeEventListeners();
+                }),
+            nullptr
+        ));
         return;
     }
+    if (_eventDispatcher) _eventDispatcher->removeEventListenersForTarget(this);
 
-    // 移除旧的监听器
-    if (_eventDispatcher) {
-        _eventDispatcher->removeEventListenersForTarget(this);
-    }
-
-    CCLOG("Registering touch event listener...");
-
-    // 创建触摸监听器 - 设置优先级-1确保比HomeVillageMap先接收
-    auto listener = EventListenerTouchOneByOne::create();
-    listener->setSwallowTouches(true); // 吞噬触摸事件(不传递给HomeVillageMap)
-    listener->onTouchBegan = CC_CALLBACK_2(SceneMap::onMapTouched, this);
-    listener->onTouchMoved = [this](Touch* touch, Event* event) {
-        Vec2 touchPos = touch->getLocation();
-
-        // 如果正在预览建筑，更新预览位置
-        if (_buildingPreview && _buildingPreview->isPreviewing())
-        {
-            // 检查是否应该开始拖拽
-            if (!_buildingPreview->isPreviewDragging())
-            {
-                if (_buildingPreview->checkDragStart(touchPos))
-                {
-                    // 开始拖拽
-                    _buildingPreview->updatePreviewPosition(touchPos);
-                }
-            }
-            else
-            {
-                // 持续更新位置
-                _buildingPreview->updatePreviewPosition(touchPos);
-            }
-        }
-        // 如果正在移动建筑
-        else if (_buildingPreview && (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()))
-        {
-            _buildingPreview->updatePreviewPosition(touchPos);
-        }
-        };
-    listener->onTouchEnded = [this](Touch* touch, Event* event) {
-        // 结束预览拖拽
-        if (_buildingPreview && _buildingPreview->isPreviewDragging())
-        {
-            _buildingPreview->endPreviewDrag();
-        }
-        // 结束简单拖拽
-        else if (_buildingPreview && _buildingPreview->isSimpleDragging())
-        {
-            _buildingPreview->endSimpleDrag();
-        }
-        };
-    _eventDispatcher->addEventListenerWithFixedPriority(listener, -1);
-
-    // 鼠标移动监听器(桌面平台)
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
     auto mouseListener = EventListenerMouse::create();
-    mouseListener->onMouseMove = CC_CALLBACK_1(SceneMap::onMouseMoved, this);
-    _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+    mouseListener->onMouseDown = [this](Event* event) {
+        EventMouse* e = static_cast<EventMouse*>(event);
+        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+        {
+            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+            Vec2 mapPos = _homeVillageMap->getMapPosition(); float zoom = _homeVillageMap->getZoom(); Vec2 targetPos = (mouseWorldPos - mapPos) / zoom;
+            Building* targetBuilding = _buildingPreview->checkBuildingAtPosition(targetPos, _buildings);
+            if (targetBuilding) targetBuilding->showMenuImmediately();
+        }
+        };
+    mouseListener->onMouseUp = [this](Event* event) {
+        EventMouse* e = static_cast<EventMouse*>(event);
+        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+        {
+            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+            for (auto& building : _buildings)
+            {
+                if (building && building->isMenuShow() && building->getUpgradeMenu())
+                {
+                    Vec2 localPos = building->getUpgradeMenu()->convertToNodeSpace(mouseWorldPos);
+                    if (building->getUpgradeBtn() && building->getUpgradeBtn()->getBoundingBox().containsPoint(localPos)) {
+                        building->upgradeBuilding();
+                        this->calculateTotalGoldProduceSpeed();
+                        this->calculateTotalElixirProduceSpeed();
+                        CCLOG("建筑升级成功！立刻更新产速");
+                    }
+                    else if (building->getCancelBtn() && building->getCancelBtn()->getBoundingBox().containsPoint(localPos)) building->removeBuilding();
+                    else if (building->getInfoBtn() && building->getInfoBtn()->getBoundingBox().containsPoint(localPos)) building->showBuildingInfo();
+                }
+            }
+        }
+        };
+    _eventDispatcher->addEventListenerWithFixedPriority(mouseListener, -100);
 #endif
 
-    // 自定义事件 - 建筑放置完成
-    auto buildingPlacedListener = EventListenerCustom::create("building_placed",
-        [this](EventCustom* event) {
-            // 检查SceneMap是否有效
-            if (!this || !this->getScene()) {
-                CCLOG("SceneMap object or scene is invalid, ignoring building_placed event");
-                return;
-            }
+    auto touchListener = EventListenerTouchOneByOne::create();
+    touchListener->setSwallowTouches(true);
+    touchListener->onTouchBegan = CC_CALLBACK_2(SceneMap::onMapTouched, this);
+    touchListener->onTouchMoved = [this](Touch* touch, Event* event) {
+        Vec2 touchPos = touch->getLocation();
+        if (_buildingPreview && _buildingPreview->isPreviewing())
+        {
+            if (!_buildingPreview->isPreviewDragging() && _buildingPreview->checkDragStart(touchPos)) _buildingPreview->updatePreviewPosition(touchPos);
+            else if (_buildingPreview->isPreviewDragging()) _buildingPreview->updatePreviewPosition(touchPos);
+        }
+        else if (_buildingPreview && (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging())) _buildingPreview->updatePreviewPosition(touchPos);
+        };
+    touchListener->onTouchEnded = [this](Touch* touch, Event* event) {
+        if (_buildingPreview && _buildingPreview->isPreviewDragging()) _buildingPreview->endPreviewDrag();
+        else if (_buildingPreview && _buildingPreview->isSimpleDragging()) _buildingPreview->endSimpleDrag();
+        };
+    _eventDispatcher->addEventListenerWithFixedPriority(touchListener, -1);
 
-            Building* building = static_cast<Building*>(event->getUserData());
-            CCLOG("Building placed event received for building: %p", building);
-
-            if (building) {
-                // 将建筑添加到列表中（避免重复）
-                bool found = false;
-                for (auto existingBuilding : this->_buildings) {
-                    if (existingBuilding == building) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    this->_buildings.pushBack(building);
-                    CCLOG("Added building to SceneMap buildings list (total: %d)", (int)this->_buildings.size());
-                }
-                else {
-                    CCLOG("Building already in SceneMap buildings list");
-                }
-
-                // 重置放置状态
-                this->_isPlacingBuilding = false;
-                CCLOG("Building placed event processed successfully, _isPlacingBuilding set to false");
-            }
-            else {
-                CCLOG("Warning: Building placed event received with null building");
-                // 安全重置状态
-                this->_isPlacingBuilding = false;
-            }
+    auto buildingPlacedListener = EventListenerCustom::create("building_placed", [this](EventCustom* event) {
+        Building* building = static_cast<Building*>(event->getUserData());
+        if (building && !_buildings.contains(building)) _buildings.pushBack(building);
+        _isPlacingBuilding = false;
+        this->calculateTotalGoldCapacity();
+        this->calculateTotalElixirCapacity();
         });
     _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingPlacedListener, this);
 
-    auto buildingMovedListener = EventListenerCustom::create("building_moved",
-        [this](EventCustom* event) {
-            // 检查SceneMap是否有效
-            if (this && this->getScene() && !this->getScene()->isRunning()) {
-                CCLOG("SceneMap object or scene is invalid, ignoring building_moved event");
-                return;
-            }
-
-            // 重置移动状态
-            this->_isMovingBuilding = false;
-            this->_selectedBuilding = nullptr;
-            CCLOG("Building moved event received and processed");
+    auto buildingMovedListener = EventListenerCustom::create("building_moved", [this](EventCustom* event) {
+        _isMovingBuilding = false; _selectedBuilding = nullptr;
         });
     _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingMovedListener, this);
-
-    CCLOG("SceneMap event listeners reinitialized successfully");
 }
 
 void SceneMap::resetBuildingPlacementState()
@@ -825,3 +1271,149 @@ void SceneMap::resetBuildingPlacementState()
 
     CCLOG("Building placement state reset completed");
 }
+
+//yxy-update:
+// 场景切换后重新初始化事件监听器
+void SceneMap::onEnterTransitionDidFinish() {
+    Scene::onEnterTransitionDidFinish();
+    // Refresh display when returning from selection scene
+    _homeVillageMap->updateTroopDisplay();
+}
+void SceneMap::onTroopSelectionButtonClicked(Ref* pSender) {
+
+    CCLOG("TroopSelection button clicked, switching to troopselection scene");
+
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoTroopSelectionScene();
+}
+
+
+// =========================update qy===================================
+// 金币总产速计算（原有）
+void SceneMap::calculateTotalGoldProduceSpeed()
+{
+    int totalSpeed = 0;
+    int goldMineCount = 0;
+
+    if (_homeVillageMap && _homeVillageMap->getBuildingsContainer())
+    {
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        auto allChildren = buildingsContainer->getChildren();
+        for (auto node : allChildren)
+        {
+            Building* building = dynamic_cast<Building*>(node);
+            if (building && building->getBuildingType() == BuildingType::GOLD_MINE)
+            {
+                goldMineCount++;
+                int lv = building->getLevel();
+                switch (lv) {
+                case 1: totalSpeed += 200; break;
+                case 2: totalSpeed += 400; break;
+                case 3: totalSpeed += 600; break;
+                default: totalSpeed += 200; break;
+                }
+            }
+        }
+    }
+
+    GameManager::getInstance()->setGoldProduceSpeedPerHour(totalSpeed);
+    CCLOG("[产速计算] 检测到%d座金矿 → 总产速：%d金币/小时", goldMineCount, totalSpeed);
+}
+
+// 金币总容量计算（原有）
+void SceneMap::calculateTotalGoldCapacity()
+{
+    int totalGoldCapacity = 0;
+    if (_homeVillageMap == nullptr || _homeVillageMap->getBuildingsContainer() == nullptr)
+    {
+        CCLOG("[金币上限] 地图容器为空，总容量设为0");
+        GameManager::getInstance()->setGoldStorageCapacity(totalGoldCapacity);
+        return;
+    }
+
+    auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+    auto allChildren = buildingsContainer->getChildren();
+    for (auto node : allChildren)
+    {
+        Building* building = dynamic_cast<Building*>(node);
+        if (building == nullptr) continue;
+
+        BuildingType type = building->getBuildingType();
+        if (type == BuildingType::TOWN_HALL ||
+            type == BuildingType::GOLD_MINE ||
+            type == BuildingType::GOLD_STORAGE)
+        {
+            int singleCap = getSingleBuildingGoldCapacity(building);
+            totalGoldCapacity += singleCap;
+            CCLOG("[金币上限] 建筑类型：%d | 等级：%d | 单建筑容量：%d", (int)type, building->getLevel(), singleCap);
+        }
+    }
+
+    GameManager::getInstance()->setGoldStorageCapacity(totalGoldCapacity);
+    CCLOG("[金币上限] 全局总容量计算完成 → 总和 = %d", totalGoldCapacity);
+    this->refreshResourceImmediately();
+}
+
+// ========== 新增：圣水总产速计算 ==========
+void SceneMap::calculateTotalElixirProduceSpeed()
+{
+    int totalSpeed = 0;
+    int elixirCollectorCount = 0;
+
+    if (_homeVillageMap && _homeVillageMap->getBuildingsContainer())
+    {
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        auto allChildren = buildingsContainer->getChildren();
+        for (auto node : allChildren)
+        {
+            Building* building = dynamic_cast<Building*>(node);
+            if (building && building->getBuildingType() == BuildingType::ELIXIR_COLLECTOR)
+            {
+                elixirCollectorCount++;
+                int lv = building->getLevel();
+                switch (lv) {
+                case 1: totalSpeed += 200; break;
+                case 2: totalSpeed += 400; break;
+                case 3: totalSpeed += 600; break;
+                default: totalSpeed += 200; break;
+                }
+            }
+        }
+    }
+    GameManager::getInstance()->setElixirProduceSpeedPerHour(totalSpeed);
+    CCLOG("[产圣水计算] 检测到%d座圣水收集器 → 总产速：%d圣水/小时", elixirCollectorCount, totalSpeed);
+}
+
+// ========== 新增：圣水总容量计算 ==========
+void SceneMap::calculateTotalElixirCapacity()
+{
+    int totalElixirCapacity = 0;
+    if (_homeVillageMap == nullptr || _homeVillageMap->getBuildingsContainer() == nullptr)
+    {
+        CCLOG("[圣水上限] 地图容器为空，总容量设为0");
+        GameManager::getInstance()->setElixirStorageCapacity(totalElixirCapacity);
+        return;
+    }
+
+    auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+    auto allChildren = buildingsContainer->getChildren();
+    for (auto node : allChildren)
+    {
+        Building* building = dynamic_cast<Building*>(node);
+        if (building == nullptr) continue;
+
+        BuildingType type = building->getBuildingType();
+        if (type == BuildingType::TOWN_HALL ||
+            type == BuildingType::ELIXIR_COLLECTOR ||
+            type == BuildingType::ELIXIR_STORAGE)
+        {
+            int singleCap = getSingleBuildingElixirCapacity(building);
+            totalElixirCapacity += singleCap;
+            CCLOG("[圣水上限] 建筑类型：%d | 等级：%d | 单建筑容量：%d", (int)type, building->getLevel(), singleCap);
+        }
+    }
+    GameManager::getInstance()->setElixirStorageCapacity(totalElixirCapacity);
+    CCLOG("[圣水上限] 全局总容量计算完成 → 总和 = %d", totalElixirCapacity);
+    this->refreshResourceImmediately();
+}
+// =========================update qy===================================

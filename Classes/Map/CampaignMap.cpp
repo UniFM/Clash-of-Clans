@@ -1,7 +1,5 @@
 #include "CampaignMap.h"
-#include "Building/TownHall.h"
-#include "Building/DefenseTower.h"
-#include "Control/AIController.h"
+#include "buildings/BuildingsData.h"
 
 USING_NS_CC;
 
@@ -53,13 +51,13 @@ void CampaignMap::setupLevel(int levelId)
         townHall->setPosition(gridToWorld(18, 18));
         addBuilding(townHall);
 
-        auto tower1 = DefenseTower::create(BuildingType::ARCHER_TOWER, 1);
-        tower1->setPosition(gridToWorld(18, 18));
-        addBuilding(tower1);
+        //auto tower1 = DefenseTower::create(BuildingType::ARCHER_TOWER, 1);
+        //tower1->setPosition(gridToWorld(18, 18));
+        //addBuilding(tower1);
 
-        auto tower2 = DefenseTower::create(BuildingType::CANNON, 1);
-        tower2->setPosition(gridToWorld(22, 18));
-        addBuilding(tower2);
+        //auto tower2 = DefenseTower::create(BuildingType::CANNON, 1);
+        //tower2->setPosition(gridToWorld(22, 18));
+        //addBuilding(tower2);
     }
     else if (levelId == 1)
     {
@@ -68,9 +66,9 @@ void CampaignMap::setupLevel(int levelId)
         townHall->setPosition(gridToWorld(18, 22));
         addBuilding(townHall);
 
-        auto cannon = DefenseTower::create(BuildingType::CANNON, 1);
-        cannon->setPosition(gridToWorld(18, 18)); // 略低于大本营
-        addBuilding(cannon);
+        //auto cannon = DefenseTower::create(BuildingType::CANNON, 1);
+        //cannon->setPosition(gridToWorld(18, 18)); // 略低于大本营
+        //addBuilding(cannon);
     }
     else if (levelId == 2)
     {
@@ -79,16 +77,16 @@ void CampaignMap::setupLevel(int levelId)
         townHall->setPosition(gridToWorld(18, 18));
         addBuilding(townHall);
 
-        auto cannon1 = DefenseTower::create(BuildingType::CANNON, 2);
-        cannon1->setPosition(gridToWorld(22, 22));
-        addBuilding(cannon1);
+        //auto cannon1 = DefenseTower::create(BuildingType::CANNON, 2);
+        //cannon1->setPosition(gridToWorld(22, 22));
+        //addBuilding(cannon1);
 
-        auto cannon2 = DefenseTower::create(BuildingType::CANNON, 2);
-        cannon2->setPosition(gridToWorld(27, 19));
-        addBuilding(cannon2);
+        //auto cannon2 = DefenseTower::create(BuildingType::CANNON, 2);
+        //cannon2->setPosition(gridToWorld(27, 19));
+        //addBuilding(cannon2);
 
-        auto tower = DefenseTower::create(BuildingType::ARCHER_TOWER, 1);
-        tower->setPosition(gridToWorld(22, 10));
-        addBuilding(tower);
+        //auto tower = DefenseTower::create(BuildingType::ARCHER_TOWER, 1);
+        //tower->setPosition(gridToWorld(22, 10));
+        //addBuilding(tower);
     }
 }

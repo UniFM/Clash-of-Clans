@@ -1,5 +1,9 @@
 #include "HomeVillageMap.h"
 #include "cocos2d.h"
+#include "Troops/Unit.h"
+#include "Troops/TroopManager.h"
+#include "Troops/TroopDefinitions.h"
+#include "SceneMap.h"
 
 using namespace cocos2d;
 
@@ -83,8 +87,92 @@ bool HomeVillageMap::init(const std::string& mapImagePath)
     {
         return false;
     }
-        
+
+    // 初始化时更新一次部队显示
+    this->updateTroopDisplay();
+
     return true;
+}
+
+
+
+// [新增] 移植自 SceneMap 的 updateTroopDisplay 函数
+void HomeVillageMap::updateTroopDisplay() {
+    log("HomeVillageMap::updateTroopDisplay called");
+
+    // 获取BaseMap中的部队容器
+    auto troopsContainer = this->getTroopsContainer();
+    
+    // 容错处理
+    if (!troopsContainer) {
+        log("ERROR: troopsContainer was NULL in BaseMap.");
+        return;
+    }
+
+    // 1. 清理旧显示
+    troopsContainer->removeAllChildren();
+
+    // 2. 获取草地区域内的1/4位置作为兵营位置（相对于地图内容固定）
+    // 这里使用相对于地图的局部坐标，让兵营随地图移动
+    // 计算草地层1/4位置的绝对坐标（相对于草地层自身）
+    float grassRelativeX = BaseMap::getGrassRectWidth() * 0.5f;
+    float grassRelativeY = BaseMap::getGrassRectHeight() * 0.3f;
+
+    // 转换为世界坐标系（考虑草地层自身的原点）
+    float worldX = BaseMap::getGrassOffsetX() + grassRelativeX;
+    float worldY = BaseMap::getGrassOffsetY() + grassRelativeY;
+
+    // 设置兵营位置（使用地图局部坐标系）
+    Vec2 barracksPos = Vec2(worldX, worldY);
+
+    // 游荡半径
+    float wanderRadius = 100.0f;
+
+    // 3. 从 TroopManager 获取实际选中的部队数量
+    auto tm = TroopManager::getInstance();
+
+    std::vector<UnitType> types = {
+        UnitType::BARBARIAN,
+        UnitType::ARCHER,
+        UnitType::GOBLIN,
+        UnitType::GIANT
+    };
+
+    int totalSpawned = 0;
+
+    // 4. 生成并显示
+    for (auto type : types) {
+        // 转换类型
+        TroopType troopType = static_cast<TroopType>(type);
+
+        int count = tm->getTroopCount(troopType);
+
+        if (count > 0) {
+            log("Spawning type %d: count = %d", (int)type, count);
+        }
+
+        for (int i = 0; i < count; ++i) {
+            Unit* unit = Unit::create(type);
+
+            if (unit) {
+                // 随机初始位置（相对于地图的局部坐标）
+                float angle = CCRANDOM_0_1() * M_PI * 2;
+                float dist = CCRANDOM_0_1() * wanderRadius;
+                Vec2 startPos = barracksPos + Vec2(cos(angle) * dist, sin(angle) * dist);
+
+                unit->setPosition(startPos);
+
+                // 添加到容器（容器是地图的子节点，所以使用地图的局部坐标系）
+                troopsContainer->addChild(unit);
+
+                // 启动游荡
+                unit->wanderAround(barracksPos, wanderRadius);
+
+                totalSpawned++;
+            }
+        }
+    }
+    log("HomeVillageMap::updateTroopDisplay finished. Spawned %d units.", totalSpawned);
 }
 
 bool HomeVillageMap::onTouchBegan(Touch* touch, Event* event)

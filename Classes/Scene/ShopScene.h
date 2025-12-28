@@ -12,7 +12,7 @@
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 #include "Constant/Constant.h"
-#include "Building/BuildingData.h"
+#include "buildings/BuildingsData.h"
 #include "Control/GameManager.h"
 
 USING_NS_CC;
@@ -86,6 +86,7 @@ private:
     // 资源相关
     void updateResourceDisplay();     // 更新资源显示
     bool canAffordBuilding(BuildingType buildingType, int level = 1); // 检查是否买得起
+    void showInsufficientResourcesMessage(); // 显示资源不足提示
     
     // 事件处理
     void onCloseButtonClicked(Ref* sender); // 关闭按钮点击

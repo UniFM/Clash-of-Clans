@@ -25,7 +25,7 @@
 
 cmake_minimum_required(VERSION 3.6)
 
-set(APP_NAME cs_final_coc)
+set(APP_NAME recocos)
 
 project(${APP_NAME})
 
@@ -35,7 +35,7 @@ if(XCODE)
     endif()
 endif()
 
-if(NOT DEFINED BUILD_ENGINE_DONE) # to test cs_final_coc into root project
+if(NOT DEFINED BUILD_ENGINE_DONE) # to test recocos into root project
     set(COCOS2DX_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cocos2d)
     set(CMAKE_MODULE_PATH ${COCOS2DX_ROOT_PATH}/cmake/Modules/)
 
@@ -57,67 +57,51 @@ endif()
 # add cross-platforms source files and header files 
 list(APPEND GAME_SOURCE
      Classes/Scene/AppDelegate.cpp
-     Classes/Scene/SplashScene.cpp
      Classes/Scene/LoginScene.cpp
-     Classes/Scene/MainMenuScene.cpp
      Classes/Scene/ShopScene.cpp
+     Classes/Scene/SplashScene.cpp
+     Classes/Scene/TroopSelectionScene.cpp
      Classes/Map/SceneMap.cpp
      Classes/Map/HomeVillageMap.cpp
-     Classes/Constant/Constant.cpp
-     Classes/Control/Control.cpp
-     Classes/Building/Building.cpp
-     Classes/Building/BuildingData.cpp
-     Classes/Building/BuildingPlaceManager.cpp
-     Classes/Building/ResourceManager.cpp
-     Classes/Building/Building.cpp
-     Classes/Building/Barracks.cpp
-     Classes/Building/DefenseTower.cpp
-     Classes/Building/ResourceBuilding.cpp
-     Classes/Building/StorageBuilding.cpp
-     Classes/Building/TownHall.cpp
-     Classes/Building/BuildingPreview.cpp
-     Classes/Troops/Unit.cpp
-     Classes/Troops/Archer.cpp
-     Classes/Troops/Barbarian.cpp
-     Classes/Troops/Bomber.cpp
-     Classes/Troops/Giant.cpp
-     Classes/Control/AIController.cpp
+     Classes/Map/CampaignMap.cpp
      Classes/Map/BattleScene.cpp
-     Classes/Control/PathFinder.cpp
+     Classes/Map/BaseMap.cpp
+     Classes/Map/CampaignMap.cpp
      Classes/Control/GameManager.cpp
-     Classes/Control/AudioManager.cpp
+     Classes/buildings/Building.cpp
+     Classes/buildings/BuildingPreview.cpp
+     Classes/buildings/ArcherTower.cpp
+     Classes/buildings/Barracks.cpp
+     Classes/buildings/Cannon.cpp
+     Classes/buildings/ElixirCollector.cpp
+     Classes/buildings/ElixirStorage.cpp
+     Classes/buildings/GoldMine.cpp
+     Classes/buildings/GoldStorage.cpp
+     Classes/buildings/TownHall.cpp
+     Classes/Troops/TroopManager.cpp
+     Classes/Troops/Unit.cpp
      )
 list(APPEND GAME_HEADER
      Classes/Scene/AppDelegate.h
-     Classes/Scene/SplashScene.h
      Classes/Scene/LoginScene.h
-     Classes/Scene/MainMenuScene.h
      Classes/Scene/ShopScene.h
+     Classes/Scene/SplashScene.h
+     Classes/Scene/TroopSelectionScene.h
      Classes/Map/SceneMap.h
      Classes/Map/HomeVillageMap.h
-     Classes/Constant/Constant.h
-     Classes/Control/Control.h
-     Classes/Building/Building.h
-     Classes/Building/BuildingData.h
-     Classes/Building/BuildingPlaceManager.h
-     Classes/Building/ResourceManager.h
-     Classes/Building/Building.h
-     Classes/Building/Barracks.h
-     Classes/Building/DefenseTower.h
-     Classes/Building/ResourceBuilding.h
-     Classes/Building/StorageBuilding.h
-     Classes/Building/TownHall.h
-     Classes/Building/BuildingPreview.h
-     Classes/Troops/Unit.h
-     Classes/Troops/Archer.h
-     Classes/Troops/Barbarian.h
-     Classes/Troops/Bomber.h
-     Classes/Troops/Giant.h
-     Classes/Control/AIController.h
+     Classes/Map/CampaignMap.h
      Classes/Map/BattleScene.h
-     Classes/Control/PathFinder.h
+     Classes/Map/BaseMap.h
      Classes/Control/GameManager.h
-     Classes/Control/AudioManager.h
+     Classes/Control/BuildingsElixirCapacityConfig.h
+     Classes/Control/BuildingsGoldCapacityConfig.h
+     Classes/Control/ResourceUILayer.h
+     Classes/Constant/Constant.h
+     Classes/buildings/BuildingsData.h
+     Classes/buildings/BuildingPreview.h
+     Classes/Troops/TroopDefinitions.h
+     Classes/Troops/TroopManager.h
+     Classes/Troops/Unit.h
      )
 
 if(ANDROID)

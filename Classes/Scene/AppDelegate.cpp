@@ -29,11 +29,12 @@
 
 #define CC_ENABLE_MULTI_TOUCH 1  // ¿ªÆô¶àµã´¥Ãþºê
 
-// #define USE_AUDIO_ENGINE 1
+ #define USE_AUDIO_ENGINE 1
 
 #if USE_AUDIO_ENGINE
 #include "audio/include/AudioEngine.h"
-using namespace cocos2d::experimental;
+using namespace cocos2d;
+
 #endif
 
 USING_NS_CC;

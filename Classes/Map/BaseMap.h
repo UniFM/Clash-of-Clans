@@ -34,6 +34,7 @@ public:
     float getZoom() const { return _zoom; }
     cocos2d::Vec2 getMapPosition() const { return _mapPosition; }
     cocos2d::Node* getBuildingsContainer() const { return _buildingsContainer; }
+    cocos2d::Node* getTroopsContainer() const { return _troopsContainer; }
 
     // 设置 / 动作处理
     void setZoom(float zoom);
@@ -88,6 +89,7 @@ protected:
     int _gridRows;
 
     cocos2d::Node* _buildingsContainer;
+    cocos2d::Node* _troopsContainer;  // 新增：部队容器
     std::vector<std::vector<bool>> _occupiedGrids;
 };
 
