@@ -1,3 +1,10 @@
+/*************************************************************
+* @file     : HomeVillageMap.cpp
+* @function ：家乡基地地图实现
+* @author   : 叶芷含
+* @note     ：实现家乡基地特有的地图功能
+**************************************************************/
+
 #include "HomeVillageMap.h"
 #include "cocos2d.h"
 #include "Troops/Unit.h"

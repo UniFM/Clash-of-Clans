@@ -73,12 +73,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        // 启用步进窗口缩放功能
+        // ???ò??????????????
         glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height), 1.0f, true);
-        // 原函数
+        // ?????
         //GLViewImpl* GLViewImpl::createWithRect(const std::string & viewName, Rect rect, float frameZoomFactor, bool resizable)
 
-        // 启用多点触摸（部分平台需要显式开启）
+        // ????????????????????????????
 #else
         glview = GLViewImpl::create("cs_final_coc");
 #endif
@@ -92,7 +92,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setAnimationInterval(1.0f / 60);
 
     // Set the design resolution
-    // 使用 FIXED_WIDTH 策略：宽度始终填满，高度自适应，上下可能出现黑边
+    // ??? FIXED_WIDTH ????????????????????????????????????????
     glview->setDesignResolutionSize(ResPath::WINDOWS.width, ResPath::WINDOWS.height, ResolutionPolicy::FIXED_WIDTH);
     //glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
     auto frameSize = glview->getFrameSize();

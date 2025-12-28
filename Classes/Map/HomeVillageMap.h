@@ -1,5 +1,10 @@
-#ifndef __MAP_LAYER_H__
-#define __MAP_LAYER_H__
+#pragma once
+/*************************************************************
+* @file     : HomeVillageMap.h
+* @function ：家乡基地类
+* @author   : 叶芷含
+* @note     ：包含地图网格系统、建筑放置、碰撞检测等核心功能
+**************************************************************/
 
 #include "cocos2d.h"
 #include "BaseMap.h"
