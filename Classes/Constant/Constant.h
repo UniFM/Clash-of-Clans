@@ -1,69 +1,163 @@
 #pragma once
 /*************************************************************
 * @file     : Constant.h
-* @function ï¼šå¸¸é‡ç±»
-* @author   : å¶èŠ·å«
-* @note     ï¼šåŒ…å«æ•´ä¸ªé¡¹ç›®ä¸­çš„æ‰€æœ‰å¸¸é‡
+* @function £º³£Á¿Àà
+* @author   : Ò¶ÜÆº¬
+* @note     £º°üº¬Õû¸öÏîÄ¿ÖĞµÄËùÓĞ³£Á¿
 **************************************************************/
 #include "cocos2d.h"
 #include <string>
 
-static cocos2d::Size smallResolutionSize = cocos2d::Size(1280, 720);   // å°å±å¹•
-static cocos2d::Size mediumResolutionSize = cocos2d::Size(1280, 720);  // ä¸­ç­‰å±å¹•
-static cocos2d::Size largeResolutionSize = cocos2d::Size(1920, 1080);  // å¤§å±å¹•
+static cocos2d::Size smallResolutionSize = cocos2d::Size(1280, 720);   // Ğ¡ÆÁÄ»
+static cocos2d::Size mediumResolutionSize = cocos2d::Size(1280, 720);  // ÖĞµÈÆÁÄ»
+static cocos2d::Size largeResolutionSize = cocos2d::Size(1920, 1080);  // ´óÆÁÄ»
 
-// åœ°å›¾ç±»å‹æšä¸¾
+//// Screen Dimensions (Design Resolution)
+//static const float DESIGN_WIDTH = 1280.0f;
+//static const float DESIGN_HEIGHT = 720.0f;
+//
+//// Collision/Logic Grid Size
+//static const float GRID_SIZE = 64.0f;
+
+// µØÍ¼ÀàĞÍÃ¶¾Ù
 enum class MapType {
-    HomeVillage,        // å®¶ä¹¡åŸºåœ°
-    BuilderBase,       // å»ºç­‘å¤§å¸ˆåŸºåœ°
-    BattleMap,         // æˆ˜æ–—åœ°å›¾
+    HomeVillage,        // ¼ÒÏç»ùµØ
+    BuilderBase,       // ½¨Öş´óÊ¦»ùµØ
+    BattleMap,         // Õ½¶·µØÍ¼
 };
 
-// åœ°å½¢ç±»å‹æšä¸¾
+// Team ID
+enum class Team {
+    PLAYER,
+    ENEMY
+};
+
+
+
+// µØĞÎÀàĞÍÃ¶¾Ù
 enum class TerrainType {
-    Grass,              // è‰åœ°
-    Occupied            // å·²å ç”¨
-    //Water,              // æ°´åŸŸ
+    Grass,              // ²İµØ
+    Occupied            // ÒÑÕ¼ÓÃ
+    //Water,              // Ë®Óò
     //Buildable
 };
 
-// å…µç§ç±»å‹æšä¸¾
+// ±øÖÖÀàĞÍÃ¶¾Ù
 enum class Troops {
-    Barbarian,   // é‡è›®äºº
-    Archer,    // å¼“ç®­æ‰‹
-    WallBreaker,    //ç‚¸å¼¹äºº
-    Giant,  //å·¨äºº
-    Goblin  //å“¥å¸ƒæ—
+    Barbarian,   // Ò°ÂùÈË
+    Archer,    // ¹­¼ıÊÖ
+    Giant,  //¾ŞÈË
+    Goblin  //¸ç²¼ÁÖ
 };
 
-// åœ°å›¾å‚æ•°
-constexpr int MAP_SIZE_WIDTH = 968;
-constexpr int MAP_SIZE_HEIGHT = 968;    // åœ°å›¾å¤§å°
-constexpr int Tile_SIZE_WIDTH = 16;
-constexpr int Tile_SIZE_HEIGHT = 16;    // ç“¦ç‰‡å¤§å°
+// Z-Orders
+enum ZOrder {
+    Z_BACKGROUND = 0,
+    Z_BUILDING = 10,
+    Z_TROOP = 20,
+    Z_PROJECTILE = 30,
+    Z_UI = 100
+};
 
-// èµ„æºè·¯å¾„,é¿å…å…¨å±€å†²çª
+// Tags
+enum Tags {
+    TAG_BUILDING = 1,
+    TAG_TROOP = 2,
+    TAG_PROJECTILE = 3
+};
+
+// Building Types
+enum class BattleBuildingType {
+    TOWN_HALL,
+    GOLD_MINE,
+    ELIXIR_COLLECTOR,
+    GOLD_STORAGE,
+    ELIXIR_STORAGE,
+    ARMY_CAMP,
+    BARRACKS,
+    CANNON,
+    ARCHER_TOWER,
+    WALL
+};
+
+// Battle Troop Types
+enum class BattleTroopType {
+    BARBARIAN,
+    ARCHER,
+    GIANT,
+    GOBLIN
+};
+
+enum class BattleResourceType
+{
+    GOLD,    // ½ğ±Ò£¨½¨Ôì/Éı¼¶½¨Öş£©
+    ELIXIR,  // Ê¥Ë®£¨ÑµÁ·±øÖÖ£©
+    GEMS     // ±¦Ê¯£¨¼ÓËÙ/¸¶·ÑµÀ¾ß£©
+};
+
+
+struct BattleBuildingStats {
+    std::string name;
+    int maxHealth;
+    int buildTime; // seconds
+    int costGold;
+    int costElixir;
+    float attackRange;
+    float attackSpeed;
+    int damage;
+    int capacity; // For storage or camp
+};
+
+struct BattleTroopStats {
+    std::string name;
+    int maxHealth;
+    int damage;
+    float moveSpeed;
+    float attackRange;
+    float attackSpeed;
+    int trainingTime;
+    int housingSpace;
+    int trainingCost; // Elixir
+};
+
+// µØÍ¼²ÎÊı
+//constexpr int MAP_SIZE_WIDTH = 968;
+//constexpr int MAP_SIZE_HEIGHT = 968;    // µØÍ¼´óĞ¡
+//constexpr int Tile_SIZE_WIDTH = 16;
+//constexpr int Tile_SIZE_HEIGHT = 16;    // ÍßÆ¬´óĞ¡
+    // Map dimensions
+constexpr float MAP_WIDTH = 3460.0f;
+constexpr float MAP_HEIGHT = 2480.0f;
+constexpr float GRASS_RECT_WIDTH= 2400.0f;
+constexpr float GRASS_RECT_HEIGHT = 1800.0f;
+constexpr float GRASS_OFFSET_X = 530.0f;
+constexpr float GRASS_OFFSET_Y = 252.0f;
+constexpr  int GRID_COLS = 44;
+constexpr int GRID_ROWS = 44;
+
+
+// ×ÊÔ´Â·¾¶,±ÜÃâÈ«¾Ö³åÍ»
 namespace ResPath {
-	//æ ¹è·¯å¾„
+	//¸ùÂ·¾¶
 	constexpr const char* ROOT = "";
 
-    //Sceneè·¯å¾„
-    constexpr const char* SPLASHSCENE = "Scene/Cover.png";    //SplashSceneæ¸¸æˆå¼€å±
+    //SceneÂ·¾¶
+    constexpr const char* SPLASHSCENE = "Scene/Cover.png";    //SplashSceneÓÎÏ·¿ªÆÁ
     constexpr const char* LOGINBACKGROUND = "Scene/LoginBackground.png";
 
-    //ç“¦ç‰‡åœ°å›¾TMX
-	const std::string TMX_HOMEVILLAGEMAP = "Map/HomeVillage.tmx";    // å®¶ä¹¡åŸºåœ°
+    //PNGµØÍ¼
+	const std::string HOMEVILLAGEMAP = "Map/HomeVillage.png";    // ¼ÒÏç»ùµØ
 
-    // æ˜¾ç¤ºå±å¤§å°,è®¾è®¡æ¯”ä¾‹ 16:9
+    // ÏÔÊ¾ÆÁ´óĞ¡,Éè¼Æ±ÈÀı 16:9
     const cocos2d::Size WINDOWS(1280.0f, 720.0f);
 
 
 
 
-    //å…µç§Sprite
+    //±øÖÖSprite
 
 
-    //å›¾æ ‡icons
+    //Í¼±êicons
     constexpr const char* ZOOMINBUTTON = "Icon/zoom_in_button.png";
     constexpr const char* ZOOMOUTBUTTON = "Icon/zoom_out_button.png";
     constexpr const char* ZOOMINBUTTONPRESSED = "Icon/zoom_in_button_pressed.png";
@@ -71,9 +165,12 @@ namespace ResPath {
     constexpr const char* SHOP = "Icon/shop.png";
     constexpr const char* CLOSEBUTTON = "Icon/close_button.png";
     constexpr const char* CLOSEBUTTONPRESSED = "Icon/close_button_pressed.png";
-    constexpr const char* SHOPPRESSED = "shop_pressed.png";
+    constexpr const char* SHOPPRESSED = "Icon/shop_pressed.png";
+    constexpr const char* UNBUILDABLEBUTTON = "Icon/unbuildable_button.png";
+    constexpr const char* CONFIRMCONSTRUCTIONBUTTON = "Icon/confirm_construction_button.png";
+    constexpr const char* CANCELCONSTRUCTIONBUTTON = "Icon/cancel_construction_button.png";
 
-    //å•†åº—shop
+    //ÉÌµêshop
     constexpr const char* SHOPBACKGROUND = "Shop/ShopBackground.png";
     constexpr const char* SHOPCATEGORYGREENBUTTON = "Shop/green.png";
     constexpr const char* SHOPCATEGORYGREYGREENBUTTON = "Shop/greygreen.png";
@@ -81,13 +178,13 @@ namespace ResPath {
     constexpr const char* UNAVAILABLEBUILDINGCARDBACKGROUND = "Shop/unavailableBuildingCardBackground.png";
 
 
-    //å»ºç­‘building
-    //é˜²å¾¡å»ºç­‘
+    //½¨Öşbuilding
+    //·ÀÓù½¨Öş
     constexpr const char* CANNONLEVEL1 = "Building/Cannon_level1.png";
 
 
-    //èµ„æºå»ºç­‘
-    //å†›äº‹å»ºç­‘
+    //×ÊÔ´½¨Öş
+    //¾üÊÂ½¨Öş
     constexpr const char* TOWNHALLLEVEL1 = "Building/Town_Hall_level1.png";
 
 

@@ -12,9 +12,8 @@
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 #include "Constant/Constant.h"
-#include "Map/SceneMap.h"
-#include "Building/BuildingData.h"
-#include "LoginScene.h"
+#include "buildings/BuildingsData.h"
+#include "Control/GameManager.h"
 
 USING_NS_CC;
 using namespace ui;
@@ -30,6 +29,10 @@ enum class ShopCategory {
 class ShopScene : public Scene {
 public:
     // 创建场景
+    static Scene* createScene() {
+        return ShopScene::create();
+    }
+    
     static ShopScene* create();
     
     // 初始化
@@ -87,7 +90,6 @@ private:
     // 事件处理
     void onCloseButtonClicked(Ref* sender); // 关闭按钮点击
     void onBackKeyPressed();                // 返回键处理
-    void enterVillageWithBuildingPlacement(BuildingType buildingType); // 进入村庄并开始建筑放置
 };
 
 #endif // __SHOP_SCENE_H__

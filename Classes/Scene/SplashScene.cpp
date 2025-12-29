@@ -1,12 +1,12 @@
 /*************************************************************
-* @file     : GameCover.cpp
+* @file     : SplashScene.cpp
 * @function ：游戏启动界面
 * @author   : 叶芷含
 * @note     ：
 **************************************************************/
 #include "SplashScene.h"
 #include "LoginScene.h"
-#include "Control/Control.h"
+#include "Control/GameManager.h"
 #include "Constant/Constant.h"
 
 USING_NS_CC;
@@ -24,6 +24,10 @@ bool SplashScene::init()
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+    // 初始化游戏管理器状态
+    auto gameManager = GameManager::getInstance();
+    gameManager->setGameState(GameState::SPLASH);
 
     // 添加游戏封面
     auto cover = Sprite::create(ResPath::SPLASHSCENE);
@@ -60,6 +64,7 @@ bool SplashScene::init()
 // 前往登录界面
 void SplashScene::gotoLogin(float dt)
 {
-    auto scene = LoginScene::createScene();
-    Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
+    // 使用GameManager切换到登录场景
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoLoginScene();
 }

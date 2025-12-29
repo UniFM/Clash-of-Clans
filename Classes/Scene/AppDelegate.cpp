@@ -23,9 +23,11 @@
  ****************************************************************************/
 
 #include "AppDelegate.h"
-#include "SplashScene.h"
-#include "Constant/Constant.h"
-#define CC_ENABLE_MULTI_TOUCH 1  // ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ„¥•ÔøΩÔøΩÔøΩÔøΩ
+#include "Scene/SplashScene.h"
+#include "Control/GameManager.h"
+#include "Map/HomeVillageMap.h"
+
+#define CC_ENABLE_MULTI_TOUCH 1  // ø™∆Ù∂‡µ„¥•√˛∫Í
 
 // #define USE_AUDIO_ENGINE 1
 
@@ -70,12 +72,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        // ÔøΩÔøΩÔøΩ√≤ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ≈πÔøΩÔøΩÔøΩ
+        // ∆Ù”√≤ΩΩ¯¥∞ø⁄Àı∑≈π¶ƒ‹
         glview = GLViewImpl::createWithRect("cs_final_coc", cocos2d::Rect(0, 0, ResPath::WINDOWS.width, ResPath::WINDOWS.height), 1.0f, true);
-        // ‘≠ÔøΩÔøΩÔøΩÔøΩ
+        // ‘≠∫Ø ˝
         //GLViewImpl* GLViewImpl::createWithRect(const std::string & viewName, Rect rect, float frameZoomFactor, bool resizable)
 
-        // ÔøΩÔøΩÔøΩ√∂ÔøΩ„¥•ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ∆ΩÃ®ÔøΩÔøΩ“™ÔøΩÔøΩ ΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ
+        // ∆Ù”√∂‡µ„¥•√˛£®≤ø∑÷∆ΩÃ®–Ë“™œ‘ Ωø™∆Ù£©
 #else
         glview = GLViewImpl::create("cs_final_coc");
 #endif
@@ -89,7 +91,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setAnimationInterval(1.0f / 60);
 
     // Set the design resolution
-    //  πÔøΩÔøΩ FIXED_WIDTH ÔøΩÔøΩÔøΩ‘£ÔøΩÔøΩÔøΩÔøΩÔøΩ ºÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩﬂ∂ÔøΩÔøΩÔøΩÔøΩÔøΩ”¶ÔøΩÔøΩÔøΩÔøΩÔøΩ¬øÔøΩÔøΩ‹≥ÔøΩÔøΩ÷∫⁄±ÔøΩ
+    //  π”√ FIXED_WIDTH ≤ﬂ¬‘£∫øÌ∂» º÷’ÃÓ¬˙£¨∏ﬂ∂»◊‘  ”¶£¨…œœ¬ø…ƒ‹≥ˆœ÷∫⁄±ﬂ
     glview->setDesignResolutionSize(ResPath::WINDOWS.width, ResPath::WINDOWS.height, ResolutionPolicy::FIXED_WIDTH);
     //glfwWindowHint(GLFW_RESIZABLE, resizable ? GL_TRUE : GL_FALSE);
     auto frameSize = glview->getFrameSize();
@@ -136,4 +138,13 @@ void AppDelegate::applicationWillEnterForeground() {
 #if USE_AUDIO_ENGINE
     AudioEngine::resumeAll();
 #endif
+}
+
+// ”¶”√≥Ã–Úº¥Ω´÷’÷π
+void AppDelegate::applicationWillTerminate() {
+    CCLOG("Application will terminate, cleaning up singletons");
+    
+    // «Â¿Ìµ•¿˝
+    GameManager::destroyInstance();
+    HomeVillageMap::destroyInstance();
 }

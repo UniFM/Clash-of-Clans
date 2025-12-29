@@ -59,6 +59,11 @@ public:
     @param  the pointer of the application
     */
     virtual void applicationWillEnterForeground();
+    
+    /**
+    @brief  Called when the application will terminate
+    */
+    virtual void applicationWillTerminate();
 };
 
 #endif // _APP_DELEGATE_H_

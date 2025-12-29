@@ -7,6 +7,8 @@
 
 #include "ShopScene.h"
 #include "Map/HomeVillageMap.h"
+#include "Control/GameManager.h"
+#include "Map/SceneMap.h"
 
 USING_NS_CC;
 
@@ -304,16 +306,7 @@ void ShopScene::refreshBuildingList()
 Node* ShopScene::createBuildingItem(BuildingType buildingType)
 {
     auto container = Node::create();
-    
-    // 获取建筑数据
-    const BuildingData* buildingData = BuildingConfig::getBuildingData(buildingType);
-    const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, 1);
-    
-    if (!buildingData || !stats) {
-        CCLOG("Warning: Could not get data for building type %d", static_cast<int>(buildingType));
-        return container;
-    }
-    
+            
     // 检查是否可以建造 (这里简化为总是可以建造，实际应该检查大本营等级)
     bool canBuild = true; // 实际实现时应该检查大本营等级等条件
     
@@ -339,15 +332,15 @@ Node* ShopScene::createBuildingItem(BuildingType buildingType)
     // 根据建筑类型添加建筑图标
     std::string buildingSpritePath;
     switch (buildingType) {
-        case BuildingType::CANNON:
-            buildingSpritePath = ResPath::CANNONLEVEL1;
-            break;
+        //case BuildingType::CANNON:
+        //    buildingSpritePath = ResPath::CANNONLEVEL1;
+        //    break;
         case BuildingType::TOWN_HALL:
             buildingSpritePath = ResPath::TOWNHALLLEVEL1;
             break;
         // 其他建筑类型可以在这里添加
         default:
-            buildingSpritePath = stats->spriteName; // 使用配置中的路径
+            buildingSpritePath = ResPath::CANNONLEVEL1; // 使用配置中的路径
             break;
     }
     
@@ -368,13 +361,13 @@ Node* ShopScene::createBuildingItem(BuildingType buildingType)
     container->addChild(buildingSprite);
     
     // 建筑名称标签
-    auto nameLabel = Label::createWithTTF(buildingData->name, "fonts/Marker Felt.ttf", 14);
+    auto nameLabel = Label::createWithTTF("buildingData->name", "fonts/Marker Felt.ttf", 14);
     nameLabel->setPosition(Vec2(0, -10));
     nameLabel->setColor(Color3B::WHITE);
     container->addChild(nameLabel);
     
     // 价格标签
-    std::string priceText = std::to_string(stats->goldCost) + " Gold";
+    std::string priceText = "std::to_string(stats->goldCost) + ";
     auto priceLabel = Label::createWithTTF(priceText, "fonts/Marker Felt.ttf", 12);
     priceLabel->setPosition(Vec2(0, -35));
     priceLabel->setColor(canBuild ? Color3B::YELLOW : Color3B::RED);
@@ -415,40 +408,9 @@ void ShopScene::onBuildingSelected(BuildingType buildingType)
     
     CCLOG("Building selected for purchase: %d", static_cast<int>(buildingType));
     
-    // 跳转回家乡地图，并开始建筑放置模式
-    this->enterVillageWithBuildingPlacement(buildingType);
-}
-
-void ShopScene::enterVillageWithBuildingPlacement(BuildingType buildingType)
-{
-    CCLOG("Returning to village with building placement mode for building type: %d", static_cast<int>(buildingType));
-
-    // 获取村庄地图单例
-    auto villageMap = HomeVillageMap::getInstance();
-
-    if (!villageMap) {
-        CCLOG("ShopScene: Failed to get HomeVillageMap instance!");
-        return;
-    }
-
-    // 设置村庄地图进入建筑放置模式
-    villageMap->startBuildingPlacement(buildingType);
-
-    CCLOG("ShopScene: HomeVillageMap building placement started");
-
-    // 创建新场景
-    auto scene = Scene::create();
-    if (!scene) {
-        CCLOG("ShopScene: Failed to create scene!");
-        return;
-    }
-
-    scene->addChild(villageMap);
-
-    // 切换到村庄场景
-    Director::getInstance()->replaceScene(TransitionFade::create(0.5f, scene));
-
-    CCLOG("ShopScene: Scene switched to village map with building placement mode");
+    // 使用正确的方法切换到村庄场景并开始建筑放置
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoVillageSceneWithBuildingPlacement(buildingType);
 }
 
 std::vector<BuildingType> ShopScene::getBuildingsByCategory(ShopCategory category)
@@ -457,7 +419,7 @@ std::vector<BuildingType> ShopScene::getBuildingsByCategory(ShopCategory categor
     
     switch (category) {
         case ShopCategory::ARMY:
-            buildings = {BuildingType::ARMY_CAMP};
+            buildings = {/*BuildingType::ARMY_CAMP*/BuildingType::GOLD_MINE, BuildingType::ELIXIR_COLLECTOR };
             break;
             
         case ShopCategory::RESOURCES:
@@ -466,7 +428,7 @@ std::vector<BuildingType> ShopScene::getBuildingsByCategory(ShopCategory categor
             
         case ShopCategory::DEFENSE:
             // 添加加农炮作为测试用例
-            buildings = {BuildingType::ARCHER_TOWER, BuildingType::CANNON};
+            buildings = {/*BuildingType::ARCHER_TOWER, BuildingType::CANNON*/BuildingType::GOLD_MINE, BuildingType::ELIXIR_COLLECTOR };
             break;
             
         case ShopCategory::TRAPS:
@@ -498,8 +460,8 @@ void ShopScene::updateResourceDisplay()
 
 bool ShopScene::canAffordBuilding(BuildingType buildingType, int level)
 {
-    const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, level);
-    if (!stats) return false;
+    //const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, level);
+    //if (!stats) return false;
     
     // 这里应该检查实际的资源数量，现在假设都买得起
     // 实际实现应该从游戏数据管理器获取当前资源
@@ -508,38 +470,11 @@ bool ShopScene::canAffordBuilding(BuildingType buildingType, int level)
 
 void ShopScene::onCloseButtonClicked(Ref* sender)
 {
-    CCLOG("Shop scene closing, Entering village map...");
+    CCLOG("Shop scene closing, returning to village...");
 
-    // 获取村庄地图单例并添加到新场景
-    auto villageMap = HomeVillageMap::getInstance();
-
-    if (!villageMap) {
-        CCLOG("LoginScene: Failed to get HomeVillageMap instance!");
-        // 显示错误信息给用户
-        statusLabel->setString("Failed to load map! Please try again.");
-        statusLabel->setColor(Color3B::RED);
-        return;
-    }
-
-    CCLOG("LoginScene: HomeVillageMap instance created successfully");
-
-    auto scene = Scene::create();
-
-    if (!scene) {
-        CCLOG("LoginScene: Failed to create scene!");
-        return;
-    }
-
-    scene->addChild(villageMap);
-
-    //// 使用过渡效果切换场景=
-    //auto transition = TransitionFade::create(1.0f, scene);
-    //Director::getInstance()->replaceScene(transition);
-
-    Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
-
-    CCLOG("LoginScene: Scene created and map added, switching scene...");
-
+    // 使用GameManager返回村庄场景
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoVillageScene();
 }
 
 void ShopScene::onBackKeyPressed()
