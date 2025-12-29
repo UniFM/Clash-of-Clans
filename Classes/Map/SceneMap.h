@@ -1,94 +1,106 @@
 #pragma once
 /*************************************************************
 * @file     : SceneMap.h
-* @function ï¼šæ‰€æœ‰åœ°å›¾çš„åŸºç±» - éƒ¨è½å†²çªåœ°å›¾ç³»ç»Ÿ
-* @author   : å¶èŠ·å«
-* @note     ï¼šåŒ…å«åœ°å›¾ç½‘æ ¼ç³»ç»Ÿã€å»ºç­‘æ”¾ç½®ã€ç¢°æ’æ£€æµ‹ç­‰æ ¸å¿ƒåŠŸèƒ½
+* @function £ºÖ÷ÓÎÏ·³¡¾° - ´å×¯¹ÜÀí
+* @author   : Ò¶ÜÆº¬ ÆëÓ± ÓáóãÓê
+* @note     £º¹ÜÀí´å×¯³¡¾°µÄUIºÍ½¨ÖşÏµÍ³
 **************************************************************/
+#ifndef __SCENE_MAP_H__
+#define __SCENE_MAP_H__
 
-#ifndef __SCENEMAP_H__
-#define __SCENEMAP_H__
 #include "cocos2d.h"
-#include "Constant/Constant.h"
-#include "Control/Control.h"
-#include "Scene/ShopScene.h"
+#include "HomeVillageMap.h"
+#include "buildings/BuildingsData.h"
+#include "buildings/BuildingPreview.h"
+#include "Control/GameManager.h"
+
 
 USING_NS_CC;
 
-class SceneMap : public Node {
+/**
+ * Ö÷ÓÎÏ·³¡¾° - ´å×¯¹ÜÀí
+ */
+class SceneMap : public Scene
+{
 public:
-	// åˆå§‹åŒ–ç“¦ç‰‡åœ°å›¾
-	virtual bool init(const std::string& tmxFile);
+    // Ê¹ÓÃµ¥Àı£¬Ìá¹©È«¾Ö·ÃÎÊ
+    static SceneMap* getInstance();
 
-	// Í¨ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½Ó¿ï¿½
-	virtual bool isPositionValid(const Vec2& pos) const;    // ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
-	virtual bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const;    // ï¿½ï¿½â½¨ï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½ï¿½
-	virtual TerrainType getTerrainType(const Vec2& pos) const;    // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	Size getMapSize() const;    // ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ß´ï¿½
-	Size getTileSize() const;    // ï¿½ï¿½È¡ï¿½ï¿½Æ¬ï¿½ß´ï¿½
-	TMXTiledMap* getTiledMap() const { return tileMap; }  // ï¿½ï¿½È¡TMXï¿½ï¿½Æ¬ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
-	cocos2d::Vec2 TMXToCocos2d(const cocos2d::Vec2& tmxPos) const;
-	cocos2d::Vec2 Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const;
+    // É¾³ı¿½±´¹¹ÔìºÍ¸³Öµ²Ù×÷£¬·ÀÖ¹¸´ÖÆÊµÀı
+    SceneMap(const SceneMap&) = delete;
+    SceneMap& operator=(const SceneMap&) = delete;
 
-	// ï¿½æ»»Îªï¿½ï¿½ã´¥ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½
-	void onTouchesBegan(const std::vector<Touch*>& touches, Event* event);
-	void onTouchesMoved(const std::vector<Touch*>& touches, Event* event);
-	void onTouchesEnded(const std::vector<Touch*>& touches, Event* event);
+    // ÖØĞÂ³õÊ¼»¯ÊÂ¼ş¼àÌıÆ÷£¨ÓÃÓÚ³¡¾°ÇĞ»»ºó£©
+    void reinitializeEventListeners();
 
-	//// ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½  ï¿½Æ³ï¿½ï¿½ï¿½Ö¸
-	//bool onTouchBegan(Touch* touch, Event* event);
-	//void onTouchMoved(Touch* touch, Event* event);
-	//void onTouchEnded(Touch* touch, Event* event);
+    virtual bool init() override;
+    virtual void onEnter() override;
+    
+    // Îö¹¹º¯Êı - È·±£ÕıÈ·ÇåÀí×ÊÔ´
+    virtual ~SceneMap();
 
-	//ï¿½ï¿½ï¿½Åµï¿½Í¼
-	void zoomIn();
-	void zoomOut();
+    // =======================update qy===================================
+    //  ¶ÔÍâ¿ª·ÅºËĞÄ·½·¨
+    void calculateTotalGoldProduceSpeed();  // ¼ÆËã½ğ¿ó×Ü²úËÙ
+    void refreshResourceUI();               // ²ú³ö½ğ±ÒºóË¢ĞÂUI£¨Ô­ÓĞ£©
+    void refreshResourceImmediately();      // ĞÂÔö£ºÖ÷¶¯²Ù×÷£¨Éı¼¶µÈ£©ºó¼´Ê±Ë¢ĞÂUI
+    // ĞÂÔö£º½ğ±ÒÈİÁ¿¼ÆËã·½·¨ÉùÃ÷
+    int getSingleBuildingGoldCapacity(Building* building); // »ñÈ¡µ¥¸ö½¨ÖşÈİÁ¿
+    void calculateTotalGoldCapacity();                      // ¼ÆËãÈ«¾Ö×ÜÈİÁ¿
+    //  Ê¥Ë®ÏµÍ³£¨ĞÂÔö£©
+    void calculateTotalElixirProduceSpeed();
+    int getSingleBuildingElixirCapacity(Building* building);
+    void calculateTotalElixirCapacity();
+    // =========================update qy===================================
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½
-	void onMouseScroll(EventMouse* event);
+private:
+    // ¹¹Ôìº¯ÊıË½ÓĞ»¯ 
+    SceneMap();
 
-	// ï¿½Ìµê°´Å¥ï¿½Øµï¿½
-	void onShopButtonClicked(Ref* sender);
+    // ¾²Ì¬ÊµÀıÖ¸Õë
+    static SceneMap* sInstance;
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½Ìµê³¡ï¿½ï¿½
-	void enterShop();
+    HomeVillageMap* _homeVillageMap;
+    Vector<Building*> _buildings;
+    BuildingPreview* _buildingPreview;
 
-	// ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½
-	TMXLayer* getLayer(const std::string& layerName) const;
+    // UI
+    Label* _goldLabel;
+    Label* _elixirLabel;
+    Label* _populationLabel;
+    // =========================update qy===================================
+    Sprite* _goldIcon;
+    Sprite* _elixirIcon;
+    // =========================update qy===================================
 
-protected:
+    // ½¨Öş·ÅÖÃ×´Ì¬
+    bool _isPlacingBuilding;
+    bool _isMovingBuilding;
+    BuildingType _selectedBuildingType;
+    Building* _selectedBuilding;  // Ñ¡ÖĞµÄ½¨Öş£¨ÓÃÓÚÒÆ¶¯£©
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½â·½ï¿½ï¿½
-	bool checkTileCollision(const Vec2& pos) const;    // ï¿½ï¿½âµ¥ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½×²
-	bool isWithinMapBounds(const Vec2& pos) const;    // ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Í¼ï¿½ß½ï¿½ï¿½ï¿½
-	TMXLayer* getCollisionLayer() const;    // ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½
+    void setupUI(); 
+    void onBattleButtonClicked(Ref* sender);
+    void onShopButtonClicked(Ref* sender);  // ÉÌµê°´Å¥»Øµ÷
+    bool onMapTouched(Touch* touch, Event* event);
+    void onMouseMoved(Event* event);  // Êó±êÒÆ¶¯ÊÂ¼ş£¨ÓÃÓÚÔ¤ÀÀ£©
 
-	// ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
-	TMXTiledMap* tileMap;
-	TMXLayer* collisionLayer;  // ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½
+    // ½¨Öş·ÅÖÃÏà¹Ø·½·¨
+    void checkPendingBuildingPlacement();  // ¼ì²éÀ´×ÔÉÌµêµÄ½¨Öş·ÅÖÃÇëÇó
+    void startBuildingPlacement(BuildingType buildingType);  // ¿ªÊ¼½¨Öş·ÅÖÃ
+    void resetBuildingPlacementState(); // ÖØÖÃ½¨Öş·ÅÖÃ×´Ì¬
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	Vec2 lastTouchPos;  // ï¿½Ï´Î´ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+    //void update(float dt) override;
 
-	// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
-	void setupScrollView();
+    void onEnterTransitionDidFinish();
+    void onTroopSelectionButtonClicked(Ref* pSender);
 
-	float currentScale = 1.0f;	// ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+    // =========================update qy===================================
+    void setupResourceUI();
 
-	const float scaleStep = 0.1f; // Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å²ï¿½ï¿½ï¿½
-	const float minScale = 0.5f;  // ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	const float maxScale = 3.0f;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // =========================update qy===================================
 
-	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	bool isTwoTouch = false;       // ï¿½Ç·ï¿½Ë«Ö¸ï¿½ï¿½ï¿½ï¿½
-	float initTwoTouchDistance;    // Ë«Ö¸ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
-	Vec2 initTwoTouchCenter;       // Ë«Ö¸ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Äµã£¨ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ê£©
-
-	// ï¿½ï¿½ï¿½
-	const float scrollStep = 0.1f; // ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å²ï¿½ï¿½ï¿½
-
-	// ï¿½Ìµï¿½ï¿½È¡ï¿½É¹ï¿½ï¿½ï¿½Ö¾
-	cocos2d::Label* statusLabel;
 };
 
-#endif
+#endif // __SCENE_MAP_H__
+
