@@ -1,504 +1,1359 @@
 /*************************************************************
 * @file     : SceneMap.cpp
-* @function ï¼šæ‰€æœ‰åœ°å›¾çš„åŸºç±»å®ç° - éƒ¨è½å†²çªåœ°å›¾ç³»ç»Ÿ
-* @author   : å¶èŠ·å«
-* @note     ï¼šå®ç°åœ°å›¾ç½‘æ ¼ç³»ç»Ÿã€å»ºç­‘æ”¾ç½®ã€ç¢°æ’æ£€æµ‹ç­‰æ ¸å¿ƒåŠŸèƒ½
+* @function £ºÖ÷µØÍ¼³¡¾°ºËĞÄÊµÏÖ - ¼ÒÏç´å×¯¹ÜÀí+½¨Öş½»»¥+×ÊÔ´ÏµÍ³
+* @author   : Ò¶ÜÆº¬ ÆëÓ± ÓáóãÓê
+* @note     : 1.µ¥ÀıÄ£Ê½ÊµÏÖÖ÷µØÍ¼³¡¾°£¬·â×°µØÍ¼³õÊ¼»¯¡¢UI´´½¨¡¢ÊÂ¼ş¼àÌıºËĞÄÂß¼­£»
+*             2.¹ÜÀí¼ÒÏç´å×¯µØÍ¼ÊµÀı£¬Ö§³Ö½¨Öş·ÅÖÃ/ÒÆ¶¯/Éı¼¶/ÒÆ³ıÈ«Á÷³Ì½»»¥£»
+*             3.ÊµÏÖ½ğ±Ò/Ê¥Ë®×ÊÔ´ÏµÍ³£¬°üº¬²úËÙ¼ÆËã¡¢ÈİÁ¿ÏŞÖÆ¡¢UIÊµÊ±Ë¢ĞÂ¹¦ÄÜ£»
+*             4.ÊÊÅä¶àÆ½Ì¨´¥Ãş/Êó±êÊÂ¼ş£¬Ö§³Ö½¨ÖşÓÒ¼ü²Ëµ¥¡¢ÍÏ×§Ô¤ÀÀ¡¢Î»ÖÃĞ£Ñé£»
+*             5.¼¯³ÉÕ½¶·/ÉÌµê/Ñ¡±ø¹¦ÄÜ°´Å¥£¬Ö§³Ö³¡¾°ÇĞ»»ÓëÕ½¶·¹Ø¿¨Ñ¡Ôñ£»
+*             6.×Ô¶¯³õÊ¼»¯Ä¬ÈÏ½¨Öş²¼¾Ö£¨´ó±¾Óª/½ğ¿ó/Ê¥Ë®ÉèÊ©/·ÀÓù½¨ÖşµÈ£©£»
+*             7.·â×°ÊÂ¼ş¼àÌıÆ÷ÖØ³õÊ¼»¯Âß¼­£¬±£Ö¤³¡¾°ÇĞ»»ºó½»»¥Õı³££»
+*             8.Ö§³Ö½¨ÖşÉı¼¶ºó²úËÙ/ÈİÁ¿ÊµÊ±¸üĞÂ£¬ÊÊÅä×ÊÔ´ÏµÍ³¶¯Ì¬µ÷Õû
 **************************************************************/
 
-#include "SceneMap.h"-
-#include <algorithm>
-#include <cmath>
-#include "Constant/Constant.h"
+#include "SceneMap.h"
+//#include "buildings/TownHall.h"
+#include "BattleScene.h"
+#include "Control/GameManager.h"
+#include "buildings/BuildingPreview.h"
+#include "Control/BuildingsElixirCapacityConfig.h"
+#include "Control/BuildingsGoldCapacityConfig.h"
+#include "buildings/BuildingsData.h"
 
-USING_NS_CC;
+// =========================update qy===================================
+const int MOUSE_LEFT_BUTTON = 0;
+const int MOUSE_RIGHT_BUTTON = 1;
+// =========================update qy===================================
 
-// åˆå§‹åŒ–ç“¦ç‰‡åœ°å›¾
-bool SceneMap::init(const std::string& tmxFile) {
-	if (!Node::init()) {
-		return false;
-	}
+// ¾²Ì¬ÊµÀı³õÊ¼»¯
+SceneMap* SceneMap::sInstance = nullptr;
 
-	// åˆ›å»ºå¹¶æ·»åŠ TMXåœ°å›¾
-	tileMap = TMXTiledMap::create(tmxFile);
-	if (!tileMap) {
-		return false;
-	}
-
-	//// ï¿½ï¿½ï¿½Ãµï¿½Í¼ï¿½ï¿½ï¿½ï¿½
-	//tileMap->setAnchorPoint(Vec2(0.0, 0.0));
-
-	// ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ê¼Î»ï¿½ï¿½ 
-	Size visibleSize = Director::getInstance()->getVisibleSize();
-	Size mapContentSize = tileMap->getContentSize();
-
-	Size mapSize = tileMap->getMapSize();
-	Size tileSize = tileMap->getTileSize();
-
-	CCLOG("mapSize = %.0f x %.0f", mapSize.width, mapSize.height);
-	CCLOG("tileSize = %.0f x %.0f", tileSize.width, tileSize.height);
-
-	Vec2 initialPos;
-	initialPos.x = 0;  // Xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-
-	if (mapContentSize.height > visibleSize.height) {
-		initialPos.y = -(mapContentSize.height - visibleSize.height)/2;
-	}
-	else {
-		initialPos.y = (mapContentSize.height - visibleSize.height) / 2;
-	}
-
-	tileMap->setPosition(initialPos);
-
-	//CCLOG("=== ï¿½ï¿½Í¼Î»ï¿½Ãµï¿½ï¿½ï¿½ ===");
-	//CCLOG("ï¿½ï¿½Í¼ï¿½ß´ï¿½: %.0fx%.0f, ï¿½ï¿½ï¿½Ú³ß´ï¿½: %.0fx%.0f",
-	//	mapContentSize.width, mapContentSize.height,
-	//	visibleSize.width, visibleSize.height);
-	//CCLOG("ï¿½ï¿½Í¼ï¿½ï¿½Ê¼Î»ï¿½ï¿½: (%.0f, %.0f)", initialPos.x, initialPos.y);
-	//CCLOG("Æ«ï¿½ï¿½ï¿½ï¿½: Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½ %.0f ï¿½ï¿½ï¿½ï¿½", -(initialPos.y));
-
-	this->addChild(tileMap);
-
-	//// Êµï¿½Öµï¿½Í¼ï¿½ï¿½Ê¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
-	//Size winSize = Director::getInstance()->getVisibleSize();	//ï¿½é¿´ï¿½ï¿½ï¿½Ú¿É¼ï¿½ï¿½ï¿½ï¿½ï¿½
-	//float mapOriginalWidth = tileMap->getMapSize().width * tileMap->getTileSize().width;	//ï¿½ï¿½Í¼Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ğ¡
-	////float mapOriginalHeight = tileMap->getMapSize().height * tileMap->getTileSize().height;	//ï¿½ï¿½Í¼Ô­Ê¼ï¿½ß¶ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ğ¡
-	//float adaptScale = winSize.width / mapOriginalWidth;
-
-	//tileMap->setScale(adaptScale);
-	//currentScale = adaptScale;
-
-	// ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½
-	collisionLayer = getLayer("Collision");
-
-	// ï¿½Å´ï¿½Å¥
-	auto zoomInBtn = MenuItemImage::create(
-		ResPath::ZOOMINBUTTON, ResPath::ZOOMINBUTTONPRESSED,
-		CC_CALLBACK_0(SceneMap::zoomIn, this)
-	);
-	zoomInBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.95f));
-
-	// ï¿½ï¿½Ğ¡ï¿½ï¿½Å¥
-	auto zoomOutBtn = MenuItemImage::create(
-		ResPath::ZOOMOUTBUTTON, ResPath::ZOOMOUTBUTTONPRESSED,
-		CC_CALLBACK_0(SceneMap::zoomOut, this)
-	);
-	zoomOutBtn->setPosition(Vec2(visibleSize.width * 0.97f, visibleSize.height * 0.88f));
-
-	//ï¿½ï¿½ï¿½ï¿½ï¿½Ìµê°´Å¥
-	auto shopBtn = MenuItemImage::create(
-		ResPath::SHOP, ResPath::SHOPPRESSED,
-		CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // ï¿½ï¿½ï¿½ï¿½Øµï¿½
-
-	shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
-
-	// ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½
-	auto menu = Menu::create(zoomInBtn, zoomOutBtn, shopBtn ,nullptr);
-	menu->setPosition(Vec2::ZERO); // ï¿½Ëµï¿½Ãªï¿½ï¿½ï¿½ï¿½ÎªÔ­ï¿½ã£¬ï¿½ï¿½ï¿½ã°´Å¥ï¿½ï¿½Î»
-	this->addChild(menu, 10); // ï¿½ã¼¶ï¿½ï¿½Îª10ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ï¿½ï¿½Ï²ï¿½
-
-	// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	auto touchListener = EventListenerTouchAllAtOnce::create();
-	// ï¿½ó¶¨¶ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
-	touchListener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
-	touchListener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
-	touchListener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
-
-	// ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
-
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ï¿½ï¿½
-	auto mouseListener = EventListenerMouse::create();
-	// ï¿½ó¶¨¹ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
-	mouseListener->onMouseScroll = CC_CALLBACK_1(SceneMap::onMouseScroll, this);
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
-
-	return true;
+// ¹¹Ôìº¯Êı
+SceneMap::SceneMap() :
+    _homeVillageMap(nullptr),
+    _buildingPreview(nullptr),
+    _goldLabel(nullptr),
+    _elixirLabel(nullptr),
+    _populationLabel(nullptr),
+    _isPlacingBuilding(false),
+    _isMovingBuilding(false),
+    _selectedBuildingType(BuildingType::TOWN_HALL),
+    _selectedBuilding(nullptr)
+    , _goldIcon(nullptr)
+    , _elixirIcon(nullptr)
+{
 }
 
-// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½
-bool SceneMap::isPositionValid(const Vec2& pos) const {
-	return isWithinMapBounds(pos) && !checkTileCollision(pos);
+// Îö¹¹º¯Êı
+SceneMap::~SceneMap() {
+    CCLOG("SceneMap destructor called");
+
+    // ÒÆ³ıÊÂ¼ş¼àÌıÆ÷
+    if (_eventDispatcher) {
+        // ÒÆ³ıËùÓĞÕë¶Ôµ±Ç°½ÚµãµÄÊÂ¼ş¼àÌıÆ÷
+        _eventDispatcher->removeEventListenersForTarget(this);
+
+        // ÒÆ³ı×Ô¶¨ÒåÊÂ¼ş¼àÌıÆ÷
+        _eventDispatcher->removeCustomEventListeners("building_placed");
+        _eventDispatcher->removeCustomEventListeners("building_moved");
+    }
+
+    // È¡Ïû¸üĞÂµ÷¶È
+    this->unscheduleUpdate();
+
+    // ÇåÀíBuildingPreview
+    if (_buildingPreview) {
+        if (_buildingPreview->getParent())
+            _buildingPreview->removeFromParent();
+        //_buildingPreview->cancel(); // Cancel might use invalid map
+        _buildingPreview = nullptr;
+    }
+
+    // ´¦ÀíSceneMapºÍHomeVillageMapµÄ¸¸×Ó¹ØÏµ - ÕâÀïÖ»ÒÆ³ıµ«²»Ïú»ÙHomeVillageMapµ¥Àı
+    // ÒòÎªHomeVillageMap×ÔÉíµÄÉúÃüÖÜÆÚÓÉÆäµ¥ÀıÄ£Ê½¹ÜÀí
+    if (_homeVillageMap) {
+        CCLOG("Removing HomeVillageMap from scene but keeping singleton instance alive");
+        // Ê¹ÓÃremoveChild false±ÜÃâÇåÀíHomeVillageMapµÄ×ÊÔ´
+        if (_homeVillageMap->getParent() == this)
+            this->removeChild(_homeVillageMap, false);
+        _homeVillageMap = nullptr; // Çå¿ÕÖ¸Õë
+    }
+
+    // Çå¿Õ½¨ÖşÁĞ±í - Êµ¼ÊµÄ½¨Öş¶ÔÏóÓÉHomeVillageMap¹ÜÀí
+    _buildings.clear();
+
+    // ÖØÖÃµ¥ÀıÖ¸Õë
+    if (sInstance == this) {
+        sInstance = nullptr;
+    }
+
+    CCLOG("SceneMap destructor completed");
 }
 
-// ï¿½ï¿½â½¨ï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
-bool SceneMap::canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const {
-	if (!tileMap) {
-		return false;
-	}
-
-	// ï¿½ï¿½é½¨ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½Æ¬Î»ï¿½ï¿½
-	Size tileSize = tileMap->getTileSize();
-	int tilesX = static_cast<int>(std::ceil(buildingSize.width / tileSize.width));
-	int tilesY = static_cast<int>(std::ceil(buildingSize.height / tileSize.height));
-
-	// ï¿½ï¿½é½¨ï¿½ï¿½Õ¼ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬
-	for (int x = 0; x < tilesX; x++) {
-		for (int y = 0; y < tilesY; y++) {
-			Vec2 checkPos = Vec2(pos.x + x * tileSize.width, pos.y + y * tileSize.height);
-			if (!isPositionValid(checkPos)) {
-				return false;
-			}
-		}
-	}
-
-	return true;
+// »ñÈ¡µ¥ÀıÊµÀı
+SceneMap* SceneMap::getInstance() {
+    if (!sInstance) {
+        sInstance = new (std::nothrow) SceneMap();
+        if (sInstance && sInstance->init()) {
+            sInstance->autorelease();
+            sInstance->retain(); // Keep it alive
+        }
+        else {
+            CC_SAFE_DELETE(sInstance);
+        }
+    }
+    return sInstance;
 }
 
-// ï¿½ï¿½âµ¥ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½×²
-bool SceneMap::checkTileCollision(const Vec2& pos) const {
-	if (!collisionLayer || !tileMap) {
-		// ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Collisionï¿½ã£¬Ê¹ï¿½ï¿½Grassï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½×²ï¿½ï¿½ï¿½
-		TMXLayer* grassLayer = getLayer("Grass");
-		if (!grassLayer) {
-			return false; // Ã»ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½×²ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
-		}
-		
-		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Îªï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
-		Size tileSize = tileMap->getTileSize();
-		Size mapSize = tileMap->getMapSize();
-
-		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
-		int tileX = static_cast<int>(pos.x / tileSize.width);
-		int tileY = static_cast<int>(pos.y / tileSize.height);
-
-		// ï¿½ï¿½ï¿½ß½ï¿½
-		if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-			return true; // ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½ï¿½Îªï¿½ï¿½×²
-		}
-
-		// ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"left-up"ï¿½ï¿½È¾Ë³ï¿½ï¿½ï¿½TMXï¿½ï¿½Í¼ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è·­×ª
-		// ï¿½ï¿½Îªcocos2d-xï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµ(ï¿½ï¿½ï¿½Â½ï¿½ÎªÔ­ï¿½ï¿½)ï¿½ï¿½left-upï¿½ï¿½È¾Ë³ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Âµï¿½
-		// Ö±ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ²ï¿½Ñ¯
-		unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-		// ï¿½ï¿½ï¿½ï¿½Ğ²İµï¿½ï¿½ï¿½Æ¬(gid != 0)ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½falseï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½×²
-		// ï¿½ï¿½ï¿½Ã»ï¿½Ğ²İµï¿½ï¿½ï¿½Æ¬(gid == 0)ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Ğ£ï¿½ï¿½ï¿½ï¿½ï¿½trueï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½×²
-		return gid == 0;
-	}
-
-	// Ô­ï¿½Ğµï¿½Collisionï¿½ï¿½ï¿½ß¼ï¿½
-	Size tileSize = tileMap->getTileSize();
-	Size mapSize = tileMap->getMapSize();
-
-	int tileX = static_cast<int>(pos.x / tileSize.width);
-	int tileY = static_cast<int>(pos.y / tileSize.height);
-
-	if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-		return true;
-	}
-
-	// ï¿½ï¿½ï¿½ï¿½"left-up"ï¿½ï¿½È¾Ë³ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½
-	unsigned int gid = collisionLayer->getTileGIDAt(Vec2(tileX, tileY));
-	return gid != 0;
-}
-
-// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Í¼ï¿½ß½ï¿½ï¿½ï¿½
-bool SceneMap::isWithinMapBounds(const Vec2& pos) const {
-	if (!tileMap) {
-		return false;
-	}
-
-	Size mapSize = tileMap->getMapSize();
-	Size tileSize = tileMap->getTileSize();
-
-	// ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ğ¡
-	float mapWidth = mapSize.width * tileSize.width;
-	float mapHeight = mapSize.height * tileSize.height;
-
-	// ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Úµï¿½Í¼ï¿½ï¿½Î§ï¿½ï¿½
-	return pos.x >= 0 && pos.x < mapWidth && pos.y >= 0 && pos.y < mapHeight;
-}
-
-// ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½
-TMXLayer* SceneMap::getLayer(const std::string& layerName) const {
-	if (tileMap) {
-		return tileMap->getLayer(layerName);
-	}
-	return nullptr;
-}
-
-// ï¿½ï¿½È¡ï¿½ï¿½×²ï¿½ï¿½
-TMXLayer* SceneMap::getCollisionLayer() const {
-	return collisionLayer;
-}
-
-// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-TerrainType SceneMap::getTerrainType(const Vec2& pos) const {
-	if (!isWithinMapBounds(pos)) {
-		return TerrainType::Grass; // Ä¬ï¿½Ï·ï¿½ï¿½Ø²İµï¿½ï¿½ï¿½ï¿½ï¿½
-	}
-
-	TMXLayer* grassLayer = getLayer("Grass");
-	if (!grassLayer || !tileMap) {
-		return TerrainType::Grass;
-	}
-
-	// ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½êµ½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ê£©
-	Size tileSize = tileMap->getTileSize();
-	Size mapSize = tileMap->getMapSize();
-
-	int tileX = static_cast<int> (pos.x / tileSize.width);
-	int tileY = static_cast<int> (pos.y / tileSize.height);
-
-	// ï¿½ß½ï¿½ï¿½ï¿½
-	if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-		return TerrainType::Grass;
-	}
-
-	// ï¿½ï¿½ï¿½ï¿½"left-up"ï¿½ï¿½È¾Ë³ï¿½ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½Ô­Ê¼ï¿½ï¿½ï¿½ï¿½
-	unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-	return gid != 0 ? TerrainType::Grass : TerrainType::Grass; // ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Grass
-}
-
-// ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ß´ï¿½
-Size SceneMap::getMapSize() const {
-	if (tileMap) {
-		return tileMap->getMapSize();
-	}
-	return Size::ZERO;
-}
-
-// ï¿½ï¿½È¡ï¿½ï¿½Æ¬ï¿½ß´ï¿½
-Size SceneMap::getTileSize() const {
-	if (tileMap) {
-		return tileMap->getTileSize();
-	}
-	return Size::ZERO;
-}
-
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-//cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
-//	if (!tileMap) {
-//		return tmxPos;
-//	}
-//	
-//	Size tileSize = tileMap->getTileSize();
-//	Size mapSize = tileMap->getMapSize();
-//	
-//	// yï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
-//	Vec2 cocos2dPos;
-//	cocos2dPos.x = tmxPos.x * tileSize.width;
-//	cocos2dPos.y = mapSize.height * tileSize.height - tmxPos.y * tileSize.height;
-//	
-//	return cocos2dPos;
+//Scene* SceneMap::createScene()
+//{
+//    // ²»Ê¹ÓÃ CREATE_FUNC ºêÀ´´´½¨
+//    SceneMap* scene = new (std::nothrow) SceneMap();
+//    if (scene && scene->init())
+//    {
+//        scene->autorelease();
+//        return scene;
+//    }
+//    CC_SAFE_DELETE(scene);
+//    return nullptr;
 //}
 
-cocos2d::Vec2 SceneMap::TMXToCocos2d(const cocos2d::Vec2& tmxPos) const {
-	if (!tileMap) return tmxPos;
+bool SceneMap::init()
+{
+    if (!Scene::init()) {
+        CCLOG("Failed to init SceneMap! ");
+        return false;
+    }
 
-	// 1. ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
-	Size tileSize = tileMap->getTileSize();   // 16ï¿½ï¿½16
-	Vec2 mapOrigin = tileMap->getPosition();  // ï¿½ï¿½Í¼ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨ï¿½ï¿½Î»ï¿½Æ£ï¿½
-	float scale = tileMap->getScale();        // ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
+    // »ñÈ¡¿É¼ûÇøÓò´óĞ¡
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto background = LayerColor::create(Color4B(50, 50, 50, 255), visibleSize.width, visibleSize.height);
+    this->addChild(background, -10);
 
-	// 2. Yï¿½ï¿½Õ¤ï¿½ï¿½ï¿½ï¿½ï¿½Staggered×ªï¿½ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½Ê½
-	// Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ 0.75ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğµï¿½Ë®Æ½Æ«ï¿½Æ£ï¿½
-	float stepX = tileSize.width * 0.75f;
-	// ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ß¶ï¿½ + Å¼ï¿½ï¿½ï¿½ĞµÄ´ï¿½Ö±Æ«ï¿½Æ£ï¿½Í¼ï¿½ï¿½ß¶ï¿½/2ï¿½ï¿½
-	float yOffset = (static_cast<int>(tmxPos.x) % 2) * (tileSize.height / 2);
+    // ´´½¨µØÍ¼ - Ê¹ÓÃµ¥ÀıÄ£Ê½
+    _homeVillageMap = HomeVillageMap::getInstance("Map/1.png");
+    if (_homeVillageMap)
+    {
+        // ¼ì²é²¢ÒÆ³ıµØÍ¼¿ÉÄÜ´æÔÚµÄ¸¸½Úµã
+        auto parent = _homeVillageMap->getParent();
+        if (parent) {
+            CCLOG("HomeVillageMap already has a parent, removing from previous parent");
+            parent->removeChild(_homeVillageMap, false); // false±íÊ¾²»Ö´ĞĞcleanupÇåÀí
+        }
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	float x = tmxPos.x * stepX;
-	float y = tmxPos.y * tileSize.height + yOffset;
+        this->addChild(_homeVillageMap, 0);
+        CCLOG("Map layer created successfully with singleton instance");
 
-	// 3. Ó¦ï¿½Ãµï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Î»ï¿½ï¿½
-	x *= scale;
-	y *= scale;
-	x += mapOrigin.x;
-	y += mapOrigin.y;
+        // ÇåÀí¾ÉµÄ½¨ÖşÔ¤ÀÀ
+        if (_buildingPreview)
+        {
+            CCLOG("SceneMap::init - removing old building preview");
+            if (_buildingPreview->getParent()) {
+                _buildingPreview->removeFromParent();
+            }
+            _buildingPreview = nullptr;
+        }
 
-	// ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½×ªÎªï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	x += (tileSize.width / 2) * scale;
-	y += (tileSize.height / 2) * scale;
+        _buildingPreview = BuildingPreview::create(_homeVillageMap);
+        if (_buildingPreview)
+        {
+            this->addChild(_buildingPreview, 150);  // ÉèÖÃ¸ßÓÅÏÈ¼¶
+            CCLOG("BuildingPreview created successfully");
+        }
+        else
+            CCLOG("ERROR: Failed to create BuildingPreview");
+    }
+    else
+    {
+        CCLOG("ERROR: Failed to create map layer - this should not happen with placeholder support");
+        // ´´½¨±¸ÓÃ±³¾°
+        auto fallbackBg = LayerColor::create(Color4B(20, 120, 20, 255), visibleSize.width, visibleSize.height);
+        this->addChild(fallbackBg, 0);
 
-	return Vec2(x, y);
+        auto label = Label::createWithSystemFont("Map Loading Failed", "fonts/arial.ttf", 48);
+        if (label)
+        {
+            label->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+            label->setColor(Color3B::WHITE);
+            this->addChild(label, 1);
+        }
+    }
+
+    // ÉèÖÃUI½çÃæ
+    setupUI();
+    // =========================update qy===================================
+    setupResourceUI();
+    // =========================update qy===================================
+
+    // ÖØĞÂ³õÊ¼»¯ÊÂ¼ş¼àÌıÆ÷
+    reinitializeEventListeners();
+
+    // ¼ì²éGameManagerÖĞÊÇ·ñÓĞµÈ´ı·ÅÖÃµÄ½¨Öş
+    bool hasPendingPlacement = false;
+    auto gameManager = GameManager::getInstance();
+    if (gameManager->hasPendingBuildingPlacement())
+    {
+        hasPendingPlacement = true;
+        // ÕâÀï²»Ö±½Ó´¦Àí£¬Áô¸øcheckPendingBuildingPlacement´¦Àí
+        // È·±£BuildingPreviewÄÜ¹»ÕıÈ·ÏÔÊ¾Ô¤ÀÀ
+    }
+
+    // ÖØÖÃ½¨Öş·ÅÖÃ×´Ì¬ - Èç¹ûÓĞpending placement»áÔÚresetÖĞ±»±£Áô
+    resetBuildingPlacementState();
+
+    // ¼ì²é²¢´¦ÀíµÈ´ı·ÅÖÃµÄ½¨Öş
+    checkPendingBuildingPlacement();
+
+    // ´ÓµØÍ¼ÖĞ»ñÈ¡ÒÑÓĞ½¨Öş²¢Ìí¼Óµ½_buildingsÁĞ±í
+    if (_homeVillageMap)
+    {
+        // ¼ì²éÊÇ·ñÒÑÓĞ½¨Öş
+        bool hasBuildings = false;
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+
+        if (buildingsContainer && buildingsContainer->getChildrenCount() > 0) {
+            hasBuildings = true;
+            CCLOG("Found existing buildings (%d), skipping default TownHall creation",
+                (int)buildingsContainer->getChildrenCount());
+
+            // ½«µØÍ¼ÖĞµÄ½¨ÖşÌí¼Óµ½SceneMapµÄÁĞ±íÖĞ
+            auto existingBuildings = buildingsContainer->getChildren();
+            for (auto building : existingBuildings) {
+                auto buildingObj = dynamic_cast<Building*>(building);
+                if (buildingObj) {
+                    _buildings.pushBack(buildingObj);
+                }
+            }
+        }
+
+        // =========================update qy===================================
+        
+        // Èç¹ûÃ»ÓĞÒÑÓĞ½¨Öş£¬´´½¨Ä¬ÈÏµÄÊĞÕşÌü
+        if (!hasBuildings) {
+            CCLOG("No existing buildings found, creating default TownHall/GoldMine/GoldStorage/ElixirCollector/ElixirStorage");
+            int centerGridX = _homeVillageMap->getGridCols() / 2;
+            int centerGridY = _homeVillageMap->getGridRows() / 2;
+
+            // ´´½¨´ó±¾Óª
+            auto townHall = TownHall::create(1);
+            if (townHall)
+            {
+                Size gridSize = townHall->getGridSize();
+                centerGridX -= (int)gridSize.width / 2;
+                centerGridY -= (int)gridSize.height / 2;
+                if (_homeVillageMap->canPlaceBuilding(centerGridX, centerGridY, gridSize))
+                {
+                    townHall->setGridPosition(centerGridX, centerGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(centerGridX, centerGridY);
+                    townHall->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(townHall);
+                    _buildings.pushBack(townHall);
+                    _homeVillageMap->markGridsOccupied(centerGridX, centerGridY, gridSize, true);
+                    CCLOG("TownHall created at grid (%d, %d)", centerGridX, centerGridY);
+                }
+            }
+
+            // ´´½¨½ğ¿ó
+            int goldMineGridX = centerGridX - 4;
+            int goldMineGridY = centerGridY;
+            auto goldMine = GoldMine::create(1);
+            if (goldMine)
+            {
+                Size goldMineGridSize = goldMine->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(goldMineGridX, goldMineGridY, goldMineGridSize))
+                {
+                    goldMine->setGridPosition(goldMineGridX, goldMineGridY);
+                    Vec2 goldMineWorldPos = _homeVillageMap->gridToWorld(goldMineGridX, goldMineGridY);
+                    goldMine->setPosition(goldMineWorldPos);
+                    _homeVillageMap->addBuilding(goldMine);
+                    _buildings.pushBack(goldMine);
+                    _homeVillageMap->markGridsOccupied(goldMineGridX, goldMineGridY, goldMineGridSize, true);
+                    CCLOG("GoldMine created at grid (%d, %d)", goldMineGridX, goldMineGridY);
+                }
+            }
+
+            // ´´½¨´¢½ğ¹Ş
+            int goldStorageGridX = centerGridX + 4;
+            int goldStorageGridY = centerGridY;
+            auto goldStorage = GoldStorage::create(1);
+            if (goldStorage)
+            {
+                Size goldStorageGridSize = goldStorage->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(goldStorageGridX, goldStorageGridY, goldStorageGridSize))
+                {
+                    goldStorage->setGridPosition(goldStorageGridX, goldStorageGridY);
+                    Vec2 goldStorageWorldPos = _homeVillageMap->gridToWorld(goldStorageGridX, goldStorageGridY);
+                    goldStorage->setPosition(goldStorageWorldPos);
+                    _homeVillageMap->addBuilding(goldStorage);
+                    _buildings.pushBack(goldStorage);
+                    _homeVillageMap->markGridsOccupied(goldStorageGridX, goldStorageGridY, goldStorageGridSize, true);
+                    CCLOG("GoldStorage created at grid (%d, %d)", goldStorageGridX, goldStorageGridY);
+                }
+            }
+
+            // ========== ĞÂÔö£º´´½¨Ê¥Ë®ÊÕ¼¯Æ÷ ==========
+            int elixirCollectorGridX = centerGridX - 4;
+            int elixirCollectorGridY = centerGridY + 4;
+            auto elixirCollector = ElixirCollector::create(1);
+            if (elixirCollector)
+            {
+                Size gridSize = elixirCollector->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(elixirCollectorGridX, elixirCollectorGridY, gridSize))
+                {
+                    elixirCollector->setGridPosition(elixirCollectorGridX, elixirCollectorGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(elixirCollectorGridX, elixirCollectorGridY);
+                    elixirCollector->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(elixirCollector);
+                    _buildings.pushBack(elixirCollector);
+                    _homeVillageMap->markGridsOccupied(elixirCollectorGridX, elixirCollectorGridY, gridSize, true);
+                    CCLOG("ElixirCollector created at grid (%d, %d)", elixirCollectorGridX, elixirCollectorGridY);
+                }
+            }
+
+            // ========== ĞÂÔö£º´´½¨Ê¥Ë®Æ¿ ==========
+            int elixirStorageGridX = centerGridX + 4;
+            int elixirStorageGridY = centerGridY + 4;
+            auto elixirStorage = ElixirStorage::create(1);
+            if (elixirStorage)
+            {
+                Size gridSize = elixirStorage->getGridSize();
+                if (_homeVillageMap->canPlaceBuilding(elixirStorageGridX, elixirStorageGridY, gridSize))
+                {
+                    elixirStorage->setGridPosition(elixirStorageGridX, elixirStorageGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(elixirStorageGridX, elixirStorageGridY);
+                    elixirStorage->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(elixirStorage);
+                    _buildings.pushBack(elixirStorage);
+                    _homeVillageMap->markGridsOccupied(elixirStorageGridX, elixirStorageGridY, gridSize, true);
+                    CCLOG("ElixirStorage created at grid (%d, %d)", elixirStorageGridX, elixirStorageGridY);
+                }
+            }
+            // ========== ĞÂÔö£º´´½¨1¼¶¼ÓÅ©ÅÚ ==========
+            auto cannon = Cannon::create(1);
+            if (cannon)
+            {
+                Size gridSize = cannon->getGridSize();
+                int cannonGridX = centerGridX - 6;
+                int cannonGridY = centerGridY - 4;
+                if (_homeVillageMap->canPlaceBuilding(cannonGridX, cannonGridY, gridSize))
+                {
+                    cannon->setGridPosition(cannonGridX, cannonGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(cannonGridX, cannonGridY);
+                    cannon->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(cannon);
+                    _buildings.pushBack(cannon);
+                    _homeVillageMap->markGridsOccupied(cannonGridX, cannonGridY, gridSize, true);
+                }
+            }
+
+            // ========== ĞÂÔö£º´´½¨1¼¶¼ıËş ==========
+            auto archerTower = ArcherTower::create(1);
+            if (archerTower)
+            {
+                Size gridSize = archerTower->getGridSize();
+                int archerGridX = centerGridX + 6;
+                int archerGridY = centerGridY - 4;
+                if (_homeVillageMap->canPlaceBuilding(archerGridX, archerGridY, gridSize))
+                {
+                    archerTower->setGridPosition(archerGridX, archerGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(archerGridX, archerGridY);
+                    archerTower->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(archerTower);
+                    _buildings.pushBack(archerTower);
+                    _homeVillageMap->markGridsOccupied(archerGridX, archerGridY, gridSize, true);
+                }
+            }
+            // ========== ĞÂÔö£º´´½¨1¼¶±øÓª ==========
+            auto barracks = Barracks::create(1);
+            if (barracks)
+            {
+                Size gridSize = barracks->getGridSize();
+                int barracksGridX = centerGridX;
+                int barracksGridY = centerGridY - 4;
+                if (_homeVillageMap->canPlaceBuilding(barracksGridX, barracksGridY, gridSize))
+                {
+                    barracks->setGridPosition(barracksGridX, barracksGridY);
+                    Vec2 worldPos = _homeVillageMap->gridToWorld(barracksGridX, barracksGridY);
+                    barracks->setPosition(worldPos);
+                    _homeVillageMap->addBuilding(barracks);
+                    _buildings.pushBack(barracks);
+                    _homeVillageMap->markGridsOccupied(barracksGridX, barracksGridY, gridSize, true);
+                    CCLOG("Barracks created at grid (%d, %d)", barracksGridX, barracksGridY);
+                }
+            }
+        }
+    }
+    // =========================update qy===================================
+
+    this->scheduleUpdate();
+
+    // ½ğ±Ò²úËÙ¶¨Ê±Æ÷
+    this->schedule([this](float dt) {
+        GameManager::getInstance()->updateGoldProduce(dt);
+        }, 0.2f, "gold_accumulate_only");
+
+    // ========== ĞÂÔö£ºÊ¥Ë®²úËÙ¶¨Ê±Æ÷ ==========
+    this->schedule([this](float dt) {
+        GameManager::getInstance()->updateElixirProduce(dt);
+        }, 0.2f, "elixir_accumulate_only");
+
+    // ³õÊ¼»¯¼ÆËãËùÓĞ²úËÙÓëÈİÁ¿
+    this->calculateTotalGoldProduceSpeed();
+    this->calculateTotalGoldCapacity();
+    this->calculateTotalElixirProduceSpeed();
+    this->calculateTotalElixirCapacity();
+
+    // =========================update qy===================================
+
+    //// ²¥·Å±³¾°ÒôÀÖ
+    //auto audioMgr = AudioManager::getInstance();
+    //// audioMgr->playBackgroundMusic("sounds/background.mp3", true);
+
+    CCLOG("SceneMap initialized successfully");
+    return true;
 }
 
-//cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
-//	if (!tileMap) {
-//		return cocosPos;
-//	}
-//	
-//	Size tileSize = tileMap->getTileSize();
-//	Size mapSize = tileMap->getMapSize();
-//	
-//	// Cocos2dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ÎªTMXï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
-//	Vec2 tmxPos;
-//	tmxPos.x = static_cast<int>(cocosPos.x / tileSize.width);
-//	tmxPos.y = static_cast<int>(mapSize.height - cocosPos.y / tileSize.height);		// yï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
-//	
-//	return tmxPos;
+
+void SceneMap::onEnter()
+{
+    Scene::onEnter();
+    CCLOG("SceneMap::onEnter called");
+
+    // ÖØĞÂ³õÊ¼»¯ÊÂ¼ş¼àÌıÆ÷
+    reinitializeEventListeners();
+
+    // ÖØÖÃ½¨Öş·ÅÖÃ×´Ì¬
+    // È·±£½øÈë³¡¾°Ê±ÇåÀíµôÎŞĞ§µÄ·ÅÖÃ×´Ì¬£¬µ«±£ÁôpendingµÄ·ÅÖÃ
+    resetBuildingPlacementState();
+
+    // ¼ì²épendingµÄ½¨Öş·ÅÖÃ
+    checkPendingBuildingPlacement();
+}
+
+// =========================update qy===================================
+// »ñÈ¡µ¥¸ö½¨Öş½ğ±ÒÈİÁ¿£¨Ô­ÓĞ£©
+int SceneMap::getSingleBuildingGoldCapacity(Building* building)
+{
+    if (building == nullptr) return 0;
+
+    int level = building->getLevel();
+    BuildingType type = building->getBuildingType();
+    int singleCapacity = 0;
+
+    if (type == BuildingType::TOWN_HALL)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = TOWN_HALL_LEVEL_1_GOLD_CAPACITY; break;
+        case 2: singleCapacity = TOWN_HALL_LEVEL_2_GOLD_CAPACITY; break;
+        case 3: singleCapacity = TOWN_HALL_LEVEL_3_GOLD_CAPACITY; break;
+        default: singleCapacity = TOWN_HALL_LEVEL_1_GOLD_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::GOLD_MINE)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = GOLD_MINE_LEVEL_1_GOLD_CAPACITY; break;
+        case 2: singleCapacity = GOLD_MINE_LEVEL_2_GOLD_CAPACITY; break;
+        case 3: singleCapacity = GOLD_MINE_LEVEL_3_GOLD_CAPACITY; break;
+        default: singleCapacity = GOLD_MINE_LEVEL_1_GOLD_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::GOLD_STORAGE)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = GOLD_STORAGE_LEVEL_1_GOLD_CAPACITY; break;
+        case 2: singleCapacity = GOLD_STORAGE_LEVEL_2_GOLD_CAPACITY; break;
+        case 3: singleCapacity = GOLD_STORAGE_LEVEL_3_GOLD_CAPACITY; break;
+        default: singleCapacity = GOLD_STORAGE_LEVEL_1_GOLD_CAPACITY; break;
+        }
+    }
+    return singleCapacity;
+}
+
+// ========== ĞÂÔö£º»ñÈ¡µ¥¸ö½¨ÖşÊ¥Ë®ÈİÁ¿ ==========
+int SceneMap::getSingleBuildingElixirCapacity(Building* building)
+{
+    if (building == nullptr) return 0;
+    int level = building->getLevel();
+    BuildingType type = building->getBuildingType();
+    int singleCapacity = 0;
+
+    if (type == BuildingType::TOWN_HALL)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = TOWN_HALL_LEVEL_1_ELIXIR_CAPACITY; break;
+        case 2: singleCapacity = TOWN_HALL_LEVEL_2_ELIXIR_CAPACITY; break;
+        case 3: singleCapacity = TOWN_HALL_LEVEL_3_ELIXIR_CAPACITY; break;
+        default: singleCapacity = TOWN_HALL_LEVEL_1_ELIXIR_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::ELIXIR_COLLECTOR)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = ELIXIR_COLLECTOR_LEVEL_1_ELIXIR_CAPACITY; break;
+        case 2: singleCapacity = ELIXIR_COLLECTOR_LEVEL_2_ELIXIR_CAPACITY; break;
+        case 3: singleCapacity = ELIXIR_COLLECTOR_LEVEL_3_ELIXIR_CAPACITY; break;
+        default: singleCapacity = ELIXIR_COLLECTOR_LEVEL_1_ELIXIR_CAPACITY; break;
+        }
+    }
+    else if (type == BuildingType::ELIXIR_STORAGE)
+    {
+        switch (level)
+        {
+        case 1: singleCapacity = ELIXIR_STORAGE_LEVEL_1_ELIXIR_CAPACITY; break;
+        case 2: singleCapacity = ELIXIR_STORAGE_LEVEL_2_ELIXIR_CAPACITY; break;
+        case 3: singleCapacity = ELIXIR_STORAGE_LEVEL_3_ELIXIR_CAPACITY; break;
+        default: singleCapacity = ELIXIR_STORAGE_LEVEL_1_ELIXIR_CAPACITY; break;
+        }
+    }
+    return singleCapacity;
+}
+// =========================update qy===================================
+
+void SceneMap::setupUI()
+{
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // ´´½¨¹¦ÄÜ°´Å¥
+    Vector<MenuItem*> menuItems;
+
+    // Õ½¶·°´Å¥
+    auto battleBtn = MenuItemImage::create(
+        "Icon/BattleIcon.png", "Icon/BattleIconPressed.png",   //Õı³£&°´ÏÂ Í¼Æ¬
+        CC_CALLBACK_1(SceneMap::onBattleButtonClicked, this));    // µã»÷»Øµ÷
+
+    battleBtn->setPosition(Vec2(visibleSize.width * 0.05f, visibleSize.height * 0.08f));
+    menuItems.pushBack(battleBtn);
+
+    // yzh-ÉÌµê°´Å¥
+    auto shopBtn = MenuItemImage::create(
+        "Icon/shop.png", "Icon/shopPressed.png",
+        CC_CALLBACK_1(SceneMap::onShopButtonClicked, this));    // µã»÷»Øµ÷
+
+    shopBtn->setPosition(Vec2(visibleSize.width * 0.95f, visibleSize.height * 0.08f));
+    menuItems.pushBack(shopBtn);
+
+    // =========================update yxy===================================
+    // Ñ¡±ø°´Å¥
+    auto troopSelectionBtn = MenuItemImage::create(
+        "Icon/TroopIcon.png",                 // Õı³£×´Ì¬Í¼±êÂ·¾¶
+        "Icon/TroopIconPressed.png",          // °´ÏÂ×´Ì¬Í¼±êÂ·¾¶
+        CC_CALLBACK_1(SceneMap::onTroopSelectionButtonClicked, this)); // µã»÷»Øµ÷º¯Êı
+
+    // ÉèÖÃËõ·Å±ÈÀı  ÏñËØÓĞµã´ó
+    troopSelectionBtn->setScale(0.05f);
+
+    // ½«Ñ¡±ø°´Å¥·ÅÔÚÉÌµê°´Å¥×ó²à
+    troopSelectionBtn->setPosition(Vec2(visibleSize.width * 0.85f, visibleSize.height * 0.08f));
+    menuItems.pushBack(troopSelectionBtn);
+    // =========================update yxy===================================
+
+    auto menu = Menu::createWithArray(menuItems);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 100);
+}
+
+// =========================update qy===================================
+void SceneMap::setupResourceUI()
+{
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    Node* resRootNode = Node::create();
+    resRootNode->setPosition(Vec2(origin.x + visibleSize.width - 60, origin.y + visibleSize.height - 100));
+    resRootNode->setAnchorPoint(Vec2(1, 1));
+    this->addChild(resRootNode, 9999);
+
+    _goldIcon = Sprite::create("Icon/gold_icon.png");
+    if (!_goldIcon) { _goldIcon = Sprite::create(); _goldIcon->setColor(Color3B::YELLOW); _goldIcon->setContentSize(Size(40, 40)); }
+    _goldIcon->setAnchorPoint(Vec2(1, 0.5)); _goldIcon->setPosition(Vec2(-10, 25)); resRootNode->addChild(_goldIcon);
+    _goldLabel = Label::createWithSystemFont("Gold: 0", "Arial", 30);
+    _goldLabel->setTextColor(Color4B::YELLOW); _goldLabel->setAnchorPoint(Vec2(1, 0.5)); _goldLabel->setPosition(Vec2(-_goldIcon->getContentSize().width - 20, 25)); resRootNode->addChild(_goldLabel);
+
+    _elixirIcon = Sprite::create("Icon/elixir_icon.png");
+    if (!_elixirIcon) { _elixirIcon = Sprite::create(); _elixirIcon->setColor(Color3B::BLUE); _elixirIcon->setContentSize(Size(40, 40)); }
+    _elixirIcon->setAnchorPoint(Vec2(1, 0.5)); _elixirIcon->setPosition(Vec2(-10, -25)); resRootNode->addChild(_elixirIcon);
+    _elixirLabel = Label::createWithSystemFont("Elixir: 0", "Arial", 30);
+    _elixirLabel->setTextColor(Color4B::BLUE); _elixirLabel->setAnchorPoint(Vec2(1, 0.5)); _elixirLabel->setPosition(Vec2(-_elixirIcon->getContentSize().width - 20, -25)); resRootNode->addChild(_elixirLabel);
+
+    refreshResourceUI();
+    CCLOG("SceneMap: ÓÒÉÏ½Ç½ğ±ÒÊ¥Ë®UI´´½¨Íê³É£¡");
+}
+
+
+// Ö÷¶¯²Ù×÷×¨Êô¼´Ê±Ë¢ĞÂ£¨Éı¼¶¿Û³ıºóµ÷ÓÃ£©
+void SceneMap::refreshResourceImmediately()
+{
+    if (!_goldLabel || !_elixirLabel) return;
+    GameManager* gm = GameManager::getInstance();
+    if (!gm) return;
+
+    int gold = gm->getResource(ResourceType::GOLD);
+    int elixir = gm->getResource(ResourceType::ELIXIR);
+    int goldCap = gm->getGoldStorageCapacity();
+    int elixirCap = gm->getElixirStorageCapacity();
+
+    _goldLabel->setString(StringUtils::format("Gold: %d/%d", gold, goldCap));
+    _elixirLabel->setString(StringUtils::format("Elixir: %d/%d", elixir, elixirCap));
+    CCLOG("[¼´Ê±Ë¢ĞÂ] ×ÊÔ´¸üĞÂÍê³É");
+}
+
+// ²ú½ğ/²úÊ¥Ë®Ë¢ĞÂ·½·¨
+void SceneMap::refreshResourceUI()
+{
+    if (!_goldLabel || !_elixirLabel) return;
+    GameManager* gm = GameManager::getInstance();
+    if (!gm) return;
+
+    int gold = gm->getResource(ResourceType::GOLD);
+    int elixir = gm->getResource(ResourceType::ELIXIR);
+    int goldCap = gm->getGoldStorageCapacity();
+    int elixirCap = gm->getElixirStorageCapacity();
+
+    _goldLabel->setString(StringUtils::format("Gold: %d/%d", gold, goldCap));
+    _elixirLabel->setString(StringUtils::format("Elixir: %d/%d", elixir, elixirCap));
+}
+// =========================update qy===================================
+
+
+void SceneMap::onBattleButtonClicked(Ref* sender)
+{
+    // ´´½¨¼òµ¥µÄÕ½¶·Ä£Ê½Ñ¡Ôñµ¯´°
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // ±³¾°ÕÚÕÖ
+    auto shade = LayerColor::create(Color4B(0, 0, 0, 200));
+    this->addChild(shade, 200);
+
+    // ²Ëµ¥Ñ¡Ïî
+    auto title = Label::createWithTTF("Select Battle Mode", "fonts/Marker Felt.ttf", 48);
+    title->setPosition(visibleSize.width / 2, visibleSize.height / 2 + 150);
+    shade->addChild(title);
+
+    auto multiplayerBtn = MenuItemLabel::create(
+        Label::createWithTTF("Multiplayer (Test)", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+            auto scene = BattleScene::createScene(0);
+            Director::getInstance()->pushScene(scene);
+        });
+
+    auto level1Btn = MenuItemLabel::create(
+        Label::createWithTTF("Goblin Forest (Level 1)", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+            auto scene = BattleScene::createScene(1);
+            Director::getInstance()->pushScene(scene);
+        });
+
+    auto level2Btn = MenuItemLabel::create(
+        Label::createWithTTF("Goblin Outpost (Level 2)", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+            auto scene = BattleScene::createScene(2);
+            Director::getInstance()->pushScene(scene);
+        });
+
+    auto cancelBtn = MenuItemLabel::create(
+        Label::createWithTTF("Cancel", "fonts/Marker Felt.ttf", 32),
+        [=](Ref* sender) {
+            shade->removeFromParent();
+        });
+
+    auto menu = Menu::create(multiplayerBtn, level1Btn, level2Btn, cancelBtn, nullptr);
+    menu->alignItemsVerticallyWithPadding(30);
+    menu->setPosition(visibleSize.width / 2, visibleSize.height / 2 - 20);
+    shade->addChild(menu);
+
+    // ²¶»ñ´¥ÃşÊÂ¼ş·ÀÖ¹´©Í¸
+    auto listener = EventListenerTouchOneByOne::create();
+    listener->setSwallowTouches(true);
+    listener->onTouchBegan = [](Touch* t, Event* e) { return true; };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, shade);
+}
+
+void SceneMap::onShopButtonClicked(Ref* sender)
+{
+    CCLOG("Shop button clicked, switching to shop scene");
+
+    // Í¨¹ı GameManager ÇĞ»»µ½ÉÌµê³¡¾°
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoShopScene();
+}
+
+ // ========================= update yzh Ê¹µÃshop·µ»ØÖ÷Á´½Ó ===================================
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////ÈÚºÏ³åÍ»/////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// µØÍ¼´¥ÃşÂß¼­£º
+// 
+//bool SceneMap::onMapTouched(Touch* touch, Event* event)
+//{
+//    Vec2 touchPos = touch->getLocation();
+//
+//    CCLOG("SceneMap::onMapTouched called at (%.2f, %.2f)", touchPos.x, touchPos.y);
+//
+//    // ¼ì²éBuildingPreviewÊÇ·ñÓĞĞ§
+//    if (!_buildingPreview) {
+//        CCLOG("BuildingPreview is null, cannot process touch");
+//        return false;
+//    }
+//
+//    // Èç¹ûÕıÔÚÔ¤ÀÀ½¨ÖşÇÒÎ´¿ªÊ¼ÍÏ×§£¬¿ªÊ¼ÍÏ×§¼ì²â
+//    if (_buildingPreview->isPreviewing() && !_buildingPreview->isPreviewDragging())
+//    {
+//        CCLOG("Preview building detected, starting drag detection");
+//        _buildingPreview->startPreviewDragDetection(touchPos);
+//        return true;
+//    }
+//
+//    // Èç¹ûÕıÔÚÒÆ¶¯½¨Öş£¬¸üĞÂÎ»ÖÃ
+//    if (_buildingPreview->isMoving())
+//    {
+//        CCLOG("Building is moving, updating position");
+//        _buildingPreview->updatePreviewPosition(touchPos);
+//        return true;
+//    }
+//
+//    // Èç¹ûÊÇ¼òµ¥ÍÏ×§Ä£Ê½£¬¸üĞÂÎ»ÖÃ
+//    if (_buildingPreview->isSimpleDragging())
+//    {
+//        CCLOG("Building is simple dragging, updating position");
+//        _buildingPreview->updatePreviewPosition(touchPos);
+//        return true;
+//    }
+//
+//    // Èç¹û²»ÊÇÔÚÒÆ¶¯½¨Öş£¬¼ì²éÊÇ·ñµã»÷ÁËÏÖÓĞ½¨Öş
+//    // ×¼±¸¿ªÊ¼ÒÆ¶¯²Ù×÷
+//    if (!_isMovingBuilding)
+//    {
+//        CCLOG("Checking for building click - moving:%s",
+//            _isMovingBuilding ? "true" : "false");
+//
+//        // ¼ì²éHomeVillageMapÊÇ·ñÓĞĞ§    
+//        if (!_homeVillageMap) {
+//            CCLOG("HomeVillageMap is null, cannot check buildings");
+//            return false;
+//        }
+//
+//        // ×ª»»´¥Ãş×ø±êµ½µØÍ¼×ø±êÏµ
+//        Vec2 mapPos = _homeVillageMap->getMapPosition();
+//        float zoom = _homeVillageMap->getZoom();
+//        Vec2 worldPos = (touchPos - mapPos) / zoom;
+//
+//        CCLOG("SceneMap::onMapTouched - checking for building at world pos (%.2f, %.2f)", worldPos.x, worldPos.y);
+//        CCLOG("Current buildings count: %d", (int)_buildings.size());
+//
+//        // Í¨¹ıBuildingPreview¼ì²éµã»÷Î»ÖÃÊÇ·ñÓĞ½¨Öş
+//        Building* clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, _buildings);
+//
+//        if (clickedBuilding)
+//        {
+//            CCLOG("Building found via BuildingPreview, starting simple drag");
+//            _buildingPreview->startSimpleDrag(clickedBuilding);
+//            return true;
+//        }
+//
+//        // ´ÓHomeVillageMapµÄ½¨ÖşÈİÆ÷ÖĞÔÙ´Î¼ì²é
+//        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+//        if (buildingsContainer) {
+//            Vector<Building*> containerBuildings;
+//            auto existingBuildings = buildingsContainer->getChildren();
+//            CCLOG("Buildings in container: %d", (int)existingBuildings.size());
+//
+//            for (auto building : existingBuildings) {
+//                auto buildingObj = dynamic_cast<Building*>(building);
+//                if (buildingObj) {
+//                    containerBuildings.pushBack(buildingObj);
+//                }
+//            }
+//
+//            // Í¨¹ıBuildingPreview¼ì²éÈİÆ÷ÖĞµÄ½¨Öş
+//            clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, containerBuildings);
+//
+//            if (clickedBuilding)
+//            {
+//                CCLOG("Building found in container via BuildingPreview, starting simple drag");
+//
+//                // ½«ÕÒµ½µÄ½¨ÖşÌí¼Óµ½SceneMapµÄÁĞ±íÖĞ
+//                bool found = false;
+//                for (auto existingBuilding : _buildings) {
+//                    if (existingBuilding == clickedBuilding) {
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//                if (!found) {
+//                    _buildings.pushBack(clickedBuilding);
+//                    CCLOG("Added building to SceneMap buildings list");
+//                }
+//
+//                _buildingPreview->startSimpleDrag(clickedBuilding);
+//                return true;
+//            }
+//        }
+//
+//        CCLOG("No building found at touch position");
+//    }
+//    else
+//    {
+//        CCLOG("Cannot check buildings - moving:%s preview:%s",
+//            _isMovingBuilding ? "true" : "false",
+//            _buildingPreview ? "valid" : "null");
+//    }
+//
+//    // ·µ»ØfalseÔÊĞíÊÂ¼ş¼ÌĞø´«µİ
+//    // ÕâÑùUIÔªËØ¿ÉÒÔ½ÓÊÕµ½´¥ÃşÊÂ¼ş
+//    return false;
+//}
+//
+//void SceneMap::onMouseMoved(Event* event)
+//{
+//    if (!_buildingPreview) {
+//        return;
+//    }
+//
+//    EventMouse* mouseEvent = static_cast<EventMouse*>(event);
+//    Vec2 mousePos = Vec2(mouseEvent->getCursorX(), mouseEvent->getCursorY());
+//
+//    // Èç¹ûÕıÔÚÔ¤ÀÀ²¢ÍÏ×§£¬¸üĞÂÔ¤ÀÀÎ»ÖÃ
+//    if (_buildingPreview->isPreviewing() && _buildingPreview->isPreviewDragging())
+//    {
+//        _buildingPreview->updatePreviewPosition(mousePos);
+//    }
+//    // Èç¹ûÕıÔÚÒÆ¶¯½¨Öş
+//    else if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging())
+//    {
+//        _buildingPreview->updatePreviewPosition(mousePos);
+//    }
 //}
 
-cocos2d::Vec2 SceneMap::Cocos2dToTMX(const cocos2d::Vec2& cocosPos) const {
-	if (!tileMap) return cocosPos;
-
-	// 1. ï¿½ï¿½È¡ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½
-	Size tileSize = tileMap->getTileSize();   // 16ï¿½ï¿½16
-	Vec2 mapOrigin = tileMap->getPosition();  // ï¿½ï¿½Í¼ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	float scale = tileMap->getScale();        // ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
-	Size mapSize = tileMap->getMapSize();     // 60ï¿½ï¿½ ï¿½ï¿½ 120ï¿½ï¿½
-
-	// 2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Î»ï¿½ï¿½
-	float x = (cocosPos.x - mapOrigin.x) / scale;
-	float y = (cocosPos.y - mapOrigin.y) / scale;
-
-	// 3. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½Äµï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½TMXToCocos2dï¿½Ğ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
-	x -= (tileSize.width / 2);
-	y -= (tileSize.height / 2);
-
-	// 4. Yï¿½ï¿½Õ¤ï¿½ï¿½ï¿½ï¿½ï¿½Staggeredï¿½ï¿½×ªï¿½ï¿½
-	float stepX = tileSize.width * 0.75f;
-	// ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨Xï¿½ï¿½
-	float tileX = x / stepX;
-	// ï¿½ï¿½ï¿½ï¿½Å¼ï¿½ï¿½ï¿½ĞµÄ´ï¿½Ö±Æ«ï¿½ï¿½
-	float yOffset = (static_cast<int>(tileX) % 2) * (tileSize.height / 2);
-	// ï¿½Ù¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£¨Yï¿½ï¿½
-	float tileY = (y - yOffset) / tileSize.height;
-
-	// 5. È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ±ß½ç£¨ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ç£©
-	tileX = clampf(floor(tileX), 0, mapSize.width - 1);
-	tileY = clampf(floor(tileY), 0, mapSize.height - 1);
-
-	return Vec2(tileX, tileY);
+bool SceneMap::onMapTouched(Touch* touch, Event* event)
+{
+    Vec2 touchPos = touch->getLocation();
+    CCLOG("SceneMap::onMapTouched at (%.2f, %.2f)", touchPos.x, touchPos.y);
+    if (!_buildingPreview) return false;
+    if (_buildingPreview->isPreviewing() && !_buildingPreview->isPreviewDragging()) { _buildingPreview->startPreviewDragDetection(touchPos); return true; }
+    if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()) { _buildingPreview->updatePreviewPosition(touchPos); return true; }
+    if (!_isMovingBuilding)
+    {
+        if (!_homeVillageMap) return false;
+        Vec2 mapPos = _homeVillageMap->getMapPosition(); float zoom = _homeVillageMap->getZoom(); Vec2 worldPos = (touchPos - mapPos) / zoom;
+        Building* clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, _buildings);
+        if (clickedBuilding) { _buildingPreview->startSimpleDrag(clickedBuilding); return true; }
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        if (buildingsContainer)
+        {
+            Vector<Building*> containerBuildings;
+            auto existingBuildings = buildingsContainer->getChildren();
+            for (auto building : existingBuildings) {
+                auto buildingObj = dynamic_cast<Building*>(building);
+                if (buildingObj) containerBuildings.pushBack(buildingObj);
+            }
+            clickedBuilding = _buildingPreview->checkBuildingAtPosition(worldPos, containerBuildings);
+            if (clickedBuilding)
+            {
+                bool found = false;
+                for (auto b : _buildings) if (b == clickedBuilding) { found = true; break; }
+                if (!found) _buildings.pushBack(clickedBuilding);
+                _buildingPreview->startSimpleDrag(clickedBuilding);
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
-// ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½Í¼
-void SceneMap::setupScrollView() {
-	// ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½Â¼ï¿½
-	auto listener = EventListenerTouchAllAtOnce::create();
-	listener->onTouchesBegan = CC_CALLBACK_2(SceneMap::onTouchesBegan, this);
-	listener->onTouchesMoved = CC_CALLBACK_2(SceneMap::onTouchesMoved, this);
-	listener->onTouchesEnded = CC_CALLBACK_2(SceneMap::onTouchesEnded, this);
-
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+void SceneMap::onMouseMoved(Event* event)
+{
+    if (!_buildingPreview) return;
+    EventMouse* mouseEvent = static_cast<EventMouse*>(event);
+    Vec2 mousePos = Vec2(mouseEvent->getCursorX(), mouseEvent->getCursorY());
+    if (_buildingPreview->isPreviewing() && _buildingPreview->isPreviewDragging()) _buildingPreview->updatePreviewPosition(mousePos);
+    else if (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()) _buildingPreview->updatePreviewPosition(mousePos);
 }
 
-// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½Ê¼
-void SceneMap::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) {
-	if (touches.size() >= 2) {
-		isTwoTouch = true;
-		auto touch1 = touches[0];
-		auto touch2 = touches[1];
-		initTwoTouchDistance = touch1->getLocation().distance(touch2->getLocation());
-		initTwoTouchCenter = (touch1->getLocation() + touch2->getLocation()) / 2.0f;
-	}
-	else if (touches.size() == 1) {
-		isTwoTouch = false;
-		lastTouchPos = touches[0]->getLocation();
-	}
+
+void SceneMap::checkPendingBuildingPlacement()
+{
+    auto gameManager = GameManager::getInstance();
+    if (gameManager->hasPendingBuildingPlacement())
+    {
+        BuildingType buildingType = gameManager->getPendingBuildingType();
+        CCLOG("Found pending building placement for type: %d", (int)buildingType);
+
+        // ¿ªÊ¼½¨Öş·ÅÖÃÁ÷³Ì
+        // ÕâÀïµ÷ÓÃstartBuildingPlacementÀ´³õÊ¼»¯Ô¤ÀÀ×´Ì¬
+        // È·±£resetBuildingPlacementState²»»áÇå³ıpending×´Ì¬
+        // ÔÚinitÖĞÒÑ¾­µ÷ÓÃ¹ıreset£¬ËùÒÔÕâÀï°²È«
+
+        // startBuildingPlacement »áÉèÖÃ _isPlacingBuilding = true ²¢µ÷ÓÃ preview->startPreview
+        startBuildingPlacement(buildingType);
+
+        // Çå³ıpending×´Ì¬
+        gameManager->clearPendingBuildingPlacement();
+    }
 }
 
-// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½+ï¿½Æ¶ï¿½ï¿½ß¼ï¿½ï¿½ï¿½
-void SceneMap::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) {
-	if (!tileMap) return;
+void SceneMap::startBuildingPlacement(BuildingType buildingType)
+{
+    // È¡Ïûµ±Ç°¿ÉÄÜÕıÔÚ½øĞĞµÄÔ¤ÀÀ»òÒÆ¶¯²Ù×÷
+    if (_buildingPreview && (_buildingPreview->isPreviewing() || _buildingPreview->isMoving()))
+    {
+        _buildingPreview->cancel();
+    }
 
-	if (touches.size() >= 2 && isTwoTouch) {
-		// Ë«Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
-		auto touch1 = touches[0];
-		auto touch2 = touches[1];
-		float currentDistance = touch1->getLocation().distance(touch2->getLocation());
-		float scaleRatio = currentDistance / initTwoTouchDistance;
-		float newScale = clampf(currentScale * scaleRatio, minScale, maxScale);
-		float scaleDelta = newScale / currentScale;
+    _isPlacingBuilding = true;
+    _selectedBuildingType = buildingType;
 
-		Vec2 currentCenter = (touch1->getLocation() + touch2->getLocation()) / 2.0f;
-		Vec2 offset = currentCenter - initTwoTouchCenter;
-		Vec2 newMapPos = tileMap->getPosition() - offset * scaleDelta;
-
-		tileMap->setScale(newScale);
-		tileMap->setPosition(newMapPos);
-
-		currentScale = newScale;
-		initTwoTouchDistance = currentDistance;
-		initTwoTouchCenter = currentCenter;
-	}
-	else if (touches.size() == 1 && !isTwoTouch) {
-		// ï¿½ï¿½Ö¸ï¿½Æ¶ï¿½ï¿½ß¼ï¿½
-		Vec2 currentPos = touches[0]->getLocation();
-		Vec2 delta = currentPos - lastTouchPos;
-		tileMap->setPosition(tileMap->getPosition() + delta);
-		lastTouchPos = currentPos;
-	}
+    // ¿ªÊ¼Ô¤ÀÀ
+    if (_buildingPreview)
+    {
+        _buildingPreview->startPreview(buildingType);
+        CCLOG("Started building placement preview for type: %d", (int)buildingType);
+    }
+    else
+    {
+        CCLOG("ERROR: BuildingPreview not available for building placement");
+    }
 }
 
-// ï¿½ï¿½ã´¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-void SceneMap::onTouchesEnded(const std::vector<Touch*>& touches, Event* event) {
-	if (touches.size() < 2) {
-		isTwoTouch = false;
-	}
+
+///////////////////////////////////////////////////////////////////
+///////////////////////ºËĞÄÈÚºÏ³åÍ»/////////////////////////////////
+///////////////////////////////////////////////////////////////////
+//void SceneMap::reinitializeEventListeners()
+//{
+//    CCLOG("SceneMap::reinitializeEventListeners - setting up event listeners");
+//
+//    // ¼ì²é³¡¾°ÊÇ·ñÕıÔÚÔËĞĞ£¬·ñÔòÑÓ³Ù³õÊ¼»¯
+//    if (!this->isRunning()) {
+//        CCLOG("Scene is not running, scheduling event listener initialization");
+//        this->scheduleOnce([this](float dt) {
+//            this->reinitializeEventListeners();
+//            }, 0.1f, "delayed_event_init");
+//        return;
+//    }
+//
+//    // ÒÆ³ı¾ÉµÄ¼àÌıÆ÷
+//    if (_eventDispatcher) {
+//        _eventDispatcher->removeEventListenersForTarget(this);
+//    }
+//
+//    CCLOG("Registering touch event listener...");
+//
+//    // =========================update qy===================================
+//    // comment : Êó±êÓÒ¼ü
+//#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+//    auto mouseListener = EventListenerMouse::create();
+//    mouseListener->onMouseDown = [this](Event* event) {
+//        EventMouse* e = static_cast<EventMouse*>(event);
+//        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+//        {
+//            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+//            Vec2 mapPos = _homeVillageMap->getMapPosition(); float zoom = _homeVillageMap->getZoom(); Vec2 targetPos = (mouseWorldPos - mapPos) / zoom;
+//            Building* targetBuilding = _buildingPreview->checkBuildingAtPosition(targetPos, _buildings);
+//            if (targetBuilding) targetBuilding->showMenuImmediately();
+//        }
+//        };
+//    mouseListener->onMouseUp = [this](Event* event) {
+//        EventMouse* e = static_cast<EventMouse*>(event);
+//        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+//        {
+//            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+//            for (auto& building : _buildings)
+//            {
+//                if (building && building->isMenuShow() && building->getUpgradeMenu())
+//                {
+//                    Vec2 localPos = building->getUpgradeMenu()->convertToNodeSpace(mouseWorldPos);
+//                    if (building->getUpgradeBtn() && building->getUpgradeBtn()->getBoundingBox().containsPoint(localPos)) {
+//                        building->upgradeBuilding();
+//                        this->calculateTotalGoldProduceSpeed();
+//                        this->calculateTotalElixirProduceSpeed();
+//                        CCLOG("½¨ÖşÉı¼¶³É¹¦£¡Á¢¿Ì¸üĞÂ²úËÙ");
+//                    }
+//                    else if (building->getCancelBtn() && building->getCancelBtn()->getBoundingBox().containsPoint(localPos)) building->removeBuilding();
+//                    else if (building->getInfoBtn() && building->getInfoBtn()->getBoundingBox().containsPoint(localPos)) building->showBuildingInfo();
+//                }
+//            }
+//        }
+//        };
+//    _eventDispatcher->addEventListenerWithFixedPriority(mouseListener, -100);
+//#endif
+//    // =========================update qy===================================
+//
+//    // ´´½¨´¥Ãş¼àÌıÆ÷ - ÉèÖÃÓÅÏÈ¼¶-1È·±£±ÈHomeVillageMapÏÈ½ÓÊÕ
+//    auto listener upd EventListenerTouchOneByOne::create();
+//    listener->setSwallowTouches(true); // ÍÌÊÉ´¥ÃşÊÂ¼ş(²»´«µİ¸øHomeVillageMap)
+//    listener->onTouchBegan = CC_CALLBACK_2(SceneMap::onMapTouched, this);
+//    listener->onTouchMoved = [this](Touch* touch, Event* event) {
+//        Vec2 touchPos = touch->getLocation();
+//
+//        // Èç¹ûÕıÔÚÔ¤ÀÀ½¨Öş£¬¸üĞÂÔ¤ÀÀÎ»ÖÃ
+//        if (_buildingPreview && _buildingPreview->isPreviewing())
+//        {
+//            // ¼ì²éÊÇ·ñÓ¦¸Ã¿ªÊ¼ÍÏ×§
+//            if (!_buildingPreview->isPreviewDragging())
+//            {
+//                if (_buildingPreview->checkDragStart(touchPos))
+//                {
+//                    // ¿ªÊ¼ÍÏ×§
+//                    _buildingPreview->updatePreviewPosition(touchPos);
+//                }
+//            }
+//            else
+//            {
+//                // ³ÖĞø¸üĞÂÎ»ÖÃ
+//                _buildingPreview->updatePreviewPosition(touchPos);
+//            }
+//        }
+//        // Èç¹ûÕıÔÚÒÆ¶¯½¨Öş
+//        else if (_buildingPreview && (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging()))
+//        {
+//            _buildingPreview->updatePreviewPosition(touchPos);
+//        }
+//        };
+//    listener->onTouchEnded = [this](Touch* touch, Event* event) {
+//        // ½áÊøÔ¤ÀÀÍÏ×§
+//        if (_buildingPreview && _buildingPreview->isPreviewDragging())
+//        {
+//            _buildingPreview->endPreviewDrag();
+//        }
+//        // ½áÊø¼òµ¥ÍÏ×§
+//        else if (_buildingPreview && _buildingPreview->isSimpleDragging())
+//        {
+//            _buildingPreview->endSimpleDrag();
+//        }
+//        };
+//    _eventDispatcher->addEventListenerWithFixedPriority(listener, -1);
+//
+//    // ×Ô¶¨ÒåÊÂ¼ş - ½¨Öş·ÅÖÃÍê³É
+//    auto buildingPlacedListener = EventListenerCustom::create("building_placed",
+//        [this](EventCustom* event) {
+//            // ¼ì²éSceneMapÊÇ·ñÓĞĞ§
+//            if (!this || !this->getScene()) {
+//                CCLOG("SceneMap object or scene is invalid, ignoring building_placed event");
+//                return;
+//            }
+//
+//            Building* building = static_cast<Building*>(event->getUserData());
+//            CCLOG("Building placed event received for building: %p", building);
+//
+//            if (building) {
+//                // ½«½¨ÖşÌí¼Óµ½ÁĞ±íÖĞ£¨±ÜÃâÖØ¸´£©
+//                bool found = false;
+//                for (auto existingBuilding : this->_buildings) {
+//                    if (existingBuilding == building) {
+//                        found = true;
+//                        break;
+//                    }
+//                }
+//
+//                if (!found) {
+//                    this->_buildings.pushBack(building);
+//                    CCLOG("Added building to SceneMap buildings list (total: %d)", (int)this->_buildings.size());
+//                }
+//                else {
+//                    CCLOG("Building already in SceneMap buildings list");
+//                }
+//
+//                // ÖØÖÃ·ÅÖÃ×´Ì¬
+//                this->_isPlacingBuilding = false;
+//                CCLOG("Building placed event processed successfully, _isPlacingBuilding set to false");
+//            }
+//            else {
+//                CCLOG("Warning: Building placed event received with null building");
+//                // °²È«ÖØÖÃ×´Ì¬
+//                this->_isPlacingBuilding = false;
+//            }
+//            // ================================update qy=====================================
+//            this->calculateTotalGoldCapacity();
+//            this->calculateTotalElixirCapacity();
+//            // ================================update qy=====================================
+//        });
+//    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingPlacedListener, this);
+//
+//    auto buildingMovedListener = EventListenerCustom::create("building_moved",
+//        [this](EventCustom* event) {
+//            // ¼ì²éSceneMapÊÇ·ñÓĞĞ§
+//            if (this && this->getScene() && !this->getScene()->isRunning()) {
+//                CCLOG("SceneMap object or scene is invalid, ignoring building_moved event");
+//                return;
+//            }
+//
+//            // ÖØÖÃÒÆ¶¯×´Ì¬
+//            this->_isMovingBuilding = false;
+//            this->_selectedBuilding = nullptr;
+//            CCLOG("Building moved event received and processed");
+//        });
+//    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingMovedListener, this);
+//
+//    CCLOG("SceneMap event listeners reinitialized successfully");
+//}
+void SceneMap::reinitializeEventListeners()
+{
+    CCLOG("SceneMap::reinitializeEventListeners");
+    if (!this->isRunning()) {
+        this->runAction(Sequence::create(
+            DelayTime::create(0.1f),
+            CallFunc::create([this]() {
+                this->reinitializeEventListeners();
+                }),
+            nullptr
+        ));
+        return;
+    }
+    if (_eventDispatcher) _eventDispatcher->removeEventListenersForTarget(this);
+
+#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC)
+    auto mouseListener = EventListenerMouse::create();
+    mouseListener->onMouseDown = [this](Event* event) {
+        EventMouse* e = static_cast<EventMouse*>(event);
+        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+        {
+            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+            Vec2 mapPos = _homeVillageMap->getMapPosition(); float zoom = _homeVillageMap->getZoom(); Vec2 targetPos = (mouseWorldPos - mapPos) / zoom;
+            Building* targetBuilding = _buildingPreview->checkBuildingAtPosition(targetPos, _buildings);
+            if (targetBuilding) targetBuilding->showMenuImmediately();
+        }
+        };
+    mouseListener->onMouseUp = [this](Event* event) {
+        EventMouse* e = static_cast<EventMouse*>(event);
+        if (static_cast<int>(e->getMouseButton()) == MOUSE_RIGHT_BUTTON)
+        {
+            Vec2 mouseWorldPos = Vec2(e->getCursorX(), e->getCursorY());
+            for (auto& building : _buildings)
+            {
+                if (building && building->isMenuShow() && building->getUpgradeMenu())
+                {
+                    Vec2 localPos = building->getUpgradeMenu()->convertToNodeSpace(mouseWorldPos);
+                    if (building->getUpgradeBtn() && building->getUpgradeBtn()->getBoundingBox().containsPoint(localPos)) {
+                        building->upgradeBuilding();
+                        this->calculateTotalGoldProduceSpeed();
+                        this->calculateTotalElixirProduceSpeed();
+                        CCLOG("½¨ÖşÉı¼¶³É¹¦£¡Á¢¿Ì¸üĞÂ²úËÙ");
+                    }
+                    else if (building->getCancelBtn() && building->getCancelBtn()->getBoundingBox().containsPoint(localPos)) building->removeBuilding();
+                    else if (building->getInfoBtn() && building->getInfoBtn()->getBoundingBox().containsPoint(localPos)) building->showBuildingInfo();
+                }
+            }
+        }
+        };
+    _eventDispatcher->addEventListenerWithFixedPriority(mouseListener, -100);
+#endif
+
+    auto touchListener = EventListenerTouchOneByOne::create();
+    touchListener->setSwallowTouches(true);
+    touchListener->onTouchBegan = CC_CALLBACK_2(SceneMap::onMapTouched, this);
+    touchListener->onTouchMoved = [this](Touch* touch, Event* event) {
+        Vec2 touchPos = touch->getLocation();
+        if (_buildingPreview && _buildingPreview->isPreviewing())
+        {
+            if (!_buildingPreview->isPreviewDragging() && _buildingPreview->checkDragStart(touchPos)) _buildingPreview->updatePreviewPosition(touchPos);
+            else if (_buildingPreview->isPreviewDragging()) _buildingPreview->updatePreviewPosition(touchPos);
+        }
+        else if (_buildingPreview && (_buildingPreview->isMoving() || _buildingPreview->isSimpleDragging())) _buildingPreview->updatePreviewPosition(touchPos);
+        };
+    touchListener->onTouchEnded = [this](Touch* touch, Event* event) {
+        if (_buildingPreview && _buildingPreview->isPreviewDragging()) _buildingPreview->endPreviewDrag();
+        else if (_buildingPreview && _buildingPreview->isSimpleDragging()) _buildingPreview->endSimpleDrag();
+        };
+    _eventDispatcher->addEventListenerWithFixedPriority(touchListener, -1);
+
+    auto buildingPlacedListener = EventListenerCustom::create("building_placed", [this](EventCustom* event) {
+        Building* building = static_cast<Building*>(event->getUserData());
+        if (building && !_buildings.contains(building)) _buildings.pushBack(building);
+        _isPlacingBuilding = false;
+        this->calculateTotalGoldCapacity();
+        this->calculateTotalElixirCapacity();
+        });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingPlacedListener, this);
+
+    auto buildingMovedListener = EventListenerCustom::create("building_moved", [this](EventCustom* event) {
+        _isMovingBuilding = false; _selectedBuilding = nullptr;
+        });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingMovedListener, this);
 }
-//ï¿½ï¿½ï¿½Å¹ï¿½ï¿½Üµï¿½Êµï¿½ï¿½
-void SceneMap::zoomIn() {
-	currentScale += scaleStep;
-	currentScale = clampf(currentScale, minScale, maxScale);
-	tileMap->setScale(currentScale);
+
+void SceneMap::resetBuildingPlacementState()
+{
+    CCLOG("SceneMap::resetBuildingPlacementState - resetting building states");
+
+    // ¼ì²éÊÇ·ñÓĞµÈ´ı·ÅÖÃµÄ½¨Öş£¬Èç¹ûÓĞÔò±£Áô×´Ì¬
+    auto gameManager = GameManager::getInstance();
+    if (gameManager && gameManager->hasPendingBuildingPlacement()) {
+        CCLOG("Found pending building placement, skipping state reset to preserve building preview");
+        return;
+    }
+
+    _isPlacingBuilding = false;
+    _isMovingBuilding = false;
+    _selectedBuilding = nullptr;
+
+    // È¡ÏûÈÎºÎÕıÔÚ½øĞĞµÄÔ¤ÀÀ
+    if (_buildingPreview) {
+        // ÕâÀïĞèÒª×¢Òâ£ºÈç¹ûÓĞPendingPlacement£¬²»Ó¦¸Ãµ÷ÓÃcancel
+        // ÒòÎªÔÚSceneMap::initÖĞ»áÏÈµ÷ÓÃresetÈ»ºóµ÷ÓÃcheckPendingBuildingPlacement
+        // Ö»ÓĞµ±ShopSceneÉèÖÃÁËPendingPlacementÊ±²Å»áÎªTRUE
+        // ËùÒÔÉÏÃæµÄif (gameManager->hasPendingBuildingPlacement()) »á±£»¤ÕâÖÖÇé¿ö
+
+        if (_buildingPreview->isPreviewing() || _buildingPreview->isMoving()) {
+            _buildingPreview->cancel();
+            CCLOG("Cancelled existing building preview/move operations");
+        }
+    }
+
+    CCLOG("Building placement state reset completed");
 }
 
-void SceneMap::zoomOut() {
-	currentScale -= scaleStep;
-	currentScale = clampf(currentScale, minScale, maxScale);
-	tileMap->setScale(currentScale);
+//yxy-update:
+// ³¡¾°ÇĞ»»ºóÖØĞÂ³õÊ¼»¯ÊÂ¼ş¼àÌıÆ÷
+void SceneMap::onEnterTransitionDidFinish() {
+    Scene::onEnterTransitionDidFinish();
+    // Refresh display when returning from selection scene
+    _homeVillageMap->updateTroopDisplay();
+}
+void SceneMap::onTroopSelectionButtonClicked(Ref* pSender) {
+
+    CCLOG("TroopSelection button clicked, switching to troopselection scene");
+
+    auto gameManager = GameManager::getInstance();
+    gameManager->gotoTroopSelectionScene();
 }
 
-// Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
-void SceneMap::onMouseScroll(EventMouse* event) {
-	if (!tileMap) return;
 
-	// ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½
-	float scrollY = event->getScrollY();
-	if (scrollY == 0) return;
+// =========================update qy===================================
+// ½ğ±Ò×Ü²úËÙ¼ÆËã£¨Ô­ÓĞ£©
+void SceneMap::calculateTotalGoldProduceSpeed()
+{
+    int totalSpeed = 0;
+    int goldMineCount = 0;
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
-	float newScale = currentScale + (scrollY > 0 ? scrollStep : -scrollStep);
-	newScale = clampf(newScale, minScale, maxScale); // ï¿½ï¿½ï¿½Æ·ï¿½Î§
-	if (newScale == currentScale) return; // ï¿½Ş±ä»¯ï¿½ò·µ»ï¿½
+    if (_homeVillageMap && _homeVillageMap->getBuildingsContainer())
+    {
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        auto allChildren = buildingsContainer->getChildren();
+        for (auto node : allChildren)
+        {
+            Building* building = dynamic_cast<Building*>(node);
+            if (building && building->getBuildingType() == BuildingType::GOLD_MINE)
+            {
+                goldMineCount++;
+                int lv = building->getLevel();
+                switch (lv) {
+                case 1: totalSpeed += 200; break;
+                case 2: totalSpeed += 400; break;
+                case 3: totalSpeed += 600; break;
+                default: totalSpeed += 200; break;
+                }
+            }
+        }
+    }
 
-	// ï¿½ï¿½ï¿½ï¿½êµ±Ç°Î»ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-	Vec2 mouseWorldPos = event->getLocation(); // ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
-	Vec2 mapLocalPos = tileMap->convertToNodeSpace(mouseWorldPos); // ï¿½ï¿½ï¿½ï¿½Úµï¿½Í¼ï¿½Úµï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Äµï¿½Í¼Î»ï¿½ï¿½Æ«ï¿½ï¿½
-	float scaleRatio = newScale / currentScale;
-	Vec2 newMapPos = tileMap->getPosition() - (mapLocalPos * (scaleRatio - 1)) * tileMap->getScale();
-
-	// Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Î»ï¿½ï¿½
-	tileMap->setScale(newScale);
-	tileMap->setPosition(newMapPos);
-
-	// ï¿½ï¿½ï¿½Âµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½
-	currentScale = newScale;
+    GameManager::getInstance()->setGoldProduceSpeedPerHour(totalSpeed);
+    CCLOG("[²úËÙ¼ÆËã] ¼ì²âµ½%d×ù½ğ¿ó ¡ú ×Ü²úËÙ£º%d½ğ±Ò/Ğ¡Ê±", goldMineCount, totalSpeed);
 }
 
-void SceneMap::onShopButtonClicked(Ref* sender) {
-	this->scheduleOnce([this](float dt) {
-		this->enterShop();
-	}, 0.0f, "enter_shop");	  //ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½É³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Îª0.0f
+// ½ğ±Ò×ÜÈİÁ¿¼ÆËã£¨Ô­ÓĞ£©
+void SceneMap::calculateTotalGoldCapacity()
+{
+    int totalGoldCapacity = 0;
+    if (_homeVillageMap == nullptr || _homeVillageMap->getBuildingsContainer() == nullptr)
+    {
+        CCLOG("[½ğ±ÒÉÏÏŞ] µØÍ¼ÈİÆ÷Îª¿Õ£¬×ÜÈİÁ¿ÉèÎª0");
+        GameManager::getInstance()->setGoldStorageCapacity(totalGoldCapacity);
+        return;
+    }
+
+    auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+    auto allChildren = buildingsContainer->getChildren();
+    for (auto node : allChildren)
+    {
+        Building* building = dynamic_cast<Building*>(node);
+        if (building == nullptr) continue;
+
+        BuildingType type = building->getBuildingType();
+        if (type == BuildingType::TOWN_HALL ||
+            type == BuildingType::GOLD_MINE ||
+            type == BuildingType::GOLD_STORAGE)
+        {
+            int singleCap = getSingleBuildingGoldCapacity(building);
+            totalGoldCapacity += singleCap;
+            CCLOG("[½ğ±ÒÉÏÏŞ] ½¨ÖşÀàĞÍ£º%d | µÈ¼¶£º%d | µ¥½¨ÖşÈİÁ¿£º%d", (int)type, building->getLevel(), singleCap);
+        }
+    }
+
+    GameManager::getInstance()->setGoldStorageCapacity(totalGoldCapacity);
+    CCLOG("[½ğ±ÒÉÏÏŞ] È«¾Ö×ÜÈİÁ¿¼ÆËãÍê³É ¡ú ×ÜºÍ = %d", totalGoldCapacity);
+    this->refreshResourceImmediately();
 }
 
-void SceneMap::enterShop() {
-	CCLOG("Click shop button, jump to shop scene!");
+// ========== ĞÂÔö£ºÊ¥Ë®×Ü²úËÙ¼ÆËã ==========
+void SceneMap::calculateTotalElixirProduceSpeed()
+{
+    int totalSpeed = 0;
+    int elixirCollectorCount = 0;
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½Ìµê³¡ï¿½ï¿½
-	auto shopScene = ShopScene::create();
-
-	if (!shopScene) {
-		CCLOG("Warning: Failed to enter shopScene!");
-		// ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ã»ï¿½
-		statusLabel->setString("Failed to enter shopScene! Please try again.");
-		statusLabel->setColor(Color3B::RED);
-		return;
-	}
-	CCLOG("enter shopScene successfully");
-
-	auto scene = Scene::create();
-
-	if (!scene) {
-		CCLOG("shopScene: Failed to create scene!");
-		return;
-	}
-	scene->addChild(shopScene);
-
-	// Ê¹ï¿½Ã¹ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½Ğ»ï¿½ï¿½ï¿½ï¿½ï¿½
-	auto transition = TransitionFade::create(1.0f, scene);
-	Director::getInstance()->replaceScene(transition);
+    if (_homeVillageMap && _homeVillageMap->getBuildingsContainer())
+    {
+        auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+        auto allChildren = buildingsContainer->getChildren();
+        for (auto node : allChildren)
+        {
+            Building* building = dynamic_cast<Building*>(node);
+            if (building && building->getBuildingType() == BuildingType::ELIXIR_COLLECTOR)
+            {
+                elixirCollectorCount++;
+                int lv = building->getLevel();
+                switch (lv) {
+                case 1: totalSpeed += 200; break;
+                case 2: totalSpeed += 400; break;
+                case 3: totalSpeed += 600; break;
+                default: totalSpeed += 200; break;
+                }
+            }
+        }
+    }
+    GameManager::getInstance()->setElixirProduceSpeedPerHour(totalSpeed);
+    CCLOG("[²úÊ¥Ë®¼ÆËã] ¼ì²âµ½%d×ùÊ¥Ë®ÊÕ¼¯Æ÷ ¡ú ×Ü²úËÙ£º%dÊ¥Ë®/Ğ¡Ê±", elixirCollectorCount, totalSpeed);
 }
+
+// ========== ĞÂÔö£ºÊ¥Ë®×ÜÈİÁ¿¼ÆËã ==========
+void SceneMap::calculateTotalElixirCapacity()
+{
+    int totalElixirCapacity = 0;
+    if (_homeVillageMap == nullptr || _homeVillageMap->getBuildingsContainer() == nullptr)
+    {
+        CCLOG("[Ê¥Ë®ÉÏÏŞ] µØÍ¼ÈİÆ÷Îª¿Õ£¬×ÜÈİÁ¿ÉèÎª0");
+        GameManager::getInstance()->setElixirStorageCapacity(totalElixirCapacity);
+        return;
+    }
+
+    auto buildingsContainer = _homeVillageMap->getBuildingsContainer();
+    auto allChildren = buildingsContainer->getChildren();
+    for (auto node : allChildren)
+    {
+        Building* building = dynamic_cast<Building*>(node);
+        if (building == nullptr) continue;
+
+        BuildingType type = building->getBuildingType();
+        if (type == BuildingType::TOWN_HALL ||
+            type == BuildingType::ELIXIR_COLLECTOR ||
+            type == BuildingType::ELIXIR_STORAGE)
+        {
+            int singleCap = getSingleBuildingElixirCapacity(building);
+            totalElixirCapacity += singleCap;
+            CCLOG("[Ê¥Ë®ÉÏÏŞ] ½¨ÖşÀàĞÍ£º%d | µÈ¼¶£º%d | µ¥½¨ÖşÈİÁ¿£º%d", (int)type, building->getLevel(), singleCap);
+        }
+    }
+    GameManager::getInstance()->setElixirStorageCapacity(totalElixirCapacity);
+    CCLOG("[Ê¥Ë®ÉÏÏŞ] È«¾Ö×ÜÈİÁ¿¼ÆËãÍê³É ¡ú ×ÜºÍ = %d", totalElixirCapacity);
+    this->refreshResourceImmediately();
+}
+// =========================update qy===================================

@@ -1,68 +1,60 @@
-#pragma once
 /*************************************************************
-* @file     : HomeVillageMap.h
-* @function ï¼šå®¶ä¹¡åŸºåœ°ç±»
-* @author   : å¶èŠ·å«
-* @note     ï¼šåŒ…å«åœ°å›¾ç½‘æ ¼ç³»ç»Ÿã€å»ºç­‘æ”¾ç½®ã€ç¢°æ’æ£€æµ‹ç­‰æ ¸å¿ƒåŠŸèƒ½
+* @file     : HomeVillageMap.cpp
+* @function £º¼ÒÏç´å×¯µØÍ¼ºËĞÄÊµÏÖ - µ¥Àı¹ÜÀí+±øÖÖ¿ÉÊÓ»¯+µØÍ¼½»»¥
+* @author   : Ò¶ÜÆº¬
+* @note     : 1.µ¥ÀıÄ£Ê½ÊµÏÖ¼ÒÏç´å×¯µØÍ¼È«¾ÖÎ¨Ò»ÊµÀı£¬Ö§³Ö´´½¨/Ïú»Ù/»ñÈ¡½Ó¿Ú£»
+*             2.×Ô¶¨Òå¼ÒÏç´å×¯µØÍ¼³ß´ç¡¢²İµØ±ß½ç¡¢Íø¸ñÊıÁ¿µÈºËĞÄ²ÎÊı£»
+*             3.ÒÆÖ²±øÖÖÏÔÊ¾Âß¼­£¬´ÓTroopManager»ñÈ¡±øÖÖÊıÁ¿²¢ÔÚµØÍ¼¹Ì¶¨Î»ÖÃÉú³É¿ÉÊÓ»¯±øÖÖ£»
+*             4.±øÖÖÖ§³ÖËæ»úÓÎµ´Ğ§¹û£¬»ùÓÚ±øÓªÎ»ÖÃÉú³ÉÖ¸¶¨°ë¾¶ÄÚµÄÓÎµ´Â·¾¶£»
+*             5.ÖØĞ´´¥ÃşÊÂ¼ş»Øµ÷£¬¼Ì³ĞBaseMap»ù´¡½»»¥Âß¼­£»
+*             6.Ìá¹©½¨Öş·ÅÖÃÆô¶¯½Ó¿Ú£¬Ô¤Áô½¨Öş²¿ÊğÀ©Õ¹ÄÜÁ¦£»
+*             7.³õÊ¼»¯Ê±×Ô¶¯¸üĞÂ±øÖÖÏÔÊ¾£¬ÇåÀí¾É±øÖÖ½Úµã±ÜÃâÖØ¸´äÖÈ¾
 **************************************************************/
 
+#ifndef __MAP_LAYER_H__
+#define __MAP_LAYER_H__
+
 #include "cocos2d.h"
-#include "SceneMap.h"
-#include "Constant/Constant.h"
-#include "Building/BuildingData.h"
+#include "BaseMap.h"
+#include "buildings/BuildingsData.h" 
 
-USING_NS_CC;
+enum class BuildingType;
 
-class HomeVillageMap : public SceneMap {
+class HomeVillageMap : public BaseMap
+{
 public:
-	// ä½¿ç”¨å•ä¾‹ï¼Œæä¾›å…¨å±€è®¿é—®
-	static HomeVillageMap* getInstance();
+    static HomeVillageMap* getInstance(const std::string& mapImagePath);
+    static HomeVillageMap* create(const std::string& mapImagePath);
+    static void destroyInstance();
 
-	// åˆ é™¤æ‹·è´æ„é€ å’Œèµ‹å€¼æ“ä½œï¼Œé˜²æ­¢å¤åˆ¶å®ä¾‹
-	HomeVillageMap(const HomeVillageMap&) = delete;
-	HomeVillageMap& operator=(const HomeVillageMap&) = delete;
+    HomeVillageMap(const HomeVillageMap&) = delete;
+    HomeVillageMap& operator=(const HomeVillageMap&) = delete;
 
-	// åˆå§‹åŒ–åœ°å›¾
-	bool init(const std::string& tmxFile) override;
+    virtual bool init(const std::string& mapImagePath) override;
+    virtual ~HomeVillageMap();
 
-	// é‡å†™åŸºç±»æ–¹æ³•ï¼Œæ·»åŠ å®¶ä¹¡åŸºåœ°ç‰¹æœ‰é€»è¾‘
-	bool canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const override;
+    // ¼ÒÏçÌØÓĞ·½·¨£º·ÅÖÃ½¨ÖşÎï
+    void setPendingBuildingPlacement(BuildingType buildingType) {
+        _pendingBuildingType = buildingType;
+        _hasPendingBuilding = true;
+    }
 
-	// å®¶ä¹¡åŸºåœ°ç‰¹æœ‰çš„æ£€æµ‹æ–¹æ³•
-	bool isOnGrassland(const Vec2& pos, const Size& buildingSize) const;  // æ£€æŸ¥æ˜¯å¦å®Œå…¨åœ¨è‰åœ°ä¸Š
+    void startBuildingPlacement(BuildingType buildingType);
 
-	// å»ºç­‘æ”¾ç½®ç›¸å…³æ–¹æ³•
-	void startBuildingPlacement(BuildingType buildingType);  // å¼€å§‹å»ºç­‘æ”¾ç½®æ¨¡å¼
-	void endBuildingPlacement();                             // ç»“æŸå»ºç­‘æ”¾ç½®æ¨¡å¼
-	bool isInBuildingPlacementMode() const { return isPlacingBuilding; }
+    // [ĞÂÔö] ÒÆÖ²×Ô SceneMap µÄ¹¦ÄÜ£º¸üĞÂ²¿¶ÓÏÔÊ¾
+    void updateTroopDisplay();
 
-	// ææ„å‡½æ•°å…¬å¼€ï¼Œå…è®¸æ­£å¸¸é‡Šæ”¾
-	virtual ~HomeVillageMap();
+protected:
+    virtual bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event) override;
+    virtual void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event) override;
+    virtual void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) override;
 
 private:
-	// æ„é€ å‡½æ•°ç§æœ‰åŒ– 
-	HomeVillageMap();
+    HomeVillageMap();
+    static HomeVillageMap* sInstance;
 
-	// é™æ€å®ä¾‹æŒ‡é’ˆ
-	static HomeVillageMap* sInstance;
-
-	// TMXåœ°å›¾å±‚
-	TMXLayer* backgroundLayer;   // èƒŒæ™¯å±‚
-	TMXLayer* grassLayer;        // è‰åœ°å±‚
-
-	// å»ºç­‘æ”¾ç½®ç›¸å…³
-	bool isPlacingBuilding;           // æ˜¯å¦å¤„äºå»ºç­‘æ”¾ç½®æ¨¡å¼
-	BuildingType currentBuildingType; // å½“å‰è¦æ”¾ç½®çš„å»ºç­‘ç±»å‹
-	Sprite* buildingPreview;          // å»ºç­‘é¢„è§ˆç²¾çµ
-	
-	// å»ºç­‘æ”¾ç½®ç›¸å…³äº‹ä»¶å¤„ç†
-	void onTouchBeganForBuilding(const Vec2& touchPos);
-	void onTouchMovedForBuilding(const Vec2& touchPos);
-	void onTouchEndedForBuilding(const Vec2& touchPos);
-	
-	// æ›´æ–°å»ºç­‘é¢„è§ˆä½ç½®å’ŒçŠ¶æ€
-	void updateBuildingPreview(const Vec2& worldPos);
-	
-	// ç¡®è®¤æ”¾ç½®å»ºç­‘
-	void placeBuildingAtPosition(const Vec2& pos);
+    bool _hasPendingBuilding;
+    BuildingType _pendingBuildingType;
 };
+
+#endif // __MAP_LAYER_H__

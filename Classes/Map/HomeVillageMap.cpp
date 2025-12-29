@@ -1,355 +1,209 @@
 /*************************************************************
 * @file     : HomeVillageMap.cpp
-* @function ï¼šå®¶ä¹¡åŸºåœ°åœ°å›¾å®ç°
-* @author   : å¶èŠ·å«
-* @note     ï¼šå®ç°å®¶ä¹¡åŸºåœ°ç‰¹æœ‰çš„åœ°å›¾åŠŸèƒ½
+* @function £º¼ÒÏç´å×¯µØÍ¼ºËĞÄÊµÏÖ - µ¥Àı¹ÜÀí+±øÖÖ¿ÉÊÓ»¯+µØÍ¼½»»¥
+* @author   : Ò¶ÜÆº¬
+* @note     : 1.µ¥ÀıÄ£Ê½ÊµÏÖ¼ÒÏç´å×¯µØÍ¼È«¾ÖÎ¨Ò»ÊµÀı£¬Ö§³Ö´´½¨/Ïú»Ù/»ñÈ¡½Ó¿Ú£»
+*             2.×Ô¶¨Òå¼ÒÏç´å×¯µØÍ¼³ß´ç¡¢²İµØ±ß½ç¡¢Íø¸ñÊıÁ¿µÈºËĞÄ²ÎÊı£»
+*             3.ÒÆÖ²±øÖÖÏÔÊ¾Âß¼­£¬´ÓTroopManager»ñÈ¡±øÖÖÊıÁ¿²¢ÔÚµØÍ¼¹Ì¶¨Î»ÖÃÉú³É¿ÉÊÓ»¯±øÖÖ£»
+*             4.±øÖÖÖ§³ÖËæ»úÓÎµ´Ğ§¹û£¬»ùÓÚ±øÓªÎ»ÖÃÉú³ÉÖ¸¶¨°ë¾¶ÄÚµÄÓÎµ´Â·¾¶£»
+*             5.ÖØĞ´´¥ÃşÊÂ¼ş»Øµ÷£¬¼Ì³ĞBaseMap»ù´¡½»»¥Âß¼­£»
+*             6.Ìá¹©½¨Öş·ÅÖÃÆô¶¯½Ó¿Ú£¬Ô¤Áô½¨Öş²¿ÊğÀ©Õ¹ÄÜÁ¦£»
+*             7.³õÊ¼»¯Ê±×Ô¶¯¸üĞÂ±øÖÖÏÔÊ¾£¬ÇåÀí¾É±øÖÖ½Úµã±ÜÃâÖØ¸´äÖÈ¾
 **************************************************************/
 
 #include "HomeVillageMap.h"
+#include "cocos2d.h"
+#include "Troops/Unit.h"
+#include "Troops/TroopManager.h"
+#include "Troops/TroopDefinitions.h"
+#include "SceneMap.h"
 
-USING_NS_CC;
+using namespace cocos2d;
 
-// é™æ€å®ä¾‹æŒ‡é’ˆåˆå§‹åŒ–
 HomeVillageMap* HomeVillageMap::sInstance = nullptr;
 
-// æ„é€ å‡½æ•°
 HomeVillageMap::HomeVillageMap()
-    : backgroundLayer(nullptr)
-    , grassLayer(nullptr)
-    , isPlacingBuilding(false)
-    , currentBuildingType(BuildingType::CANNON)
-    , buildingPreview(nullptr)
+    : _hasPendingBuilding(false)
+    , _pendingBuildingType(BuildingType::TOWN_HALL)
 {
 }
 
-// ææ„å‡½æ•°
-HomeVillageMap::~HomeVillageMap() {
-    // æ¸…ç©ºé™æ€å®ä¾‹æŒ‡é’ˆ
+HomeVillageMap::~HomeVillageMap()
+{
+    CCLOG("HomeVillageMap destructor called");
     if (sInstance == this) {
         sInstance = nullptr;
     }
 }
 
-// è·å–å•ä¾‹å®ä¾‹
-HomeVillageMap* HomeVillageMap::getInstance() {
+HomeVillageMap* HomeVillageMap::getInstance(const std::string& mapImagePath) {
+    if (sInstance) {
+        if (sInstance->getReferenceCount() == 0) {
+            sInstance = nullptr;
+        }
+    }
+    
     if (!sInstance) {
         sInstance = new (std::nothrow) HomeVillageMap();
-        if (sInstance && sInstance->init(ResPath::TMX_HOMEVILLAGEMAP)) {
+        if (sInstance && sInstance->init(mapImagePath)) {
             sInstance->autorelease();
+            sInstance->retain();
         }
         else {
             CC_SAFE_DELETE(sInstance);
+        }
+    } else {
+        auto parent = sInstance->getParent();
+        if (parent) {
+            parent->removeChild(sInstance, false);
         }
     }
     return sInstance;
 }
 
-// åˆå§‹åŒ–åœ°å›¾
-bool HomeVillageMap::init(const std::string& tmxFile) {
-    if (!SceneMap::init(tmxFile)) {
-        CCLOG("Failed to init SceneMap with file: %s", tmxFile.c_str());
+HomeVillageMap* HomeVillageMap::create(const std::string& mapImagePath)
+{
+    HomeVillageMap* homeVillageMap = new (std::nothrow) HomeVillageMap();
+    if (homeVillageMap && homeVillageMap->init(mapImagePath))
+    {
+        homeVillageMap->autorelease();
+        return homeVillageMap;
+    }
+    CC_SAFE_DELETE(homeVillageMap);
+    return nullptr;
+}
+
+void HomeVillageMap::destroyInstance() {
+    if (sInstance) {
+        auto parent = sInstance->getParent();
+        if (parent) {
+            parent->removeChild(sInstance, false);
+        }
+        sInstance->release();
+        sInstance = nullptr;
+    }
+}
+
+bool HomeVillageMap::init(const std::string& mapImagePath)
+{
+    // ÉèÖÃÌØ¶¨ÓÚ¼ÒÏç´å×¯µÄµØÍ¼²ÎÊı
+    _mapWidth = 3460.0f;
+    _mapHeight = 2480.0f;
+    _grassRectWidth = 2400.0f;
+    _grassRectHeight = 1800.0f;
+    _grassOffsetX = 530.0f;
+    _grassOffsetY = 252.0f;
+    _gridCols = 44;
+    _gridRows = 44;
+
+    if (!BaseMap::init(mapImagePath))
+    {
         return false;
     }
 
-    // è°ƒè¯•åœ°å›¾åŠ è½½
-    if (!tileMap) {
-        CCLOG("TileMap is null!");
-        return false;
-    }
-
-    // å…ˆè·å–ç‰¹å®šå±‚
-    backgroundLayer = getLayer("Background");
-    grassLayer = getLayer("Grass");
-
-    // è·å–å±å¹•å’Œåœ°å›¾å°ºå¯¸
-    Size visibleSize = Director::getInstance()->getVisibleSize();
-    Size mapContentSize = tileMap->getContentSize();
-
-    // ä¿®æ­£çš„åœ°å›¾ä½ç½®è®¾ç½®é€»è¾‘
-    Vec2 initialPos;
-
-    initialPos.x = 0;
-    initialPos.y = 0;
-
-    tileMap->setPosition(initialPos);
-
-    // é‡ç½®åœ°å›¾çš„å˜æ¢å±æ€§ï¼Œç¡®ä¿æ²¡æœ‰æ—‹è½¬æˆ–æ‰­æ›²
-    tileMap->setRotation(0);
-    tileMap->setScaleX(1.0f);
-    tileMap->setScaleY(1.0f);
-    tileMap->setSkewX(0);
-    tileMap->setSkewY(0);
-
-    // è®¾ç½®æ»šåŠ¨è§†å›¾
-    setupScrollView();
+    // ³õÊ¼»¯Ê±¸üĞÂÒ»´Î²¿¶ÓÏÔÊ¾
+    this->updateTroopDisplay();
 
     return true;
 }
 
-// é‡å†™å»ºç­‘æ”¾ç½®æ£€æµ‹ï¼Œæ·»åŠ è‰åœ°æ£€æµ‹
-bool HomeVillageMap::canPlaceBuilding(const Vec2& pos, const Size& buildingSize) const {
-    // é¦–å…ˆè¿›è¡ŒåŸºç¡€æ£€æµ‹
-    if (!SceneMap::canPlaceBuilding(pos, buildingSize)) {
-        return false;
+
+
+// [ĞÂÔö] ÒÆÖ²×Ô SceneMap µÄ updateTroopDisplay º¯Êı
+void HomeVillageMap::updateTroopDisplay() {
+    log("HomeVillageMap::updateTroopDisplay called");
+
+    // »ñÈ¡BaseMapÖĞµÄ²¿¶ÓÈİÆ÷
+    auto troopsContainer = this->getTroopsContainer();
+    
+    // Èİ´í´¦Àí
+    if (!troopsContainer) {
+        log("ERROR: troopsContainer was NULL in BaseMap.");
+        return;
     }
 
-    // æ£€æŸ¥æ˜¯å¦åœ¨è‰åœ°ä¸Š
-    return isOnGrassland(pos, buildingSize);
-}
+    // 1. ÇåÀí¾ÉÏÔÊ¾
+    troopsContainer->removeAllChildren();
 
-// æ£€æŸ¥æ˜¯å¦å®Œå…¨åœ¨è‰åœ°ä¸Š
-bool HomeVillageMap::isOnGrassland(const Vec2& pos, const Size& buildingSize) const {
-    if (!grassLayer || !tileMap) {
-        return false;
-    }
+    // 2. »ñÈ¡²İµØÇøÓòÄÚµÄ1/4Î»ÖÃ×÷Îª±øÓªÎ»ÖÃ£¨Ïà¶ÔÓÚµØÍ¼ÄÚÈİ¹Ì¶¨£©
+    // ÕâÀïÊ¹ÓÃÏà¶ÔÓÚµØÍ¼µÄ¾Ö²¿×ø±ê£¬ÈÃ±øÓªËæµØÍ¼ÒÆ¶¯
+    // ¼ÆËã²İµØ²ã1/4Î»ÖÃµÄ¾ø¶Ô×ø±ê£¨Ïà¶ÔÓÚ²İµØ²ã×ÔÉí£©
+    float grassRelativeX = BaseMap::getGrassRectWidth() * 0.5f;
+    float grassRelativeY = BaseMap::getGrassRectHeight() * 0.3f;
 
-    // å°†ä¸–ç•Œåæ ‡è½¬æ¢ä¸ºç“¦ç‰‡åæ ‡
-    Size tileSize = tileMap->getTileSize();
-    Size mapSize = tileMap->getMapSize();
+    // ×ª»»ÎªÊÀ½ç×ø±êÏµ£¨¿¼ÂÇ²İµØ²ã×ÔÉíµÄÔ­µã£©
+    float worldX = BaseMap::getGrassOffsetX() + grassRelativeX;
+    float worldY = BaseMap::getGrassOffsetY() + grassRelativeY;
 
-    // è®¡ç®—å»ºç­‘å ç”¨çš„ç“¦ç‰‡èŒƒå›´
-    int startTileX = static_cast<int>(pos.x / tileSize.width);
-    int startTileY = static_cast<int>(pos.y / tileSize.height);
+    // ÉèÖÃ±øÓªÎ»ÖÃ£¨Ê¹ÓÃµØÍ¼¾Ö²¿×ø±êÏµ£©
+    Vec2 barracksPos = Vec2(worldX, worldY);
 
-    int tilesX = static_cast<int>(std::ceil(buildingSize.width / tileSize.width));
-    int tilesY = static_cast<int>(std::ceil(buildingSize.height / tileSize.height));
+    // ÓÎµ´°ë¾¶
+    float wanderRadius = 100.0f;
 
-    CCLOG("å»ºç­‘å ç”¨ç“¦ç‰‡æ•°: %d x %d", tilesX, tilesY);
+    // 3. ´Ó TroopManager »ñÈ¡Êµ¼ÊÑ¡ÖĞµÄ²¿¶ÓÊıÁ¿
+    auto tm = TroopManager::getInstance();
 
-    // æ£€æŸ¥å»ºç­‘å ç”¨çš„æ‰€æœ‰ç“¦ç‰‡æ˜¯å¦éƒ½åœ¨è‰åœ°ä¸Š
-    for (int x = 0; x < tilesX; x++) {
-        for (int y = 0; y < tilesY; y++) {
-            int tileX = startTileX + x;
-            int tileY = startTileY + y;
+    std::vector<UnitType> types = {
+        UnitType::BARBARIAN,
+        UnitType::ARCHER,
+        UnitType::GOBLIN,
+        UnitType::GIANT
+    };
 
-            // æ£€æŸ¥è¾¹ç•Œï¼ˆä½¿ç”¨ç“¦ç‰‡åæ ‡è¾¹ç•Œï¼‰
-            if (tileX < 0 || tileX >= mapSize.width || tileY < 0 || tileY >= mapSize.height) {
-                CCLOG("ç“¦ç‰‡åæ ‡è¶…å‡ºè¾¹ç•Œ: (%d, %d)", tileX, tileY);
-                return false; // è¶…å‡ºè¾¹ç•Œ
-            }
+    int totalSpawned = 0;
 
-            // ç›´æ¥ä½¿ç”¨ç“¦ç‰‡åæ ‡æ£€æŸ¥ï¼Œä¸éœ€è¦è½¬æ¢
-            unsigned int gid = grassLayer->getTileGIDAt(Vec2(tileX, tileY));
-            if (gid == 0) {  // 0è¡¨ç¤ºæ²¡æœ‰ç“¦ç‰‡ï¼Œå³ä¸æ˜¯è‰åœ°
-                CCLOG("ä½ç½®(%d, %d)ä¸æ˜¯è‰åœ°ï¼ŒGID: %u", tileX, tileY, gid);
-                return false;
-            }
-            else {
-                CCLOG("ä½ç½®(%d, %d)æ˜¯è‰åœ°ï¼ŒGID: %u", tileX, tileY, gid);
+    // 4. Éú³É²¢ÏÔÊ¾
+    for (auto type : types) {
+        // ×ª»»ÀàĞÍ
+        TroopType troopType = static_cast<TroopType>(type);
+
+        int count = tm->getTroopCount(troopType);
+
+        if (count > 0) {
+            log("Spawning type %d: count = %d", (int)type, count);
+        }
+
+        for (int i = 0; i < count; ++i) {
+            Unit* unit = Unit::create(type);
+
+            if (unit) {
+                // Ëæ»ú³õÊ¼Î»ÖÃ£¨Ïà¶ÔÓÚµØÍ¼µÄ¾Ö²¿×ø±ê£©
+                float angle = CCRANDOM_0_1() * M_PI * 2;
+                float dist = CCRANDOM_0_1() * wanderRadius;
+                Vec2 startPos = barracksPos + Vec2(cos(angle) * dist, sin(angle) * dist);
+
+                unit->setPosition(startPos);
+
+                // Ìí¼Óµ½ÈİÆ÷£¨ÈİÆ÷ÊÇµØÍ¼µÄ×Ó½Úµã£¬ËùÒÔÊ¹ÓÃµØÍ¼µÄ¾Ö²¿×ø±êÏµ£©
+                troopsContainer->addChild(unit);
+
+                // Æô¶¯ÓÎµ´
+                unit->wanderAround(barracksPos, wanderRadius);
+
+                totalSpawned++;
             }
         }
     }
-
-    CCLOG("æ‰€æœ‰ç“¦ç‰‡éƒ½åœ¨è‰åœ°ä¸Š");
-    return true;
+    log("HomeVillageMap::updateTroopDisplay finished. Spawned %d units.", totalSpawned);
 }
 
-// å¼€å§‹å»ºç­‘æ”¾ç½®æ¨¡å¼
+bool HomeVillageMap::onTouchBegan(Touch* touch, Event* event)
+{
+    return BaseMap::onTouchBegan(touch, event);
+}
+
+void HomeVillageMap::onTouchMoved(Touch* touch, Event* event)
+{
+    BaseMap::onTouchMoved(touch, event);
+}
+
+void HomeVillageMap::onTouchEnded(Touch* touch, Event* event)
+{
+    BaseMap::onTouchEnded(touch, event);
+}
+
 void HomeVillageMap::startBuildingPlacement(BuildingType buildingType)
 {
-    CCLOG("Starting building placement mode for building type: %d", static_cast<int>(buildingType));
-    
-    isPlacingBuilding = true;
-    currentBuildingType = buildingType;
-    
-    // åˆ›å»ºå»ºç­‘é¢„è§ˆç²¾çµ
-    std::string spritePath;
-    switch (buildingType) {
-        case BuildingType::CANNON:
-            spritePath = ResPath::CANNONLEVEL1;
-            break;
-        case BuildingType::TOWN_HALL:
-            spritePath = ResPath::TOWNHALLLEVEL1;
-            break;
-        default:
-            // å¯ä»¥è®¾ç½®é»˜è®¤é¢„è§ˆå›¾ç‰‡æˆ–ä»BuildingConfigè·å–
-            const BuildingLevelStats* stats = BuildingConfig::getStats(buildingType, 1);
-            if (stats) {
-                spritePath = stats->spriteName;
-            }
-            break;
-    }
-    
-    buildingPreview = Sprite::create(spritePath);
-    if (!buildingPreview) {
-        // å¦‚æœåŠ è½½å¤±è´¥ï¼Œåˆ›å»ºå ä½ç¬¦
-        buildingPreview = Sprite::create();
-        auto placeholder = LayerColor::create(Color4B(100, 200, 100, 128), 64, 64);
-        buildingPreview->addChild(placeholder);
-        buildingPreview->setContentSize(Size(64, 64));
-    }
-    
-    // è®¾ç½®é¢„è§ˆå»ºç­‘çš„é€æ˜åº¦ï¼Œè¡¨ç¤ºè¿™æ˜¯é¢„è§ˆçŠ¶æ€
-    buildingPreview->setOpacity(150);
-    buildingPreview->setVisible(false); // åˆå§‹æ—¶éšè—ï¼Œç­‰è§¦æ‘¸æ—¶æ˜¾ç¤º
-    this->addChild(buildingPreview, 100); // é«˜å±‚çº§ç¡®ä¿åœ¨æœ€ä¸Šå±‚
-    
-    // åˆ›å»ºå»ºç­‘æ”¾ç½®çš„è§¦æ‘¸ç›‘å¬å™¨
-    auto touchListener = EventListenerTouchOneByOne::create();
-    touchListener->setSwallowTouches(true);
-    
-    touchListener->onTouchBegan = [this](Touch* touch, Event* event) -> bool {
-        if (isPlacingBuilding) {
-            Vec2 touchPos = touch->getLocation();
-            this->onTouchBeganForBuilding(touchPos);
-            return true;
-        }
-        return false;
-    };
-    
-    touchListener->onTouchMoved = [this](Touch* touch, Event* event) {
-        if (isPlacingBuilding) {
-            Vec2 touchPos = touch->getLocation();
-            this->onTouchMovedForBuilding(touchPos);
-        }
-    };
-    
-    touchListener->onTouchEnded = [this](Touch* touch, Event* event) {
-        if (isPlacingBuilding) {
-            Vec2 touchPos = touch->getLocation();
-            this->onTouchEndedForBuilding(touchPos);
-        }
-    };
-    
-    // æ·»åŠ ç›‘å¬å™¨ï¼Œä½¿ç”¨é«˜ä¼˜å…ˆçº§ç¡®ä¿ä¼˜å…ˆå¤„ç†å»ºç­‘æ”¾ç½®
-    _eventDispatcher->addEventListenerWithFixedPriority(touchListener, -1);
-    
-    // ä¿å­˜ç›‘å¬å™¨å¼•ç”¨ä»¥ä¾¿åç»­ç§»é™¤
-    buildingPreview->setUserData(touchListener);
-    
-    CCLOG("Building placement mode started successfully");
+    CCLOG("HomeVillageMap: Starting building placement for type: %d", (int)buildingType);
 }
-
-// ç»“æŸå»ºç­‘æ”¾ç½®æ¨¡å¼
-void HomeVillageMap::endBuildingPlacement()
-{
-    CCLOG("Ending building placement mode");
-    
-    isPlacingBuilding = false;
-    
-    if (buildingPreview) {
-        // ç§»é™¤è§¦æ‘¸ç›‘å¬å™¨
-        auto touchListener = static_cast<EventListenerTouchOneByOne*>(buildingPreview->getUserData());
-        if (touchListener) {
-            _eventDispatcher->removeEventListener(touchListener);
-        }
-        
-        // ç§»é™¤é¢„è§ˆç²¾çµ
-        buildingPreview->removeFromParent();
-        buildingPreview = nullptr;
-    }
-    
-    CCLOG("Building placement mode ended");
-}
-
-// å¤„ç†å»ºç­‘æ”¾ç½®çš„è§¦æ‘¸å¼€å§‹
-void HomeVillageMap::onTouchBeganForBuilding(const Vec2& touchPos)
-{
-    if (!buildingPreview) return;
-    
-    buildingPreview->setVisible(true);
-    updateBuildingPreview(touchPos);
-    
-    CCLOG("Building placement touch began at (%.1f, %.1f)", touchPos.x, touchPos.y);
-}
-
-// å¤„ç†å»ºç­‘æ”¾ç½®çš„è§¦æ‘¸ç§»åŠ¨
-void HomeVillageMap::onTouchMovedForBuilding(const Vec2& touchPos)
-{
-    updateBuildingPreview(touchPos);
-}
-
-// å¤„ç†å»ºç­‘æ”¾ç½®çš„è§¦æ‘¸ç»“æŸ
-void HomeVillageMap::onTouchEndedForBuilding(const Vec2& touchPos)
-{
-    CCLOG("Building placement touch ended at (%.1f, %.1f)", touchPos.x, touchPos.y);
-    
-    // è½¬æ¢è§¦æ‘¸ä½ç½®åˆ°åœ°å›¾åæ ‡
-    Vec2 mapPos = this->convertToNodeSpace(touchPos);
-    
-    // æ£€æŸ¥æ˜¯å¦å¯ä»¥åœ¨æ­¤ä½ç½®æ”¾ç½®å»ºç­‘
-    const BuildingData* buildingData = BuildingConfig::getBuildingData(currentBuildingType);
-    if (buildingData) {
-        Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16); // å‡è®¾æ¯æ ¼16åƒç´ 
-        
-        if (canPlaceBuilding(mapPos, buildingSize)) {
-            // ç¡®è®¤æ”¾ç½®å»ºç­‘
-            placeBuildingAtPosition(mapPos);
-            endBuildingPlacement();
-        } else {
-            CCLOG("Cannot place building at this position");
-            // å¯ä»¥åœ¨è¿™é‡Œæ·»åŠ é”™è¯¯æç¤º
-        }
-    }
-}
-
-// æ›´æ–°å»ºç­‘é¢„è§ˆä½ç½®å’ŒçŠ¶æ€
-void HomeVillageMap::updateBuildingPreview(const Vec2& worldPos)
-{
-    if (!buildingPreview) return;
-    
-    // è½¬æ¢ä¸–ç•Œåæ ‡åˆ°åœ°å›¾åæ ‡
-    Vec2 mapPos = this->convertToNodeSpace(worldPos);
-    
-    // è®¾ç½®é¢„è§ˆç²¾çµä½ç½®
-    buildingPreview->setPosition(mapPos);
-    
-    // æ£€æŸ¥å½“å‰ä½ç½®æ˜¯å¦å¯ä»¥æ”¾ç½®å»ºç­‘
-    const BuildingData* buildingData = BuildingConfig::getBuildingData(currentBuildingType);
-    if (buildingData) {
-        Size buildingSize(buildingData->gridWidth * 16, buildingData->gridHeight * 16);
-        
-        if (canPlaceBuilding(mapPos, buildingSize)) {
-            // å¯ä»¥æ”¾ç½® - ç»¿è‰²é€æ˜
-            buildingPreview->setColor(Color3B(100, 255, 100));
-        } else {
-            // ä¸å¯ä»¥æ”¾ç½® - çº¢è‰²é€æ˜
-            buildingPreview->setColor(Color3B(255, 100, 100));
-        }
-    }
-}
-
-// ç¡®è®¤æ”¾ç½®å»ºç­‘
-void HomeVillageMap::placeBuildingAtPosition(const Vec2& pos)
-{
-    CCLOG("Placing building type %d at position (%.1f, %.1f)", 
-          static_cast<int>(currentBuildingType), pos.x, pos.y);
-    
-    // åˆ›å»ºå®é™…çš„å»ºç­‘ç²¾çµ
-    std::string spritePath;
-    switch (currentBuildingType) {
-        case BuildingType::CANNON:
-            spritePath = ResPath::CANNONLEVEL1;
-            break;
-        case BuildingType::TOWN_HALL:
-            spritePath = ResPath::TOWNHALLLEVEL1;
-            break;
-        default:
-            const BuildingLevelStats* stats = BuildingConfig::getStats(currentBuildingType, 1);
-            if (stats) {
-                spritePath = stats->spriteName;
-            }
-            break;
-    }
-    
-    auto buildingSprite = Sprite::create(spritePath);
-    if (!buildingSprite) {
-        // åˆ›å»ºå ä½ç¬¦
-        buildingSprite = Sprite::create();
-        auto placeholder = LayerColor::create(Color4B(100, 150, 200, 255), 64, 64);
-        buildingSprite->addChild(placeholder);
-        buildingSprite->setContentSize(Size(64, 64));
-    }
-    
-    buildingSprite->setPosition(pos);
-    this->addChild(buildingSprite, 5); // åœ¨åœ°å›¾ä¹‹ä¸Šï¼Œä½†æ¯”UIä½
-    
-    CCLOG("Building placed successfully!");
-    
-    // TODO: åœ¨è¿™é‡Œå¯ä»¥æ·»åŠ å…¶ä»–é€»è¾‘ï¼Œå¦‚ï¼š
-    // 1. æ›´æ–°æ¸¸æˆæ•°æ®
-    // 2. æ‰£é™¤èµ„æº
-    // 3. ä¿å­˜å»ºç­‘åˆ°å­˜æ¡£ç³»ç»Ÿ
-    // 4. æ’­æ”¾æ”¾ç½®éŸ³æ•ˆ
-}
-
