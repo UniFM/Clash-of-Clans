@@ -1,6 +1,6 @@
 #pragma once
 /*************************************************************
-* @file     : GameCover.h
+* @file     : SplashScene.h
 * @function ：游戏启动界面
 * @author   : 叶芷含
 * @note     ：
