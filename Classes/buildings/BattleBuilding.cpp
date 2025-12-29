@@ -1,9 +1,9 @@
 /*************************************************************
 * @file     : BattleBuilding.cpp
-* @function £ºÕ½¶·½¨ÖşÊµÏÖ - ¶àÀàĞÍ½¨Öş¼ÓÔØ+¹¥»÷Âß¼­+¿ÉÊÓ»¯Ğ§¹û
-* @author   : ÆëÓ±
-* @note     : 1.Ö§³ÖÖ÷³Ç/½ğ¿ó/¼ÓÅ©ÅÚµÈ¶àÀàĞÍ½¨Öş¼ÓÔØ£»2.¹¥»÷ĞÍ½¨Öşº¬Éä³Ì/¹¥ËÙ/ÉËº¦Âß¼­£»3.Í¼Æ¬¼ÓÔØÊ§°Ü»ØÍËÑÕÉ«¿é£»
-*             4.²»Í¬½¨ÖşÊÊÅä²»Í¬Ëõ·Å±ÈÀı£»5.¹¥»÷Ğ§¹û¿ÉÊÓ»¯£¨»ÆÉ«ÏßÌõ£©£»6.ÑªÌõÃªµãÊÊÅäµ×²¿ÖĞĞÄ²¼¾Ö
+* @function ï¼šæˆ˜æ–—å»ºç­‘å®ç° - å¤šç±»å‹å»ºç­‘åŠ è½½+æ”»å‡»é€»è¾‘+å¯è§†åŒ–æ•ˆæœ
+* @author   : ä¿ç­±é›¨
+* @note     : 1.æ”¯æŒä¸»åŸ/é‡‘çŸ¿/åŠ å†œç‚®ç­‰å¤šç±»å‹å»ºç­‘åŠ è½½ï¼›2.æ”»å‡»å‹å»ºç­‘å«å°„ç¨‹/æ”»é€Ÿ/ä¼¤å®³é€»è¾‘ï¼›3.å›¾ç‰‡åŠ è½½å¤±è´¥å›é€€é¢œè‰²å—ï¼›
+*             4.ä¸åŒå»ºç­‘é€‚é…ä¸åŒç¼©æ”¾æ¯”ä¾‹ï¼›5.æ”»å‡»æ•ˆæœå¯è§†åŒ–ï¼ˆé»„è‰²çº¿æ¡ï¼‰ï¼›6.è¡€æ¡é”šç‚¹é€‚é…åº•éƒ¨ä¸­å¿ƒå¸ƒå±€
 **************************************************************/
 #include "BattleBuilding.h"
 #include "Control/BattleManager.h"
@@ -26,7 +26,7 @@ bool BattleBuilding::init(BattleBuildingType type, Team team) {
     _type = type;
     _stats = BattleManager::getInstance()->getBattleBuildingStats(type);
     setStats(_stats.maxHealth, team);
-    setEntityName(_stats.name); // ¡¾ĞŞ¸Ä¡¿Ê¹ÓÃÕıÈ·µÄ·½·¨Ãû
+    setEntityName(_stats.name); // ã€ä¿®æ”¹ã€‘ä½¿ç”¨æ­£ç¡®çš„æ–¹æ³•å
 
     _target = nullptr;
     _attackTimer = 0.0f;
@@ -34,22 +34,22 @@ bool BattleBuilding::init(BattleBuildingType type, Team team) {
     auto sprite = Sprite::create(imagePath);
 
     if (sprite) {
-        // ÉèÖÃÍ¼Æ¬ÃªµãÎªµ×²¿ÖĞĞÄ£¬ÕâÑùÑªÌõ¿ÉÒÔÏÔÊ¾ÔÚ¶¥²¿
+        // è®¾ç½®å›¾ç‰‡é”šç‚¹ä¸ºåº•éƒ¨ä¸­å¿ƒï¼Œè¿™æ ·è¡€æ¡å¯ä»¥æ˜¾ç¤ºåœ¨é¡¶éƒ¨
         sprite->setAnchorPoint(Vec2(0.5f, 0.0f));
 
-        // ¸ù¾İ½¨ÖşÀàĞÍµ÷Õû´óĞ¡
+        // æ ¹æ®å»ºç­‘ç±»å‹è°ƒæ•´å¤§å°
         float scale = getScaleForBattleBuilding(type);
         sprite->setScale(scale);
 
 
         this->addChild(sprite, 0);
-        _sprite = sprite; // ¡¾Ìí¼Ó¡¿±£´æ¾«ÁéÒıÓÃ
+        _sprite = sprite; // ã€æ·»åŠ ã€‘ä¿å­˜ç²¾çµå¼•ç”¨
 
-        //// Ìí¼ÓÑªÌõ£¨Èç¹ûĞèÒªµÄ»°£©
+        //// æ·»åŠ è¡€æ¡ï¼ˆå¦‚æœéœ€è¦çš„è¯ï¼‰
         //setupHealthBar(sprite->getContentSize().height * scale);
     }
     else {
-        // Èç¹ûÍ¼Æ¬¼ÓÔØÊ§°Ü£¬»ØÍËµ½Ô­À´µÄÑÕÉ«¿é
+        // å¦‚æœå›¾ç‰‡åŠ è½½å¤±è´¥ï¼Œå›é€€åˆ°åŸæ¥çš„é¢œè‰²å—
         CCLOG("Failed to load image for building: %s", imagePath.c_str());
         auto draw = DrawNode::create();
         Color4F color = (team == Team::PLAYER) ? Color4F::BLUE : Color4F::RED;
@@ -57,7 +57,7 @@ bool BattleBuilding::init(BattleBuildingType type, Team team) {
         this->addChild(draw);
     }
 
-    // Ìí¼Ó½¨ÖşÃû³Æ±êÇ©
+    // æ·»åŠ å»ºç­‘åç§°æ ‡ç­¾
     auto label = Label::createWithSystemFont(_stats.name, "Arial", 12);
     label->setPosition(Vec2(0, -25));
     label->setColor(Color3B::WHITE);
@@ -112,18 +112,18 @@ BattleBuildingType BattleBuilding::getType() const {
 //}
 
 void BattleBuilding::update(float dt) {
-    // ·ÀÓùÂß¼­£¨Ö»Õë¶ÔÓĞ¹¥»÷Á¦µÄ½¨Öş£©
+    // é˜²å¾¡é€»è¾‘ï¼ˆåªé’ˆå¯¹æœ‰æ”»å‡»åŠ›çš„å»ºç­‘ï¼‰
     if (_stats.damage > 0) {
         if (_target && !_target->isDead()) {
             float dist = this->getPosition().distance(_target->getPosition());
             if (dist <= _stats.attackRange) {
-                // ÔÚ¹¥»÷·¶Î§ÄÚ
+                // åœ¨æ”»å‡»èŒƒå›´å†…
                 _attackTimer += dt;
                 if (_attackTimer >= _stats.attackSpeed) {
                     _attackTimer = 0;
                     _target->takeDamage(_stats.damage);
 
-                    // ¡¾ĞŞ¸Ä¡¿¿ÉÊÓ»¯Éä»÷Ğ§¹û
+                    // ã€ä¿®æ”¹ã€‘å¯è§†åŒ–å°„å‡»æ•ˆæœ
                     auto shot = DrawNode::create();
                     shot->drawLine(Vec2::ZERO, _target->getPosition() - this->getPosition(), Color4F::YELLOW);
                     shot->setLineWidth(2.0f);
@@ -136,32 +136,32 @@ void BattleBuilding::update(float dt) {
 
                     CCLOG("%s attacked %s for %d damage",
                         _stats.name.c_str(),
-                        _target->getEntityName().c_str(), // ¡¾ĞŞ¸Ä¡¿Ê¹ÓÃÕıÈ·µÄ·½·¨Ãû
+                        _target->getEntityName().c_str(), // ã€ä¿®æ”¹ã€‘ä½¿ç”¨æ­£ç¡®çš„æ–¹æ³•å
                         _stats.damage);
                 }
             }
             else {
-                _target = nullptr; // ³¬³ö·¶Î§£¬¶ªÊ§Ä¿±ê
+                _target = nullptr; // è¶…å‡ºèŒƒå›´ï¼Œä¸¢å¤±ç›®æ ‡
             }
         }
     }
 }
 
 
-// ========== ¸¨Öúº¯Êı ==========
+// ========== è¾…åŠ©å‡½æ•° ==========
 std::string BattleBuilding::getImagePathForBattleBuilding(BattleBuildingType type, Team team) {
-    // ¸ù¾İ½¨ÖşÀàĞÍÑ¡ÔñÍ¼Æ¬
+    // æ ¹æ®å»ºç­‘ç±»å‹é€‰æ‹©å›¾ç‰‡
     switch (type) {
     case BattleBuildingType::TOWN_HALL:
-        return "buildings/Town_Hall1.png";  // ĞŞ¸ÄÎªÍ³Ò»µÄbuildingsÄ¿Â¼
+        return "buildings/Town_Hall1.png";  // ä¿®æ”¹ä¸ºç»Ÿä¸€çš„buildingsç›®å½•
     case BattleBuildingType::GOLD_MINE:
         return "buildings/Gold_Mine1.png";
     case BattleBuildingType::ELIXIR_COLLECTOR:
-        return "buildings/Elixir_Collector1.png";  // ĞŞÕıÎÄ¼şÃû
+        return "buildings/Elixir_Collector1.png";  // ä¿®æ­£æ–‡ä»¶å
     case BattleBuildingType::CANNON:
         return "buildings/Cannon1.png";
     case BattleBuildingType::ARCHER_TOWER:
-        return "buildings/Archer_Tower1.png";  // ĞŞÕıÎÄ¼şÃû
+        return "buildings/Archer_Tower1.png";  // ä¿®æ­£æ–‡ä»¶å
     case BattleBuildingType::GOLD_STORAGE:
         return "buildings/Gold_Storage1.png";
     case BattleBuildingType::ELIXIR_STORAGE:
@@ -171,25 +171,25 @@ std::string BattleBuilding::getImagePathForBattleBuilding(BattleBuildingType typ
     case BattleBuildingType::ARMY_CAMP:
         return "buildings/army_camp.png";
     case BattleBuildingType::BARRACKS:
-        return "buildings/Barracks1.png";  // ĞŞÕıÎÄ¼şÃû
+        return "buildings/Barracks1.png";  // ä¿®æ­£æ–‡ä»¶å
     default:
         return "buildings/building_default.png";
     }
 }
 
 float BattleBuilding::getScaleForBattleBuilding(BattleBuildingType type) {
-    // ¸ù¾İ½¨ÖşÀàĞÍµ÷ÕûÏÔÊ¾´óĞ¡
+    // æ ¹æ®å»ºç­‘ç±»å‹è°ƒæ•´æ˜¾ç¤ºå¤§å°
     switch (type) {
     case BattleBuildingType::TOWN_HALL:
-        return 0.4f; // Ö÷³Ç´óÒ»Ğ©
+        return 0.4f; // ä¸»åŸå¤§ä¸€äº›
     case BattleBuildingType::CANNON:
         return 0.4f;
     case BattleBuildingType::ARCHER_TOWER:
         return 0.1f;
     case BattleBuildingType::WALL:
-        return 0.1f; // ³ÇÇ½Ğ¡Ò»Ğ©
+        return 0.1f; // åŸå¢™å°ä¸€äº›
     default:
-        return 0.3f; // Ä¬ÈÏ´óĞ¡
+        return 0.3f; // é»˜è®¤å¤§å°
     }
 }
 

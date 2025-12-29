@@ -1,9 +1,9 @@
 #pragma once
 /*************************************************************
-* @file     : GameCover.h
-* @function £ºÓÎÏ·Æô¶¯½çÃæ
-* @author   : Ò¶ÜÆº¬
-* @note     £º
+* @file     : SplashScene.h
+* @function ï¼šæ¸¸æˆå¯åŠ¨ç•Œé¢
+* @author   : å¶èŠ·å«
+* @note     ï¼š
 **************************************************************/
 #ifndef __GAMECOVER_H__
 #define __GAMECOVER_H__
@@ -16,7 +16,7 @@ public:
 	virtual bool init();
 
 private:
-	// µÇÂ¼½çÃæ
+	// ç™»å½•ç•Œé¢
 	void gotoLogin(float dt);
 
 	CREATE_FUNC(SplashScene);

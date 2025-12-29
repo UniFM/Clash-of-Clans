@@ -1,3 +1,14 @@
+/*************************************************************
+* @file     : BaseMap.h
+* @function ï¼šåœ°å›¾åŸºç±» - å®šä¹‰åœ°å›¾æ ¸å¿ƒåŠŸèƒ½æŽ¥å£ä¸Žæ ¸å¿ƒæˆå‘˜
+* @author   : å¶èŠ·å«
+* @note     : 1.å°è£…åœ°å›¾åæ ‡è½¬æ¢ã€ç¼©æ”¾ã€ç§»åŠ¨ç­‰æ ¸å¿ƒæ“ä½œï¼›
+*             2.æä¾›å»ºç­‘æ”¾ç½®æ ¡éªŒã€å ä½æ ‡è®°ã€ç½‘æ ¼ç®¡ç†æŽ¥å£ï¼›
+*             3.åŒ…å«è§¦æ‘¸æ‹–æ‹½ã€åœ°å›¾è¾¹ç•Œé™åˆ¶é€»è¾‘ï¼›
+*             4.åŒºåˆ†å»ºç­‘/éƒ¨é˜Ÿå®¹å™¨èŠ‚ç‚¹ï¼Œç®¡ç†åœ°å›¾å¯è§†åŒ–ä¸Žäº¤äº’åŸºç¡€ï¼›
+*             5.å®šä¹‰åœ°å›¾å°ºå¯¸ã€ç½‘æ ¼æ•°é‡ã€è‰åœ°è¾¹ç•Œç­‰å¸¸é‡å‚æ•°ï¼Œé€‚é…åæ ‡è®¡ç®—é€»è¾‘
+**************************************************************/
+
 #include "BaseMap.h"
 
 USING_NS_CC;
@@ -11,7 +22,7 @@ BaseMap::BaseMap()
     , _gridCellWidth(0.0f)
     , _gridCellHeight(0.0f)
     , _buildingsContainer(nullptr)
-    , _troopsContainer(nullptr)  // ³õÊ¼»¯²¿¶ÓÈÝÆ÷
+    , _troopsContainer(nullptr)  // åˆå§‹åŒ–éƒ¨é˜Ÿå®¹å™¨
     , _mapWidth(0.0f)
     , _mapHeight(0.0f)
     , _grassRectWidth(0.0f)
@@ -34,13 +45,13 @@ bool BaseMap::init(const std::string& mapImagePath)
         return false;
     }
 
-    // ¼ÓÔØµØÍ¼Í¼Ïñ
+    // åŠ è½½åœ°å›¾å›¾åƒ
     if (!mapImagePath.empty())
     {
         _mapSprite = Sprite::create(mapImagePath);
     }
 
-    // Í¼Æ¬¼ÓÔØÊ§°ÜÊ±µÄÕ¼Î»·û
+    // å›¾ç‰‡åŠ è½½å¤±è´¥æ—¶çš„å ä½ç¬¦
     if (!_mapSprite)
     {
         auto placeholder = DrawNode::create();
@@ -52,7 +63,7 @@ bool BaseMap::init(const std::string& mapImagePath)
         };
         placeholder->drawPoly(vertices, 4, true, Color4F(0.2f, 0.6f, 0.2f, 1.0f));
 
-        // ²ÝµØ
+        // è‰åœ°
         Vec2 grassVertices[4] = {
             Vec2(_grassOffsetX, _grassOffsetY),
             Vec2(_grassOffsetX + _grassRectWidth, _grassOffsetY),
@@ -61,7 +72,7 @@ bool BaseMap::init(const std::string& mapImagePath)
         };
         placeholder->drawPoly(grassVertices, 4, true, Color4F(0.4f, 0.8f, 0.4f, 1.0f));
 
-        // ÁâÐÎÍø¸ñ
+        // è±å½¢ç½‘æ ¼
         float rectLeft = _grassOffsetX;
         float rectRight = _grassOffsetX + _grassRectWidth;
         float rectTop = _grassOffsetY;
@@ -102,17 +113,17 @@ bool BaseMap::init(const std::string& mapImagePath)
     _buildingsContainer->setPosition(Vec2::ZERO);
     this->addChild(_buildingsContainer, 10);
 
-    // {update} ´´½¨²¿¶ÓÈÝÆ÷
+    // {update} åˆ›å»ºéƒ¨é˜Ÿå®¹å™¨
     _troopsContainer = Node::create();
     _troopsContainer->setAnchorPoint(Vec2(0, 0));
     _troopsContainer->setPosition(Vec2::ZERO);
-    this->addChild(_troopsContainer, 100); // ²¿¶ÓÔÚ½¨ÖþÖ®ÉÏ
+    this->addChild(_troopsContainer, 100); // éƒ¨é˜Ÿåœ¨å»ºç­‘ä¹‹ä¸Š
 
     initOccupiedGrids();
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
     
-    // ¶ÔµØÍ¼³ß´ç½øÐÐ°²È«¼ì²é£¬ÒÔ±ÜÃâ³ýÒÔÁãµÄÇé¿ö
+    // å¯¹åœ°å›¾å°ºå¯¸è¿›è¡Œå®‰å…¨æ£€æŸ¥ï¼Œä»¥é¿å…é™¤ä»¥é›¶çš„æƒ…å†µ
     if (_mapWidth > 0 && _mapHeight > 0) {
         float scaleX = visibleSize.width / _mapWidth;
         float scaleY = visibleSize.height / _mapHeight;
@@ -151,12 +162,12 @@ bool BaseMap::onTouchBegan(Touch* touch, Event* event)
 {
     _lastTouchPos = touch->getLocation();
     _isDragging = false;
-    return true; // »ù´¡µØÍ¼Ä¬ÈÏÉèÎª true
+    return true; // åŸºç¡€åœ°å›¾é»˜è®¤è®¾ä¸º true
 }
 
 void BaseMap::onTouchMoved(Touch* touch, Event* event)
 {
-    // »ù±¾ÊµÏÖÔÊÐíÊ¼ÖÕ½øÐÐÍÏ¶¯£¬×ÓÀà¿ÉÒÔÖØÐ´
+    // åŸºæœ¬å®žçŽ°å…è®¸å§‹ç»ˆè¿›è¡Œæ‹–åŠ¨ï¼Œå­ç±»å¯ä»¥é‡å†™
     _isDragging = true; 
 
     Vec2 currentPos = touch->getLocation();
@@ -231,7 +242,7 @@ void BaseMap::updateMapTransform()
         _buildingsContainer->setScale(_zoom);
     }
     
-    // ÈÃ²¿¶ÓÈÝÆ÷Ò²¸úËæµØÍ¼Ëõ·ÅºÍÒÆ¶¯
+    // è®©éƒ¨é˜Ÿå®¹å™¨ä¹Ÿè·Ÿéšåœ°å›¾ç¼©æ”¾å’Œç§»åŠ¨
     if (_troopsContainer)
     {
         _troopsContainer->setPosition(_mapPosition);
